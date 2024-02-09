@@ -1,0 +1,69 @@
+
+sn clock frequency is 3579545
+
+fnum = 3579545 / (2 * 16 * freq)
+
+fnum * 2 * 16 * freq = 3579545
+freq = 3579545 / (fnum * 2 * 16)
+
+lowest possible frequency:
+freq = 3579545 / (1023 * 2 * 16)
+freq = 109 hz
+lowest in-tune note possible is therefore midi note A2 (110 hz)
+midi note number 45
+in furnace this is note A-0
+
+furnace goes up to F-7
+midi note F9 (11175.30 hz)
+note number 125
+
+80 total playable notes
+
+maximum difference between consecutive fnums occurs in the lowest notes:
+
+	from A2 to A#2
+	A#2 freq = 116.54 hz
+	fnum = 3579545 / (2 * 16 * 116.54)
+	fnum = 3579545 / 3712
+	fnum = 964
+
+	A2 freq = 110.00 hz
+	fnum = 3579545 / (2 * 16 * 110)
+	fnum = 3579545 / 3520
+	fnum = 1016
+
+	difference = 52
+
+calculating for upper range:
+
+	D#9 fnum = 11
+	E9 fnum = 11
+
+	freq = 3579545 / (11 * 2 * 16)
+	freq = 10169
+
+	somewhere between D#9 (9956.06 hz) and E9 (10548.08 hz)
+
+	not enough resolution between fnums at higher pitches
+
+looking at accuracy:
+
+	C8 (4186.01 hz)
+	fnum = 27
+	freq = 3579545 / (27 * 2 * 16)
+	freq = 4142 hz
+
+	B7 (3951.07 hz)
+	fnum = 28
+	freq = 3579545 / (28 * 2 * 16)
+	freq = 3995 hz
+
+	C7 (2093.00 hz)
+	fnum = 53
+	freq = 3579545 / (53 * 2 * 16)
+	freq = 2110 hz
+
+	C6 (1046.50 hz)
+	fnum = 107
+	freq = 3579545 / (107 * 2 * 16)
+	freq = 1045 hz

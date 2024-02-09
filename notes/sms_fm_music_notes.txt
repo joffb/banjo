@@ -1,0 +1,25 @@
+
+MUSIC_CLOCK = 3579545
+
+MUSIC_FM_FSAM  = MUSIC_CLOCK / 72.0
+MUSIC_FM_FSAM = 49715
+
+freq = (pow(2.0, (note)/12.0) * 261.63)
+fnum = floor(((MUSIC_FM_FREQ * pow(2.0, 18)) / MUSIC_FM_FSAM) / pow(2, 3))
+
+// C4
+freq_c4 = Math.pow(2.0, 0/12.0) * 261.63
+freq_c4 = 261.63
+
+fnum_c4 = Math.floor(((261.63 * Math.pow(2.0, 18)) / 49715) / Math.pow(2, 3))
+fnum_c4 = 172
+
+
+// C#4
+freq_cs4 = Math.pow(2.0, 1/12.0) * 261.63
+freq_cs4 = 277.18732937722245
+
+fnum_cs4 = Math.floor(((172 * Math.pow(2.0, 18)) / 49715) / Math.pow(2, 3))
+fnum_cs4 = 113
+
+diff = (172 - 113) = 59
