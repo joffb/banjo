@@ -43,6 +43,10 @@
 	sfx_priority: db
 	sfx_state INSTANCEOF music_state
 	sfx_channel INSTANCEOF channel
+
+	; pointers to song and sfx tables
+	song_table_ptr: dw
+	sfx_table_ptr: dw
 		
 .ENDS
 

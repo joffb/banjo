@@ -53,7 +53,7 @@ music_handle_sfx_queue:
 	ld a, (queue_sfx)
 	
 	; get address of queued sfx in table
-	ld hl, sfx_table
+	ld hl, (sfx_table_ptr)
 	sla a
 	sla a
 	add a, l
@@ -116,7 +116,7 @@ music_handle_song_queue:
 	ld a, (queue_song)
 
 	; add offset to song table
-	ld hl, song_table
+	ld hl, (song_table_ptr)
 	sla a
 	sla a
 	add a, l

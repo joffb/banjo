@@ -14,7 +14,7 @@
 	.globl ___SMS__SDSC_author
 	.globl ___SMS__SEGA_signature
 	.globl _main
-	.globl _banjo_fm_unit_present
+	.globl _banjo_check_fm_unit_present
 	.globl _banjo_queue_sfx
 	.globl _banjo_queue_song
 	.globl _banjo_update
@@ -31,8 +31,10 @@
 	.globl _ROM_bank_to_be_mapped_on_slot0
 	.globl _ROM_bank_to_be_mapped_on_slot1
 	.globl _ROM_bank_to_be_mapped_on_slot2
-	.globl _sfx_table
-	.globl _song_table
+	.globl _sfx_table_sn
+	.globl _sfx_table_fm
+	.globl _song_table_sn
+	.globl _song_table_fm
 ;--------------------------------------------------------
 ; special function registers
 ;--------------------------------------------------------
@@ -76,12 +78,12 @@ _tic::
 ; code
 ;--------------------------------------------------------
 	.area _CODE
-;main.c:12: void main(void)
+;main.c:13: void main(void)
 ;	---------------------------------
 ; Function main
 ; ---------------------------------
 _main::
-;main.c:15: SMS_VRAMmemsetW(0, 0x0000, 16384);
+;main.c:16: SMS_VRAMmemsetW(0, 0x0000, 16384);
 	ld	hl, #0x4000
 	push	hl
 	ld	de, #0x0000
@@ -96,63 +98,68 @@ _main::
 ;main.c:20: SMS_displayOn();
 	ld	hl, #0x0140
 	call	_SMS_VDPturnOnFeature
-;main.c:22: banjo_init(CHANNEL_COUNT);
-	ld	a, #0x09
-	call	_banjo_init
-;main.c:24: if (banjo_fm_unit_present())
-	call	_banjo_fm_unit_present
+;main.c:24: if (banjo_check_fm_unit_present())
+	call	_banjo_check_fm_unit_present
 	or	a, a
 	jr	Z, 00102$
-;main.c:26: banjo_queue_song(0);
-	xor	a, a
-	call	_banjo_queue_song
+;main.c:26: banjo_init(MODE_FM);
+	ld	a, #0x01
+	call	_banjo_init
+;main.c:27: song_table_ptr = song_table_fm;
+	ld	hl, #_song_table_fm+0
+	ld	(_song_table_ptr), hl
+;main.c:28: sfx_table_ptr = sfx_table_fm;
+	ld	hl, #_sfx_table_fm+0
+	ld	(_sfx_table_ptr), hl
 	jr	00103$
 00102$:
-;main.c:30: banjo_queue_song(1);
-	ld	a, #0x01
-	call	_banjo_queue_song
+;main.c:32: banjo_init(MODE_SN);
+	ld	a, #0x02
+	call	_banjo_init
+;main.c:33: song_table_ptr = song_table_sn;
+	ld	hl, #_song_table_sn+0
+	ld	(_song_table_ptr), hl
+;main.c:34: sfx_table_ptr = sfx_table_sn;
+	ld	hl, #_sfx_table_sn+0
+	ld	(_sfx_table_ptr), hl
 00103$:
-;main.c:33: tic = 0;
+;main.c:38: banjo_queue_song(0);
+	xor	a, a
+	call	_banjo_queue_song
+;main.c:40: tic = 0;
 	ld	hl, #_tic
 	ld	(hl), #0x00
-00110$:
-;main.c:37: SMS_waitForVBlank();
+00107$:
+;main.c:45: SMS_waitForVBlank();
 	call	_SMS_waitForVBlank
-;main.c:39: if (tic == 64)
+;main.c:48: if (tic == 64)
 	ld	a, (_tic+0)
 	sub	a, #0x40
-	jr	NZ, 00108$
-;main.c:41: if (banjo_fm_unit_present())
-	call	_banjo_fm_unit_present
-	or	a, a
-	jr	Z, 00105$
-;main.c:43: banjo_queue_sfx(0);
+	jr	NZ, 00105$
+;main.c:50: banjo_queue_sfx(0);
 	xor	a, a
 	call	_banjo_queue_sfx
-	jr	00108$
 00105$:
-;main.c:47: banjo_queue_sfx(1);
-	ld	a, #0x01
-	call	_banjo_queue_sfx
-00108$:
-;main.c:51: banjo_update();
+;main.c:53: banjo_update();
 	call	_banjo_update
-;main.c:53: tic++;
+;main.c:55: tic++;
 	ld	hl, #_tic
 	inc	(hl)
-;main.c:55: }
-	jr	00110$
-_song_table:
+;main.c:57: }
+	jr	00107$
+_song_table_fm:
 	.db #0x00	; 0
-	.db #0x02	; 2
+	.db #0x03	; 3
 	.dw _cmajor
+_song_table_sn:
 	.db #0x00	; 0
 	.db #0x03	; 3
 	.dw _cmajor_sn
-_sfx_table:
+_sfx_table_fm:
 	.db #0x00	; 0
 	.db #0x02	; 2
 	.dw _sfx_test
+_sfx_table_sn:
 	.db #0x00	; 0
 	.db #0x03	; 3
 	.dw _sfx_test_sn

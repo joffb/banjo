@@ -57,16 +57,16 @@ music_unmute_channel:
 music_mute_all_fm: 
 	
 	ld b, #9
-	ld c, #0x20
+	ld d, #0x20
 	
 	music_mute_fm_noteoff: 
 	
-		ld a, c
+		ld a, d
 		out (#OPLL_REG_PORT), a
 		ld a, #0
 		out (#OPLL_DATA_PORT), a
 		
-		inc c
+		inc d
 		djnz music_mute_fm_noteoff
 
 	ret 

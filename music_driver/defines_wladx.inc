@@ -36,6 +36,13 @@
 
 .define SLOT_2_BANK_CHANGE		0xffff
 
+.define MODE_FM		0x1
+.define MODE_SN		0x2
+.define MODE_SN_FM		0x3
+.define MODE_DUAL_SN		0x4
+.define MODE_FM_DRUMS		0x5
+.define MODE_SN_FM_DRUMS		0x7
+
 .STRUCT instrument
 	volume_macro_len: db
 	volume_macro_mode: db

@@ -4,7 +4,6 @@
 
 .include "defines_sdas.inc"
 
-
 .area _SMS_SRAM (REL,CON)
 
     ; console framerate 50/60hz
@@ -14,7 +13,7 @@
 	queue_sfx: .ds 1
 	queue_song: .ds 1
 
-    fm_unit_present: .ds 1
+    _fm_unit_present: .ds 1
 
 	; state and channel data for song
 	song_playing: .ds 1
@@ -28,17 +27,23 @@
     sfx_state: .ds _sizeof_music_state
     sfx_channel: .ds _sizeof_channel
 	
+	; pointers to song and sfx tables
+	_song_table_ptr: .ds 2
+	_sfx_table_ptr: .ds 2
+
     .bndry 8
     fm_drum_note_ons: .ds 1
     fm_drum_volumes: .ds 3
 
 .area _CODE (REL,CON)
 
-    .globl song_state, sfx_state
-    .globl _song_channels, _song_channel_ptrs, sfx_channel
-    .globl _song_table, _sfx_table
+    .globl _song_channels, _song_channel_ptrs
+    .globl _song_table_ptr, _sfx_table_ptr
+    .globl _banjo_init, _banjo_update, _banjo_queue_song, _banjo_queue_sfx
+    .globl _banjo_check_fm_unit_present, _fm_unit_present
+
+    .globl song_state, sfx_state, sfx_channel
     .globl queue_song, song_playing, queue_sfx, sfx_playing, sfx_priority
-    .globl _banjo_init, _banjo_update, _banjo_queue_song, _banjo_queue_sfx, _banjo_fm_unit_present
 
     .include "music_init.inc"
     .include "music_play.inc"

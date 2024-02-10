@@ -2,14 +2,31 @@
 ; banjo sound driver
 ; Joe Kennedy 2023
 
+banjo_mode_channel_counts:
+    .db 0, 9, 4, 13, 8, 11, 0, 15
+
 ; initialize music system variables
-; a: channel count
+; a: mode
 banjo_init:
 
+    ; preserve the mode in c
+    ld c, a
+
+    ; get the number of channels for this mode
+    ld hl, banjo_mode_channel_counts
+    add a, l
+    ld l, a
+    adc a, h
+    sub a, l
+    ld h, a
+
+    ; store it in b
+    ld b, (hl)
+
 	; set up array of pointers to song channels
+    ; initialise pointers to channels
 	ld de, song_channels
 	ld hl, song_channel_ptrs
-    ld b, a
 
 	music_init_song_channel_pointer_loop:
 
@@ -42,27 +59,18 @@ banjo_init:
 	ld a, 60
 	ld (music_framerate), a
 
-    ; see whether the fm chip is present
-    call check_fm_unit_present
-
 	; mute all channels
 	call music_mute_all_fm
 	call music_mute_all_sn
 	
-    ; unmute SN and FM
-    ld a, 0x3
+    ; enable/disable the FM and SN depending on the mode
+    ld a, c
+    and a, 0x3
     out (AUDIO_CONTROL_PORT), a
-
 
 	ret
 
-; returns 1 if fm unit present, 0 otherwise
-banjo_fm_unit_present:
-    ld a, (fm_unit_present)
-    ret
-
-
-check_fm_unit_present:
+banjo_check_fm_unit_present:
 
     ; get current state of control port and keep in d
     in a, (AUDIO_CONTROL_PORT)

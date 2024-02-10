@@ -36,6 +36,13 @@ BANJO_MAGIC_BYTE			.equ		0xba
 
 SLOT_2_BANK_CHANGE			.equ		0xffff
 
+MODE_FM			.equ		0x1
+MODE_SN			.equ		0x2
+MODE_SN_FM			.equ		0x3
+MODE_DUAL_SN			.equ		0x4
+MODE_FM_DRUMS			.equ		0x5
+MODE_SN_FM_DRUMS			.equ		0x7
+
 instrument.volume_macro_len .equ 0
 instrument.volume_macro_mode .equ 1
 instrument.volume_macro_loop .equ 2
