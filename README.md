@@ -49,18 +49,26 @@ For sfx you use it like:
 
 ```
 // initialise banjo
-void banjo_init(unsigned char channel_count);
+void banjo_init(unsigned char mode);
 
 // update song and sfx
 // this will change the bank for slot 2 (i.e. 0x8000 to 0xbfff (writes to mapper at 0xffff))
 void banjo_update();
 
-// queue song to be played back starting on next banjo_update
+// queue song/sfx to be played back starting on next banjo_update
 void banjo_queue_song(unsigned char song);
-
-// queue sfx to be played back starting on next banjo_update
 void banjo_queue_sfx(unsigned char sfx);
 
+// set the loop mode for the song/sfx
+// by default songs loop, but sfx don't
+void banjo_queue_song_loop_mode(unsigned char loop);
+void banjo_queue_sfx_loop_mode(unsigned char loop);
+
+// set up pointers to the song and sfx tables
+void banjo_set_song_table(song_t const *song_table_ptr);
+void banjo_set_sfx_table(song_t const *sfx_table_ptr);
+
 // returns 1 if an fm unit is present, 0 otherwise
-unsigned char banjo_fm_unit_present();
+// updates the fm_unit_present variable
+unsigned char banjo_check_fm_unit_present();
 ```
