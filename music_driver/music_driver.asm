@@ -16,9 +16,46 @@
 	.dw SONG_LABEL
 .endm
 
+.ifdef BANJO_MODE
+
+	; FM: 9 channels
+	.if BANJO_MODE = MODE_FM
+
+		.define CHANNEL_COUNT 9
+
+	; SN: 4 channels
+	.elif BANJO_MODE = MODE_SN
+
+		.define CHANNEL_COUNT 4
+
+	; Combined SN and FM: 13 channels
+	.elif BANJO_MODE = MODE_SN_FM
+
+		.define CHANNEL_COUNT 13
+
+	; FM drums: 11 channels
+	.elif BANJO_MODE = MODE_FM_DRUMS
+
+		.define CHANNEL_COUNT 11
+
+	; 2x SN: 8 channels
+	.elif BANJO_MODE = MODE_DUAL_SN
+
+		.define CHANNEL_COUNT 8
+
+	; Combined SN and FM drums: 15 channels
+	.elif BANJO_MODE = MODE_SN_FM_DRUMS
+
+		.define CHANNEL_COUNT 15
+
+	.endif
+
+.endif
+
 ; number of channels to allocate as space for songs
-.ifndef CHANNEL_COUNT
-.define CHANNEL_COUNT 4
+.ifndef BANJO_MODE
+	.define CHANNEL_COUNT 4
+	.define BANJO_MODE MODE_SN
 .endif
 
 .RAMSECTION "Music Vars" slot 3
@@ -30,7 +67,14 @@
 	queue_sfx: db
 	queue_song: db
 
-	fm_unit_present: db
+	; used to modify the loop type
+	queue_sfx_loop: db
+	queue_song_loop: db
+
+	banjo_fm_unit_present: db
+	banjo_game_gear_mode: db
+	banjo_system_e: db
+	banjo_mode: db
 
 	; state and channel data for song
 	song_playing: db
@@ -47,77 +91,27 @@
 	; pointers to song and sfx tables
 	song_table_ptr: dw
 	sfx_table_ptr: dw
-		
-.ENDS
 
-.RAMSECTION "Music FM Drum Vars" slot 3 align 8
 	fm_drum_note_ons: db
 	fm_drum_volumes: ds 3
+
 .ENDS
 
 .include "music_init.inc"
 .include "music_play.inc"
+.include "music_stop.inc"
 .include "music_update.inc"
 .include "update_pitch_registers.inc"
 .include "instrument_change.inc"
 .include "process_channels_tic.inc"
 .include "process_new_line.inc"
-.include "pitch_slide.inc"
 .include "note_on_off.inc"
 .include "mute_unmute.inc"
+.include "arpeggio.inc"
+.include "pitch_slide.inc"
+.include "vibrato.inc"
+.include "volume_change.inc"
+.include "volume_macro.inc"
+.include "fnums_sn.inc"
+.include "fnums_fm.inc"
 
-music_process_jump_table:
-	.dw mpnl_note_on
-	.dw mpnl_note_off
-	.dw mpnl_instrument_change
-	.dw mpnl_instruction_check_done
-	.dw mpnl_fm_drum
-	.dw mpnl_noise_mode
-	.dw mpnl_pitch_slide_up
-	.dw mpnl_pitch_slide_down
-	.dw mpnl_arpeggio
-	.dw mpnl_portamento
-	.dw mpnl_line_wait
-
-sn_tone_lookup:
-	.include "sn_fnums.inc"
-
-fm_tone_lookup:
-	.include "fm_fnums.inc"
-
-fm_drum_triggers:
-	; kick
-	.db 0x10
-	; snare
-	.db 0x08
-	; tom
-	.db 0x04
-	; cymbal
-	.db 0x02
-	; hi-hat
-	.db 0x01
-
-fm_drum_pitch_registers:
-	; kick
-	.db 0x16
-	; snare
-	.db 0x17
-	; tom
-	.db 0x18
-	; cymbal
-	.db 0x18
-	; hi-hat
-	.db 0x17
-
-; masks used to preserve volumes for other drums which share the byte
-fm_drum_volume_masks:
-	; kick
-	.db 0xf0
-	; snare
-	.db 0xf0
-	; tom
-	.db 0x0f
-	; cymbal
-	.db 0xf0
-	; hi-hat
-	.db 0x0f

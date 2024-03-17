@@ -10,5 +10,6 @@ python ..\..\json2sms.py sfx 2 sfx_test sfx_test.json sfx_test.asm
 python ..\..\furnace2json.py ..\sfx_test_sn.fur sfx_test_sn.json
 python ..\..\json2sms.py sfx 2 sfx_test_sn sfx_test_sn.json sfx_test_sn.asm
 
-..\..\..\wla_dx\wla-z80.exe main.asm
-..\..\..\wla_dx\wlalink.exe -s -r linkfile.txt main.sms
+wla-z80 -D BANJO_MODE=5 main.asm
+wlalink -s -r linkfile.txt main.sms
+wlalink -s -r linkfile.txt main.gg

@@ -2,68 +2,75 @@
 ; banjo sound driver
 ; Joe Kennedy 2023
 
-; change the instrument on this channel
-; b  : current channel number
-; hl : pointer to current instruction in pattern
-; ix : pointer to current channel
-; iy : pointer to music state
+; ix: channel
+; iy: state
+; a: new instrument number
 music_instrument_change: 
 
-	; get current instrument
-	ld a, channel.instrument_num(ix)
-	ld c, a
-
-	; get new instrument
-	inc hl
-	ld a, (hl)
-	
-	; don't do anything if the instrument number is the same
-	cp a, c
-	jr z, music_instrument_change_done
-	
 	; store the new instrument number in the channel
 	ld channel.instrument_num(ix), a
 	
-	; get pointer to instrument address table in de
-	ld e, music_state.instrument_ptrs(iy)
-	ld d, music_state.instrument_ptrs+1(iy)
+	; get pointer to instrument address table in hl
+	ld l, music_state.instrument_ptrs(iy)
+	ld h, music_state.instrument_ptrs+1(iy)
 	
 	; offset to get instrument pointer by adding instrument_num * 2 to de
     add a, a
-	add a, e
-	ld e, a
-	adc a, d
-	sub a, e
-	ld d, a
+	add a, l
+	ld l, a
+	adc a, h
+	sub a, l
+	ld h, a
 
     ; get pointer to instrument into de
-	ld a, (de)
-	ld c, a
-	inc de
-	ld a, (de)
-	ld d, a
-	ld e, c
+	ld a, (hl)
+	inc hl
+	ld h, (hl)
+	ld l, a
 	
 	; volume macro
-	; copy over macro info
-	ld a, (de)
-	ld channel.volume_macro_len(ix), a
-	inc de
-	ld a, (de)
-	ld channel.volume_macro_mode(ix), a
-	inc de
-	ld a, (de)
-	ld channel.volume_macro_loop(ix), a
-	inc de
-	ld a, (de)
-	ld channel.volume_macro_ptr(ix), a
-	inc de
-	ld a, (de)
-    ld channel.volume_macro_ptr+1(ix), a
-	
 	; set initial macro position
-	ld a, #0
-	ld channel.volume_macro_pos(ix), a
+	ld channel.volume_macro_pos(ix), #0
+
+	; copy over macro info
+	ld a, (hl)
+	ld channel.volume_macro_len(ix), a
+
+	; check if volume_macro_len > 0
+	or a, a
+	jr z, mic_no_volume_macro
+
+		inc hl
+		ld a, (hl)
+		ld channel.volume_macro_loop(ix), a
+
+		inc hl
+		ld a, (hl)
+		ld channel.volume_macro_ptr(ix), a
+
+		inc hl
+		ld a, (hl)
+		ld channel.volume_macro_ptr+1(ix), a
+
+		; set volume macro flag
+		set CHAN_FLAG_BIT_VOLUME_MACRO, channel.flags(ix)
+
+		jr mic_volume_macro_done
+
+	mic_no_volume_macro: 
+
+		inc hl
+		inc hl
+		inc hl
+
+		ld channel.volume_macro_loop(ix), #0
+		ld channel.volume_macro_ptr(ix), #0
+		ld channel.volume_macro_ptr+1(ix), #0
+
+		; clear volume macro flag
+		res CHAN_FLAG_BIT_VOLUME_MACRO, channel.flags(ix)
+
+	mic_volume_macro_done: 
 	
 	; check if this is a normal fm channel, skip ahead if it's not
 	ld a, channel.type(ix)
@@ -71,8 +78,8 @@ music_instrument_change:
 	jr nz, music_instrument_change_done
 		
 		; it is an fm instrument, store the patch number shifted left by 4
-		inc de
-		ld a, (de)
+		inc hl
+		ld a, (hl)
 		ld channel.fm_patch_shifted(ix), a
 		
 		; if it's patch 0, update the fm registers with the custom patch data
@@ -81,7 +88,7 @@ music_instrument_change:
 		jr nz, music_instrument_change_done
 		
 			; load custom patch
-			inc de
+			inc hl
 
 			; start register number
 			ld c, #0x00
@@ -91,7 +98,7 @@ music_instrument_change:
 				ld a, c
 				out (#OPLL_REG_PORT), a
 				
-				ld a, (de)
+				ld a, (hl)
 				out (#OPLL_DATA_PORT), a
 				
 				nop 
@@ -102,7 +109,7 @@ music_instrument_change:
 				nop 
 				
 				; next register and next patch data
-				inc de
+				inc hl
 				inc c
 				
 				; reached the last register?
@@ -111,9 +118,8 @@ music_instrument_change:
 				jr nz, music_instrument_change_fm_patch
 		
 	music_instrument_change_done: 
-	
-	inc hl
-	jp music_process_new_line_subloop
+
+	ret 
 
 ; hl: music instruction pointer
 music_fm_drum_change: 
@@ -140,7 +146,7 @@ music_fm_drum_change:
     sub a, l
     ld h, a
 
-    ; aiming to get instrument pointer into hl
+    ; get instrument pointer into hl
     ld a, (hl)
     inc hl
     ld h, (hl)

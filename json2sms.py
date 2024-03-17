@@ -11,15 +11,21 @@ MAGIC_BYTE          = 0xba
 NOTE_ON 			= 0x00
 NOTE_OFF 			= 0x01
 INSTRUMENT_CHANGE	= 0x02
-FM_PATCH 			= 0x03
+VOLUME_CHANGE		= 0x03
 FM_DRUM 			= 0x04
 SN_NOISE_MODE		= 0x05
-PITCH_SLIDE_UP	    = 0x06
-PITCH_SLIDE_DOWN	= 0x07
-ARPEGGIO			= 0x08
-PORTAMENTO		    = 0x09
-LINE_WAIT			= 0x0a
-END_PATTERN_LINE	= 0xff
+SLIDE_UP	        = 0x06
+SLIDE_DOWN  	    = 0x07
+SLIDE_PORTA		    = 0x08
+SLIDE_OFF           = 0x09
+ARPEGGIO			= 0x0a
+ARPEGGIO_OFF        = 0x0b
+VIBRATO			    = 0x0c
+VIBRATO_OFF         = 0x0d
+LEGATO_ON			= 0x0e
+LEGATO_OFF			= 0x0f
+GAME_GEAR_PAN		= 0x10
+END_LINE	        = 0x80
 
 INSTRUMENT_SIZE	= 16
 FM_PATCH_SIZE = 8
@@ -164,14 +170,13 @@ for i in range(0, len(song['instruments'])):
     if ("volume_macro" in instrument):
     
         instrument_bin.append(instrument['volume_macro']['length'])
-        instrument_bin.append(instrument['volume_macro']['mode'])
 
         # if loop == 0xff, there's no looping
         if (instrument['volume_macro']['loop'] == 0xff):
             instrument_bin.append(instrument['volume_macro']['loop'])
 
-        # loop position is > loop length is invalid
-        elif (instrument['volume_macro']['loop'] > instrument['volume_macro']['length']):
+        # loop position >= loop length is invalid
+        elif (instrument['volume_macro']['loop'] >= instrument['volume_macro']['length']):
             instrument_bin.append(0xff)
 
         # otherwise we do: loop = loop length - loop point
@@ -199,13 +204,16 @@ for i in range(0, len(song['instruments'])):
     
         instrument_bin.append(0)
         instrument_bin.append(0)
-        instrument_bin.append(0)
         instrument_bin.append(0xffff)
-    
-    
+
     # FM preset change (only for OPLL FM instruments)
     if (instrument['type'] == 13 and "fm" in instrument):
-    
+        
+        print(instrument['name'])
+        print("instr type: " + str(instrument['type']))
+        print("patch: " + str(instrument['fm']['opll_patch']))
+        print("----")
+
         # custom fm patch data
         if (instrument['fm']['opll_patch'] == 0):
         
@@ -314,10 +322,10 @@ for i in range(0, song['channel_count']):
     
     
     # separate pattern arrays per channel
-    patterns[i] = []
+    patterns[i] = {}
 
     current_inst = -1
-    current_vol = 15
+    current_vol = -1
 
     # go through each pattern in the channel
     for j in range (0, len(song['patterns'][i])):
@@ -365,31 +373,107 @@ for i in range(0, song['channel_count']):
                     # Arpeggio
                     elif (line['effects'][eff] == 0x00):
                     
-                        pattern_bin.append("ARPEGGIO")
-                        pattern_bin.append(line['effects'][eff + 1] >> 4)
-                        pattern_bin.append(line['effects'][eff + 1] & 0xf)
+                        if (line['effects'][eff + 1] != 0):
+                            pattern_bin.append("ARPEGGIO")
+                            pattern_bin.append(line['effects'][eff + 1])
+                        else:
+                            pattern_bin.append("ARPEGGIO_OFF")
                     
 
                     # Pitch slide up
                     elif (line['effects'][eff] == 0x01):
                     
-                        pattern_bin.append("PITCH_SLIDE_UP")
-                        pattern_bin.append(line['effects'][eff + 1])
+                        if (line['effects'][eff + 1] != 0):
+                            pattern_bin.append("SLIDE_UP")
+                            pattern_bin.append(line['effects'][eff + 1])
+                        else:
+                            pattern_bin.append("SLIDE_OFF")
                     
                     
                     # Pitch slide down
                     elif (line['effects'][eff] == 0x02):
                     
-                        pattern_bin.append("PITCH_SLIDE_DOWN")
-                        pattern_bin.append(line['effects'][eff + 1])
+                        if (line['effects'][eff + 1] != 0):
+                            pattern_bin.append("SLIDE_DOWN")
+                            pattern_bin.append(line['effects'][eff + 1])
+                        else:
+                            pattern_bin.append("SLIDE_OFF")
                     
 
                     # Portamento
                     elif (line['effects'][eff] == 0x03):
                     
-                        pattern_bin.append("PORTAMENTO")
-                        pattern_bin.append(line['effects'][eff + 1])
-                
+                        if (line['effects'][eff + 1] != 0):
+                            pattern_bin.append("SLIDE_PORTA")
+                            pattern_bin.append(line['effects'][eff + 1])
+                        else:
+                            pattern_bin.append("SLIDE_OFF")
+
+                    # Vibrato
+                    elif (line['effects'][eff] == 0x04):
+                    
+                        vibrato_speed = line['effects'][eff + 1] >> 4
+                        vibrato_amount = line['effects'][eff + 1] & 0xf
+
+                        if (vibrato_speed == 0 and vibrato_amount == 0):
+                            pattern_bin.append("VIBRATO_OFF")
+
+                        else:
+                            pattern_bin.append("VIBRATO")
+                            pattern_bin.append(vibrato_speed  * (vibrato_amount + 1))
+                            pattern_bin.append(vibrato_amount)
+
+                    # Panning
+                    elif (line['effects'][eff] == 0x80):
+                    
+                        pattern_bin.append("GAME_GEAR_PAN")
+
+                        pan_left = (1 if (line['effects'][eff + 1] < 0xff) else 0) << (channel_subchannel + 4)
+                        pan_right = (1 if (line['effects'][eff + 1] > 0x00) else 0) << channel_subchannel
+
+                        pan_mask = (~(1 << channel_subchannel)) & 0xf
+
+                        pattern_bin.append(pan_left | pan_right)
+                        pattern_bin.append(pan_mask | (pan_mask << 4))
+
+                    # legato
+                    elif (line['effects'][eff] == 0xea):
+                    
+                        if (line['effects'][eff + 1] > 0):
+                        
+                            pattern_bin.append("LEGATO_ON")
+                        
+                        else:
+                        
+                            pattern_bin.append("LEGATO_OFF")
+
+                # volume
+                # if the volume has been specified on the line, or we haven't provided a volume command yet
+                if (line['volume'] != -1):
+                    
+                    if (line['volume'] != -1):
+                        volume = line['volume']
+
+                    # volume has changed
+                    if volume != current_vol:
+                        
+                        pattern_bin.append("VOLUME_CHANGE")
+
+                        # sn channel, this byte can be sent straight to the output to set the volume
+                        if (channel_type == CHAN_SN76489):
+                        
+                            pattern_bin.append((15 - volume) | 0x80 | 0x10 | ((channel_subchannel & 0xf) << 5))
+                        
+                        elif (channel_type == CHAN_OPLL):
+                        
+                            pattern_bin.append((15 - volume))
+                        
+                        elif (channel_type == CHAN_OPLL_DRUMS):
+                        
+                            pattern_bin.append((15 - volume) << pre_shift_fm_drum_value[channel_subchannel])
+
+                    current_vol = volume
+
                 # empty
                 if (line['note'] == 0 and line['octave'] == 0):
                 
@@ -398,23 +482,7 @@ for i in range(0, song['channel_count']):
                 # note on
                 elif (line['note'] <= 12):
                 
-                    pattern_bin.append("NOTE_ON")
-                    
-                    volume = current_vol if (line['volume'] == -1) else line['volume']
-                    
-                    # sn channel, this byte can be sent straight to the output to set the volume
-                    if (channel_type == CHAN_SN76489):
-                    
-                        pattern_bin.append((15 - volume) | 0x80 | 0x10 | ((channel_subchannel & 0xf) << 5))
-                    
-                    elif (channel_type == CHAN_OPLL):
-                    
-                        pattern_bin.append((15 - volume))
-                    
-                    elif (channel_type == CHAN_OPLL_DRUMS):
-                    
-                        pattern_bin.append((15 - volume) << pre_shift_fm_drum_value[channel_subchannel])
-                    
+                    pattern_bin.append("NOTE_ON")                   
                 
                     # note number
                     if (channel_type == CHAN_SN76489):
@@ -426,11 +494,6 @@ for i in range(0, song['channel_count']):
                         pattern_bin.append((line['note'] + (line['octave'] * 12)) & 0x7f)
                     
                 
-                    if (line['volume'] != -1):
-                    
-                        current_vol = line['volume']
-                    
-                
                 # note off
                 elif (line['note'] == 100):
                 
@@ -438,33 +501,25 @@ for i in range(0, song['channel_count']):
                 
                 
                 # end line marker
-                pattern_bin.append(END_PATTERN_LINE)
+                pattern_bin.append(END_LINE)
             
 
-            # when a run of END_PATTERN_LINE ends, replace it if it's long enough
+            # when a run of END_LINE ends, replace it if it's long enough
             def run_end(run_length, pattern_bin_rle):
             
-                if (run_length > 2):
-                
-                    pattern_bin_rle.append("LINE_WAIT")
-                    pattern_bin_rle.append(run_length - 1)
-                
-                elif (run_length > 0):
-                
-                    for k in range(0, run_length):
-                    
-                        pattern_bin_rle.append(END_PATTERN_LINE)
+                if (run_length > 0):
+                    pattern_bin_rle.append("(END_LINE | " + str(run_length - 1) + ")")
                     
 
-            # run length encoding for END_PATTERN_LINEs
+            # run length encoding for END_LINE
             run_length = 0
             pattern_bin_rle = []
             
 
-            # look through pattern_bin for runs of END_PATTERN_LINE
+            # look through pattern_bin for runs of END_LINE
             for k in range(0, len(pattern_bin)):
             
-                if (pattern_bin[k] == END_PATTERN_LINE):
+                if (pattern_bin[k] == END_LINE):
 
                     run_length += 1
                 
@@ -479,7 +534,7 @@ for i in range(0, song['channel_count']):
             pattern_bin = pattern_bin_rle
 
             # add to patterns array
-            patterns[i].append(pattern_bin)        
+            patterns[i][pattern["index"]] = pattern_bin
 
 # output asm/h file
 outfile = open(out_filename, "w")
@@ -526,6 +581,20 @@ if (out_filename.endswith("asm")):
     outfile.write(".dw " + song_prefix + "_instrument_pointers" + "\n")
     writelabel("order_ptrs")
     outfile.write(".dw " + song_prefix + "_order_pointers" + "\n")
+    writelabel("subtic")
+    outfile.write(".db 0\n")
+    writelabel("tic")
+    outfile.write(".db 0\n")
+    writelabel("line")
+    outfile.write(".db 0\n")
+    writelabel("order")
+    outfile.write(".db 0\n")
+    writelabel("process_new_line")
+    outfile.write(".db 0\n")
+    writelabel("noise_mode")
+    outfile.write(".db 0\n")
+    writelabel("panning")
+    outfile.write(".db 0xff\n")
     writelabel("channel_types")
     outfile.write(".db " + ", ".join(map(str, channel_types)) + "\n")
 
@@ -559,23 +628,22 @@ if (out_filename.endswith("asm")):
         instrument = instruments[i]
         
         writelabel("instrument_" + str(i))
-        outfile.write("\t.db " + str(instrument[0]) + ", " + str(instrument[1]) + ", " + str(instrument[2]) + "\n")
+        outfile.write("\t.db " + str(instrument[0]) + ", " + str(instrument[1]) + "\n")
         
         # volume macro pointer
-        if (instrument[3] != 0xffff):
+        if (instrument[2] != 0xffff):
         
-            outfile.write("\t.dw " + song_prefix + "_volume_macro_" + str(instrument[3]) + "\n")
+            outfile.write("\t.dw " + song_prefix + "_volume_macro_" + str(instrument[2]) + "\n")
         
         else:
         
             outfile.write("\t.dw 0xffff" + "\n")
         
-        
         # fm preset
-        outfile.write("\t.db " + str(instrument[4]) + "\n")
+        outfile.write("\t.db " + str(instrument[3]) + "\n")
         
         # fm patch
-        outfile.write("\t.db " + ", ".join(map(str, instrument[5:14])) + "\n")	
+        outfile.write("\t.db " + ", ".join(map(str, instrument[4:12])) + "\n")	
 
 
     outfile.write("\n" + "\n")
@@ -637,12 +705,15 @@ if (out_filename.endswith("asm")):
         
             continue
         
-        for j in range (0, len(patterns[i])):
-            writelabel("patterns_" + str(i) + "_" + str(j))
-            outfile.write(".db " + ", ".join(map(str, patterns[i][j])) + "\n")
+        for j in range (0, len(song["patterns"][i])):
+
+            pattern_index = song["patterns"][i][j]["index"]
+
+            writelabel("patterns_" + str(i) + "_" + str(pattern_index))
+            outfile.write(".db " + ", ".join(map(str, patterns[i][pattern_index])) + "\n")
 
 # c format output
-elif (out_filename.endswith("c")):
+elif (out_filename.endswith(".c")):
 
     outfile.write('#include "banjo.h"\n\n')
 
@@ -661,8 +732,22 @@ elif (out_filename.endswith("c")):
     outfile.write("\t" + str(song['speed_2']) + ",\n")
     outfile.write("\t" + str(song['pattern_length']) + ",\n")
     outfile.write("\t" + str(song['orders_length']) + ",\n")
-    outfile.write("\t" + song_prefix + "_instrument_pointers" + ",\n")
+
+    if len (instruments) > 0:
+        outfile.write("\t" + song_prefix + "_instrument_pointers" + ",\n")
+    else:
+        outfile.write("\t0,\n")
+
     outfile.write("\t" + song_prefix + "_order_pointers" + ",\n")
+
+    outfile.write("\t" + "0,\n") # subtic
+    outfile.write("\t" + "0,\n") # tic
+    outfile.write("\t" + "0,\n") # line
+    outfile.write("\t" + "0,\n") # order
+    outfile.write("\t" + "0,\n") # process_new_line
+    outfile.write("\t" + "0,\n") # noise_mode
+    outfile.write("\t" + "0xff,\n") # panning
+
     outfile.write("\t{" + ", ".join(map(str, channel_types)) + " }\n")
     outfile.write("};\n\n")
 
@@ -677,14 +762,16 @@ elif (out_filename.endswith("c")):
     outfile.write("\n")
 
 
-    # instrument pointers
-    outfile.write("instrument_t const * const " + song_prefix + "_instrument_pointers[] = {\n")
+    if len (instruments) > 0:
 
-    for i in range (0, len(instruments)):
+        # instrument pointers
+        outfile.write("instrument_t const * const " + song_prefix + "_instrument_pointers[] = {\n")
 
-        outfile.write("\t&" + song_prefix + "_instrument_" + str(i) + ",\n")
+        for i in range (0, len(instruments)):
 
-    outfile.write("};\n\n")
+            outfile.write("\t&" + song_prefix + "_instrument_" + str(i) + ",\n")
+
+        outfile.write("};\n\n")
 
 
     # instruments
@@ -693,12 +780,12 @@ elif (out_filename.endswith("c")):
         instrument = instruments[i]
         
         outfile.write("instrument_t const " + song_prefix + "_instrument_" + str(i) + " = {\n")
-        outfile.write("\t" + str(instrument[0]) + ", " + str(instrument[1]) + ", " + str(instrument[2]) + ",\n")
+        outfile.write("\t" + str(instrument[0]) + ", " + str(instrument[1])  + ",\n")
         
         # volume macro pointer
-        if (instrument[3] != 0xffff):
+        if (instrument[2] != 0xffff):
         
-            outfile.write("\t" + song_prefix + "_volume_macro_" + str(instrument[3]) + ",\n")
+            outfile.write("\t" + song_prefix + "_volume_macro_" + str(instrument[2]) + ",\n")
         
         else:
         
@@ -706,10 +793,10 @@ elif (out_filename.endswith("c")):
         
         
         # fm preset
-        outfile.write("\t" + str(instrument[4]) + ",\n")
+        outfile.write("\t" + str(instrument[3]) + ",\n")
         
         # fm patch
-        outfile.write("\t{" + ", ".join(map(str, instrument[5:14])) + "}\n")	
+        outfile.write("\t{" + ", ".join(map(str, instrument[4:12])) + "}\n")	
 
         outfile.write("};\n\n")
 
@@ -758,10 +845,12 @@ elif (out_filename.endswith("c")):
         
             continue
 
-        for j in range (0, len(patterns[i])):
+        for j in range (0, len(song["patterns"][i])):
 
-            outfile.write("unsigned char const " + song_prefix + "_patterns_" + str(i) + "_" + str(j) + "[] = {\n")
-            outfile.write("\t" + ", ".join(map(str, patterns[i][j])) + "\n")
+            pattern_index = song["patterns"][i][j]["index"]
+
+            outfile.write("unsigned char const " + song_prefix + "_patterns_" + str(i) + "_" + str(pattern_index) + "[] = {\n")
+            outfile.write("\t" + ", ".join(map(str, patterns[i][pattern_index])) + "\n")
             outfile.write("};\n")
 
     outfile.write("\n\n")

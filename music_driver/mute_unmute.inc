@@ -3,7 +3,7 @@
 ; Joe Kennedy 2023
 
 ; a: channel to mute
-music_mute_channel:
+music_mute_song_channel:
 	
     ; use a to get an offset into song_channel_ptrs into hl
 	add a, a
@@ -19,16 +19,56 @@ music_mute_channel:
     ld h, (hl)
     ld l, a
 
+    ; this falls through!
+
+; hl: channel to mute
+music_mute_channel:
+
     ; mute channel by setting channel.muted = 1
+    set CHAN_FLAG_BIT_MUTED, (hl)
+
+    ; get chip type
     inc hl
     ld a, (hl)
-    or a, CHAN_FLAG_MUTED
-    ld (hl), a
 
+    ; SN 
+    cp a, CHAN_SN76489
+    jr nz, mmc_check_opll
+
+        ; get subchannel
+        inc hl
+        ld a, (hl)
+        or a, 0x9f
+
+        ; get port 
+        inc hl
+        ld c, (hl)
+
+        ; write to chip
+        out (c), a
+        jr mmc_done
+
+    ; FM - mute channel by sending key-off
+    mmc_check_opll:
+    cp a, CHAN_OPLL
+    jr nz, mmc_done
+
+        ; get subchannel
+        inc hl
+        ld a, (hl)
+
+        add a, 0x20
+		out (OPLL_REG_PORT), a
+		ld a, 0
+		out (OPLL_DATA_PORT), a
+
+        jr mmc_done
+
+    mmc_done:
 	ret
 
 ; a: channel to mute
-music_unmute_channel:
+music_unmute_song_channel:
 	
     ; use a to get an offset into song_channel_ptrs into hl
 	add a, a
@@ -45,15 +85,31 @@ music_unmute_channel:
     ld l, a
 
     ; unmute channel by setting channel.muted = 0
+    res CHAN_FLAG_BIT_MUTED, (hl)
+
+    ; get the type of channel
     inc hl
     ld a, (hl)
-    and a, ~CHAN_FLAG_MUTED
-    ld (hl), a
 
+    ; if it's an opll channel we want to restore to instrument
+    cp a, CHAN_OPLL
+    jr nz, music_unmute_channel_done
+
+        ; get channel in ix
+        dec hl
+        push hl
+        pop ix
+
+        ; get the current instrument number for this channel
+        ld a, (ix + channel.instrument_num)
+        ld iy, song_state
+        call music_instrument_change
+
+    music_unmute_channel_done:
 	ret
 
 
-; mute all FM channels by sending key offs
+; mute all FM channels by sending key-offs
 music_mute_all_fm:
 	
 	ld b, 9
@@ -72,6 +128,9 @@ music_mute_all_fm:
 	ret
 
 ; mute all SN channels
+; writes to both the top SN port for the SMS
+; and the port for the second SN in the System E
+; on SMS this second SN port just goes to the SN again
 music_mute_all_sn:
 
 	; mute all psg channels

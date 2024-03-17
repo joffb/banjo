@@ -13,14 +13,21 @@
 	queue_sfx: .ds 1
 	queue_song: .ds 1
 
-    _fm_unit_present: .ds 1
+	; used to modify the loop type
+    queue_sfx_loop: .ds 1
+    queue_song_loop: .ds 1
+
+    _banjo_fm_unit_present: .ds 1
+    _banjo_game_gear_mode: .ds 1
+    _banjo_system_e: .ds 1
+	_banjo_mode: .ds 1
 
 	; state and channel data for song
 	song_playing: .ds 1
-    song_state: .ds _sizeof_music_state
-    ; song_channels: .ds _sizeof_channel * CHANNEL_COUNT
-	; song_channel_ptrs: .ds CHANNEL_COUNT * 2
-	
+    _song_state: .ds _sizeof_music_state
+    _song_channels: .ds _sizeof_music_state * CHANNEL_COUNT
+	song_channel_ptrs: .ds CHANNEL_COUNT * 2
+
 	; state and channel data for sfx
 	sfx_playing: .ds 1
 	sfx_priority: .ds 1
@@ -28,86 +35,39 @@
     sfx_channel: .ds _sizeof_channel
 	
 	; pointers to song and sfx tables
-	_song_table_ptr: .ds 2
-	_sfx_table_ptr: .ds 2
+	song_table_ptr: .ds 2
+	sfx_table_ptr: .ds 2
 
-    .bndry 8
     fm_drum_note_ons: .ds 1
     fm_drum_volumes: .ds 3
 
 .area _CODE (REL,CON)
 
-    .globl _song_channels, _song_channel_ptrs
-    .globl _song_table_ptr, _sfx_table_ptr
+    .globl _song_state, _song_channels
+    .globl _banjo_set_song_table, _banjo_set_sfx_table
+    .globl _banjo_song_stop, _banjo_sfx_stop
     .globl _banjo_init, _banjo_update, _banjo_queue_song, _banjo_queue_sfx
-    .globl _banjo_check_fm_unit_present, _fm_unit_present
+    .globl _banjo_check_hardware, _banjo_fm_unit_present, _banjo_mode, _banjo_game_gear_mode, _banjo_system_e
+    .globl _banjo_queue_song_loop_mode, _banjo_queue_sfx_loop_mode
 
-    .globl song_state, sfx_state, sfx_channel
-    .globl queue_song, song_playing, queue_sfx, sfx_playing, sfx_priority
+    .globl sfx_state, sfx_channel
+    .globl queue_song, song_playing
+    .globl queue_sfx, sfx_playing, sfx_priority
 
     .include "music_init.inc"
     .include "music_play.inc"
+    .include "music_stop.inc"
     .include "music_update.inc"
     .include "update_pitch_registers.inc"
     .include "instrument_change.inc"
     .include "process_channels_tic.inc"
     .include "process_new_line.inc"
-    .include "pitch_slide.inc"
     .include "note_on_off.inc"
     .include "mute_unmute.inc"
-
-    sn_tone_lookup:
-        .include "sn_fnums.inc"
-
-    fm_tone_lookup:
-        .include "fm_fnums.inc"
-
-    music_process_jump_table:
-        .dw mpnl_note_on
-        .dw mpnl_note_off
-        .dw mpnl_instrument_change
-        .dw mpnl_instruction_check_done
-        .dw mpnl_fm_drum
-        .dw mpnl_noise_mode
-        .dw mpnl_pitch_slide_up
-        .dw mpnl_pitch_slide_down
-        .dw mpnl_arpeggio
-        .dw mpnl_portamento
-        .dw mpnl_line_wait
-
-    fm_drum_triggers:
-        ; kick
-        .db 0x10
-        ; snare
-        .db 0x08
-        ; tom
-        .db 0x04
-        ; cymbal
-        .db 0x02
-        ; hi-hat
-        .db 0x01
-
-    fm_drum_pitch_registers:
-        ; kick
-        .db 0x16
-        ; snare
-        .db 0x17
-        ; tom
-        .db 0x18
-        ; cymbal
-        .db 0x18
-        ; hi-hat
-        .db 0x17
-
-    ; masks used to preserve volumes for other drums which share the byte
-    fm_drum_volume_masks:
-        ; kick
-        .db 0xf0
-        ; snare
-        .db 0xf0
-        ; tom
-        .db 0x0f
-        ; cymbal
-        .db 0xf0
-        ; hi-hat
-        .db 0x0f
+    .include "arpeggio.inc"
+    .include "pitch_slide.inc"
+    .include "vibrato.inc"
+    .include "volume_change.inc"
+    .include "volume_macro.inc"
+    .include "fnums_sn.inc"
+    .include "fnums_fm.inc"

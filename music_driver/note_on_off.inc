@@ -8,24 +8,17 @@
 ; iy : pointer to music state
 music_sn_note_on:
 
-	; note on
-	; get volume command to send
-	inc hl
-	ld a, (hl)
-	
-	; set volume
-	ld c, (ix + channel.port)
-	out (c), a
-	
-	; store volume in channel
-	and a, 0xf
-	ld (ix + channel.volume), a
+	; restore original hl
+	ex de, hl
 
 	; update note-on status 
-	ld a, (ix + channel.flags)
-	or a, CHAN_FLAG_NOTE_ON
-	ld (ix + channel.flags), a
-	
+	set CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
+
+    ; update volume level on chip
+	ld a, (ix + channel.volume)
+	ld c, (ix + channel.port)
+	out (c), a
+
 	; update midi number field
 	inc hl
 	ld a, (hl)
@@ -33,7 +26,7 @@ music_sn_note_on:
 
 	; multiply note number by 2 to get offset into lookup table
 	ld de, sn_tone_lookup
-	sla a
+	add a, a
 	add a, e
 	ld e, a
 	adc a, d
@@ -46,6 +39,9 @@ music_sn_note_on:
 	jr z, msnno_portamento
 
 	msnno_no_portamento:
+
+		; reset current vibrato level
+		ld (ix + channel.vibrato_current), VIBRATO_CENTRE
 
 		; portamento off, put fnum in freq
 		ld a, (de)
@@ -86,10 +82,11 @@ music_sn_note_on:
 ; iy : pointer to music state
 music_sn_note_off:
 
+	; restore original hl
+	ex de, hl
+
 	; clear note on flag
-	ld a, (ix + channel.flags)
-	and a, ~CHAN_FLAG_NOTE_ON
-	ld (ix + channel.flags), a
+	res CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
 
 	; get channel (already shifted to the correct position)
 	ld a, (ix + channel.subchannel)
@@ -98,10 +95,6 @@ music_sn_note_off:
 	or a, 0x9f
 	ld c, (ix + channel.port)
 	out (c), a
-	
-	; store volume in channel
-	and a, 0xf
-	ld (ix + channel.volume), a
 	
 	inc hl 
 	jp music_process_new_line_subloop
@@ -113,21 +106,23 @@ music_sn_note_off:
 ; iy : pointer to music state
 music_fm_note_on:
 
-	; send note off if we're not playing legato and there's a note currently playing
-	ld a, (ix + channel.flags)
-	and a, CHAN_FLAG_NOTE_ON
-	jr z, music_fm_note_on_not_legato
+	; restore original hl
+	ex de, hl
+
+	; send note off if there's a note currently playing and we're not playing legato
+	bit CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
+	jr z, mufm_no_legato_done
 	
-	ld a, (ix + channel.flags)
-	and a, CHAN_FLAG_LEGATO
-	jr nz, music_fm_note_on_not_legato
+	bit CHAN_FLAG_BIT_LEGATO, (ix + channel.flags)
+	jr nz, mufm_no_legato_done
 	
 		; send note off
-		ld a, (ix + channel.fm_base_reg)
-        add a, 0x10
+		ld a, (ix + channel.subchannel)
+        add a, 0x20
 		out (OPLL_REG_PORT), a
 
 		ld a, (ix + channel.freq + 1)
+		and a, 0xf
 		out (OPLL_DATA_PORT), a
 		
 		nop
@@ -137,29 +132,25 @@ music_fm_note_on:
 		nop
 		nop
 		
-	music_fm_note_on_not_legato:
+	mufm_no_legato_done:
 	
 	; select volume and instrument register to write to
-	ld a, (ix + channel.fm_base_reg)
-    add a, 0x20
+	ld a, (ix + channel.subchannel)
+    add a, 0x30
 	out (OPLL_REG_PORT), a
 
 	; volume
-	inc hl
-	ld a, (hl)
-	ld c, a
+	ld a, (ix + channel.volume)
+	and a, 0xf
 	
 	; combine with shifted patch number
-	ld a, (ix + channel.fm_patch_shifted)
-	or a, c
+	or a, (ix + channel.fm_patch_shifted)
 
 	; write data
 	out (OPLL_DATA_PORT), a
 	
 	; update note on status 
-	ld a, (ix + channel.flags)
-	or a, CHAN_FLAG_NOTE_ON
-	ld (ix + channel.flags), a
+	set CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
 	
 	; update midi number field
 	inc hl
@@ -168,7 +159,7 @@ music_fm_note_on:
 	
 	; look up tone data by note number
 	ld de, fm_tone_lookup
-	sla a
+	add a, a
 	add a, e 
 	ld e, a
 	adc a, d
@@ -182,6 +173,9 @@ music_fm_note_on:
 	jr z, mfmno_portamento
 
 	mfmno_no_portamento:
+
+		; reset current vibrato level
+		ld (ix + channel.vibrato_current), VIBRATO_CENTRE
 
 		; store lower byte of fnum 
 		ld a, (de)
@@ -223,18 +217,20 @@ music_fm_note_on:
 ; iy : pointer to music state
 music_fm_note_off:
 
+	; restore original hl
+	ex de, hl
+
 	; clear note on flag
-	ld a, (ix + channel.flags)
-	and a, ~CHAN_FLAG_NOTE_ON
-	ld (ix + channel.flags), a
+	res CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
 
 	; select octave + key on register
-	ld a, (ix + channel.fm_base_reg)
-    add a, 0x10
+	ld a, (ix + channel.subchannel)
+    add a, 0x20
 	out (OPLL_REG_PORT), a
 	
 	; write current octave + key off
 	ld a, (ix + channel.freq + 1)
+	and a, 0xf
 	out (OPLL_DATA_PORT), a
 
 	nop
@@ -253,13 +249,14 @@ music_fm_note_off:
 ; iy : pointer to music state
 music_fm_drums_note_on:
 
+	; restore original hl
+	ex de, hl
+
 	; send note off if we're not playing legato and there's a note currently playing
-	ld a, (ix + channel.flags)
-	and a, CHAN_FLAG_NOTE_ON
+	bit CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
 	jr z, mfmdno_legato_done
 	
-	ld a, (ix + channel.flags)
-	and a, CHAN_FLAG_LEGATO
+	bit CHAN_FLAG_BIT_LEGATO, (ix + channel.flags)
 	jr nz, mfmdno_legato_done
 		
 		; select rhythm trigger register
@@ -289,13 +286,12 @@ music_fm_drums_note_on:
 
 	; volume
 	; select volume register for this drum
-	ld a, (ix + channel.fm_base_reg)
+	ld a, (ix + channel.port)
     add a, 0x20
 	out (OPLL_REG_PORT), a
 	
 	; get volume and store in c
-	inc hl
-	ld c, (hl)
+	ld c, (ix + channel.volume)
 	
 	; point de at current volume status for this register
 	; and store in e, keep de around for later
@@ -329,9 +325,7 @@ music_fm_drums_note_on:
 	nop
 	
 	; update note on status 
-	ld a, (ix + channel.flags)
-	or a, CHAN_FLAG_NOTE_ON
-	ld (ix + channel.flags), a
+	set CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
 
     ; move to midi number
     inc hl
@@ -343,7 +337,7 @@ music_fm_drums_note_on:
 
         ; set pitch register for this drum	
         ; set register for low 8 bits of f number
-        ld a, (ix + channel.fm_base_reg)
+        ld a, (ix + channel.port)
         out (OPLL_REG_PORT), a
         
         ; update midi number field
@@ -352,7 +346,7 @@ music_fm_drums_note_on:
         
         ; get pitch data
 		ld de, fm_tone_lookup
-		sla a
+		add a, a
 		add a, e 
 		ld e, a
 		adc a, d
@@ -371,7 +365,7 @@ music_fm_drums_note_on:
         nop
         
         ; set register for 9th bit of f number and octave
-        ld a, (ix + channel.fm_base_reg)
+        ld a, (ix + channel.port)
         add a, 0x10
         out (OPLL_REG_PORT), a
         
@@ -421,10 +415,11 @@ music_fm_drums_note_on:
 ; iy : pointer to music state
 music_fm_drums_note_off:
 
+	; restore original hl
+	ex de, hl
+
 	; clear note on flag
-	ld a, (ix + channel.flags)
-	and a, ~CHAN_FLAG_NOTE_ON
-	ld (ix + channel.flags), a
+	res CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
 
 	; select rhythm control register
 	ld a, 0x0e

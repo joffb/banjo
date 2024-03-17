@@ -158,10 +158,13 @@ async function process_lines(lines)
 	// we're expecting certain labels to be declared in C or used in C
 	// add an underscore in front of these symbols so they match the C declared ones
 	let underscore_prefix = [
-		"song_channels", "song_channel_ptrs", "song_table", "sfx_table",
+		"song_channels", "song_state", "song_table", "sfx_table",
 		"banjo_init", "banjo_init:", "banjo_update", "banjo_update:",
 		"banjo_queue_song", "banjo_queue_song:", "banjo_queue_sfx", "banjo_queue_sfx:",
-		"banjo_fm_unit_present", "banjo_fm_unit_present:", 
+		"banjo_set_song_table:", "banjo_set_sfx_table:",
+		"banjo_check_hardware:", "banjo_song_stop:", "banjo_sfx_stop:",
+		"banjo_queue_song_loop_mode:", "banjo_queue_sfx_loop_mode:",
+		"banjo_fm_unit_present", "banjo_game_gear_mode", "banjo_system_e", "banjo_mode",
 	];
 
 	var outfile = fs.createWriteStream(process.argv[3], {flags: "w+"});
@@ -274,7 +277,7 @@ async function process_lines(lines)
 			dest = rearrange(dest);
 		}
 		
-		else if (opcode == "cp" || opcode == "add" || opcode == "adc" || opcode == "sub" || opcode == "sbc" || opcode == "and" || opcode == "or")
+		else if (opcode == "cp" || opcode == "add" || opcode == "adc" || opcode == "sub" || opcode == "sbc" || opcode == "and" || opcode == "or" || opcode == "xor")
 		{
 			source = rearrange(source);
 		}
@@ -284,6 +287,10 @@ async function process_lines(lines)
 			dest = rearrange(dest);
 		}
 		
+		else if (opcode == "bit" || opcode == "set" || opcode == "res")
+		{
+			source = rearrange(source);
+		}
 		
 		outfile.write(
 			whitespace + 

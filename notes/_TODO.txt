@@ -1,9 +1,14 @@
-TODO LIST:    
-    song pause/play
-    vibrato effect
+TODO LIST:
+    note delay
+    pitch slide - stop over/underflow of counters
+    vibrato
+        isn't working with arpeggios currently (freq overwritten by arpeggios in music_update_pitch_registers/music_calc_fnum)
+        speed values are inconsistent with furnace?
+        Should vibrato reset on new note?
+    should banjo_sfx_stop's effect be postponed to banjo_update?
     optional Song/SFX looping
         when Song ends and all channels need muting, only mute non-Sfx tracks otherwise it'll cut off Sfx too when a song ends
         if an sfx is looping and the song stops and a new song starts, need to mute the channel that the sfx is on again
-    legato effect
-    function to detect second sn7 chip for system e
-    convert remaining js scripts to playing
+    convert remaining js scripts to python
+    restore noise mode on sfx end in sn channel 3
+    fixed pitch noise mode - keep track of noise mode when generating commands, if in fixed pitch mode then do (midi_note = midi_note % 12)

@@ -1,5 +1,4 @@
 
-
 ; banjo sound driver
 ; Joe Kennedy 2023
 
@@ -11,48 +10,48 @@ banjo_update:
     ; check if a song is queued
     ld a, (queue_song)
     cp a, 0xff
-    jr nz, _banjo_update_new_song
+    jr nz, banjo_update_new_song
 
         ; song isn't queued, check if a song is playing
         ld a, (song_playing)
         or a, a
-        jr z, _banjo_update_check_sfx
+        jr z, banjo_update_check_sfx
 
             ; if it is, run the updates
             ld ix, song_channels
             ld iy, song_state
             call music_update
 
-            jr _banjo_update_check_sfx
+            jr banjo_update_check_sfx
 
-    _banjo_update_new_song:
+    banjo_update_new_song:
 
         ; new song has been queued
         call music_handle_song_queue
 
-    _banjo_update_check_sfx:
+    banjo_update_check_sfx:
     ld a, (queue_sfx)
     cp a, 0xff
-    jr nz, _banjo_update_new_sfx
+    jr nz, banjo_update_new_sfx
 
         ; sfx isn't queued, check if a sfx is playing
         ld a, (sfx_playing)
         or a, a
-        jr z, _banjo_update_done
+        jr z, banjo_update_done
 
             ; if it is, run the updates
             ld ix, sfx_channel
             ld iy, sfx_state
             call music_update
 
-            jr _banjo_update_done
+            jr banjo_update_done
 
-    _banjo_update_new_sfx:
+    banjo_update_new_sfx:
 
         ; new sfx has been queued
         call music_handle_sfx_queue
 
-    _banjo_update_done:
+    banjo_update_done:
 
     pop iy
     pop ix
@@ -167,7 +166,7 @@ music_update:
 						
 							; unmute sfx channel
 							ld a, (iy + music_state.sfx_channel)
-							call music_unmute_channel
+							call music_unmute_song_channel
 						
 							ret
 						

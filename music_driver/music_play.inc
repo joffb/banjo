@@ -2,13 +2,41 @@
 ; banjo sound driver
 ; Joe Kennedy 2023
 
+; a: song number to queue
 banjo_queue_song:
+
     ld (queue_song), a
+
+	; clear loop mode modifier variable
+	ld a, 0xff
+	ld (queue_song_loop), a
+
     ret
 
+; a: sfx number to queue
 banjo_queue_sfx:
+
     ld (queue_sfx), a
+
+	; clear loop mode modifier variable
+	ld a, 0xff
+	ld (queue_sfx_loop), a
+
     ret
+
+; a: loop mode for queued sfx
+banjo_queue_song_loop_mode:
+
+	ld (queue_song_loop), a
+
+	ret
+
+; a: loop mode for queued sfx
+banjo_queue_sfx_loop_mode:
+
+	ld (queue_sfx_loop), a
+
+	ret
 
 music_set_default_fm_drum_pitches:
 
@@ -53,9 +81,10 @@ music_handle_sfx_queue:
 	ld a, (queue_sfx)
 	
 	; get address of queued sfx in table
+	; (multiply a by 4 and add to hl)
 	ld hl, (sfx_table_ptr)
-	sla a
-	sla a
+	add a, a
+	add a, a
 	add a, l
 	ld l, a
 	adc a, h
@@ -91,10 +120,11 @@ music_handle_sfx_queue:
 
 		; check if it's a valid song from the header
 		ld a, (hl)
-		inc hl
 		cp a, BANJO_MAGIC_BYTE
 		jr nz, mhsfq_done
 			
+			ld a, (queue_sfx_loop)
+			ld b, a
 			ld ix, sfx_channel
 			ld iy, sfx_state
 			call music_play
@@ -117,8 +147,8 @@ music_handle_song_queue:
 
 	; add offset to song table
 	ld hl, (song_table_ptr)
-	sla a
-	sla a
+	add a, a
+	add a, a
 	add a, l
 	ld l, a
 	adc a, h
@@ -142,10 +172,11 @@ music_handle_song_queue:
 
 	; check if it's a valid song from the header
 	ld a, (hl)
-	inc hl
 	cp a, BANJO_MAGIC_BYTE
 	jr nz, mhsoq_done
 
+		ld a, (queue_song_loop)
+		ld b, a
 		ld ix, song_channels
 		ld iy, song_state
 		call music_play
@@ -161,12 +192,15 @@ music_handle_song_queue:
 	
 	ret
 
+; b: loop mode
 ; c: bank
 ; ix: channels
 ; iy: state
 ; hl: pointer to music data
 music_play:
 	
+	push bc
+
 	; change bank
 	ld a, c
 	ld (SLOT_2_BANK_CHANGE), a
@@ -188,9 +222,20 @@ music_play:
 		
 		djnz music_play_copy_header
 	
+	pop bc
+
 	; store song bank in music state
 	ld (iy + music_state.bank), c
-	
+
+	; check if the loop mode has been overwritten
+	ld a, b
+	cp a, 0xff
+	jr z, mp_loop_mode_unchanged
+
+		ld (iy + music_state.loop), a
+
+	mp_loop_mode_unchanged:
+
 	; init song position variables
 	; check if we need to adjust the playback speeds from ntsc -> pal
 	ld a, (music_framerate)
@@ -210,21 +255,16 @@ music_play:
 		
 	music_play_same_speed:
 	
-	ld a, 0
-	ld (iy + music_state.subtic), a
-	ld (iy + music_state.tic), a
-	ld (iy + music_state.line), a
-	ld (iy + music_state.order), a
-	
 	; preserve channel data pointer
 	push ix 
 
-	; get order_ptrs in hl
+	; point hl at the order_ptrs in the music_state
 	push iy
 	pop hl
 	ld bc, music_state.order_ptrs
 	add hl, bc
 
+	; point hl at the first channel's order pointer
 	ld a, (hl)
 	inc hl
 	ld h, (hl)
@@ -235,14 +275,17 @@ music_play:
 	ld b, a
 		
 	music_play_channel_data:
-		
+
 		ld a, 0
 
 		; default to not muted
 		; default legato off and note off
 		; default pitch to not require updating
 		ld (ix + channel.flags), a
-		
+
+		; default volume
+		ld (ix + channel.volume), a
+
 		; default slide variables to 0
 		ld (ix + channel.slide_amount), a
 		ld (ix + channel.slide_type), a
@@ -253,17 +296,25 @@ music_play:
 		; default line wait to 0
 		ld (ix + channel.line_wait), a
 
-		; default instrument to 0xff
-		ld (ix + channel.instrument_num), 0xff
-
-		; default arpeggio to off with arpeggio_pos = 0xff
-		ld (ix + channel.arpeggio_pos), 0xff
+		; default arpeggios to 0
 		ld (ix + channel.arpeggio), a
-		ld (ix + channel.arpeggio + 1), a
+
+		; default vibrato_current and vibrato_target to VIBRATO_CENTRE (equivalent to 0 vibrato)
+		ld (ix + channel.vibrato_target), VIBRATO_CENTRE
+		ld (ix + channel.vibrato_current), VIBRATO_CENTRE
+
+		; the following variables are initialised to 0xff
+		ld a, 0xff
+
+ 		; default arpeggios off with arpeggio_pos = 0xff
+		ld (ix + channel.arpeggio_pos), a
+
+		; default instrument to no instrument (0xff)
+		ld (ix + channel.instrument_num), a
 
 		; initialise freq to 0xffff
-		ld (ix + channel.freq), 0xff
-		ld (ix + channel.freq + 1), 0xff
+		ld (ix + channel.freq), a
+		ld (ix + channel.freq + 1), a
 
 		; init pointer to order table for this channel
 		; get pointer to order data in de
@@ -274,7 +325,7 @@ music_play:
 		ld (ix + channel.order_table_ptr + 1), d
 		inc hl
 		
-		; init address of pattern in channel
+		; init address of first pattern in channel
 		ld a, (de)
 		ld (ix + channel.pattern_ptr), a
 		inc de
@@ -349,6 +400,16 @@ music_play:
 			rrca
 			rrca
 
+			; preserve shifted subchannel in c
+			ld c, a
+
+			; set default channel volume
+			or a, 0x90
+			ld (ix + channel.volume), a
+
+			; restore shifted subchannel
+			ld a, c
+
 		mpct_dont_shift_subchannel:
 		ld (ix + channel.subchannel), a
 
@@ -357,7 +418,7 @@ music_play:
 		; set fnum/octave/volume registers and drum trigger byte for drum tracks
 		ld a, (ix + channel.type)
 		cp a, CHAN_OPLL_DRUMS
-		jr nz, mpct_check_is_opll
+		jr nz, music_play_channel_types_next_channel
 		
 			; get subchannel # and store for later
 			ld a, (ix + channel.subchannel)
@@ -386,8 +447,8 @@ music_play:
 			ld d, a
 			ld a, (de)
 			
-			; store registers
-			ld (ix + channel.fm_base_reg), a
+			; store it in channel.port
+			ld (ix + channel.port), a
 			
 			; look up trigger byte
 			ld de, fm_drum_triggers
@@ -401,18 +462,7 @@ music_play:
 			
 			; store trigger
 			ld (ix + channel.fm_drum_trigger), a
-		
-			jr music_play_channel_types_next_channel
-			
-		mpct_check_is_opll:
-		cp a, CHAN_OPLL
-		jr nz, music_play_channel_types_next_channel
 
-			; get subchannel and add 0x10 to get fnum reg
-			ld a, (ix + channel.subchannel)
-			add a, 0x10
-			ld (ix + channel.fm_base_reg), a
-						
 		music_play_channel_types_next_channel:
 
 		ld de, _sizeof_channel
@@ -420,27 +470,38 @@ music_play:
 		
 		dec b
 		jp nz, music_play_channel_types
-
+		
 	; restore channel data pointer
 	pop ix
 
+	; for songs we should clear down all the channels and reset things
 	ld a, (iy + music_state.sfx_channel)
 	cp a, 0xff
 	jr nz, music_play_is_sfx
 
-		; mute all sn channels
-		call music_mute_all_sn
-		
 		; default sn noise to use ch3 tone and white noise
 		ld a, 0xe7
 		out (SN76489_PORT), a
 		out (SN76489_2_PORT), a
 
+		; check if we're in game gear mode
+		ld a, (banjo_game_gear_mode)
+		cp a, 1
+		jr nz, mp_not_game_gear
+
+			; default all channels to center panning
+			ld a, 0xff
+			ld (iy + music_state.panning), a
+			out (GAME_GEAR_PAN_PORT), a
+
+		mp_not_game_gear:
+
+		; mute all sn channels
+		call music_mute_all_sn
+
 		; init fm_drum_note_ons as no drums playing
 		ld a, 0
 		ld (fm_drum_note_ons), a
-
-		call music_mute_all_fm
 
 		; max rhythm values	
 		ld c, 0x36
@@ -459,24 +520,110 @@ music_play:
 		or a, a
 		call z, music_set_default_fm_drum_pitches
 
+		; mute all fm channels
+		call music_mute_all_fm
+
 		; unmute SN and FM
 		ld a, 0x3
 		out (AUDIO_CONTROL_PORT), a
 
-		; play first line of track
-		call music_process_new_line
-
-		ret
+		jr music_play_done
 	
+	; for sfx we just need to mute a channel
 	music_play_is_sfx:
 
 		ld a, 0x1
 		ld (sfx_playing), a
 
 		ld a, (iy + music_state.sfx_channel)
-		call music_mute_channel
+		call music_mute_song_channel
 
+	music_play_done:
+	
 		; play first line of track
 		call music_process_new_line
-	
+
 		ret
+
+banjo_song_rewind:
+
+	; check the song state to see if the first byte is the magic byte
+	ld a, (song_state + music_state.magic_byte)
+	cp a, BANJO_MAGIC_BYTE
+	jr nz, bsrw_done
+
+		ld ix, song_channels
+		ld iy, song_state
+		call music_reset_channels_order_and_pattern
+
+		ld a, 0
+		ld (iy + music_state.tic), a
+		ld (iy + music_state.subtic), a
+		ld (iy + music_state.line), a
+		ld (iy + music_state.order), a
+
+		ld b, (iy + music_state.channel_count)
+		bsrw_channel_loop:
+
+			ld a, 0
+			ld (ix + channel.flags), 0
+			ld (ix + channel.line_wait), 0
+
+			ld de, _sizeof_channel
+			add ix, de
+			djnz bsrw_channel_loop
+
+	bsrw_done:
+	ret
+
+; if there's a valid banjo song loaded, resume playback of it
+banjo_song_resume:
+
+	; check the song state to see if the first byte is the magic byte
+	ld a, (song_state + music_state.magic_byte)
+	cp a, BANJO_MAGIC_BYTE
+	jr nz, bsr_no_valid_song
+
+		; resume playback
+		ld a, 1
+		ld (song_playing), a
+	
+	bsr_no_valid_song:
+	ret
+
+fm_drum_triggers:
+	; kick
+	.db 0x10
+	; snare
+	.db 0x08
+	; tom
+	.db 0x04
+	; cymbal
+	.db 0x02
+	; hi-hat
+	.db 0x01
+
+fm_drum_pitch_registers:
+	; kick
+	.db 0x16
+	; snare
+	.db 0x17
+	; tom
+	.db 0x18
+	; cymbal
+	.db 0x18
+	; hi-hat
+	.db 0x17
+
+; masks used to preserve volumes for other drums which share the byte
+fm_drum_volume_masks:
+	; kick
+	.db 0xf0
+	; snare
+	.db 0xf0
+	; tom
+	.db 0x0f
+	; cymbal
+	.db 0xf0
+	; hi-hat
+	.db 0x0f

@@ -9,25 +9,31 @@ const fs = require('fs');
 var defines = [
     [
         { name: "NOTE_ON", value: 0x00 },
-        { name: "NOTE_OFF",	value: 0x01 },
+        { name: "NOTE_OFF", value: 0x01 },
         { name: "INSTRUMENT_CHANGE", value: 0x02 },
-        { name: "FM_PATCH", value: 0x03 },
+        { name: "VOLUME_CHANGE", value: 0x03 },
         { name: "FM_DRUM", value: 0x04 },
         { name: "SN_NOISE_MODE", value: 0x05 },
-        { name: "PITCH_SLIDE_UP", value: 0x06 },
-        { name: "PITCH_SLIDE_DOWN", value: 0x07 },
-        { name: "ARPEGGIO", value: 0x08 },
-        { name: "PORTAMENTO", value: 0x09 },
-        { name: "LINE_WAIT", value: 0x0a },
-        { name: "END_PATTERN_LINE", value: 0xff },
+        { name: "SLIDE_UP", value: 0x06 },
+        { name: "SLIDE_DOWN", value: 0x07 },
+        { name: "SLIDE_PORTA", value: 0x08 },
+        { name: "SLIDE_OFF", value: 0x09 },
+        { name: "ARPEGGIO", value: 0x0a },
+        { name: "ARPEGGIO_OFF", value: 0x0b },
+        { name: "VIBRATO", value: 0x0c },
+        { name: "VIBRATO_OFF", value: 0x0d },
+        { name: "LEGATO_ON", value: 0x0e },
+        { name: "LEGATO_OFF", value: 0x0f },
+        { name: "GAME_GEAR_PAN", value: 0x10 },
+        { name: "END_LINE", value: 0x80 },
     ],
     [
+        { name: "GAME_GEAR_PORT_0", value: 0x00 },
+        { name: "GAME_GEAR_PAN_PORT", value: 0x06 },
         { name: "SN76489_PORT", value: 0x7f },
         { name: "SN76489_2_PORT", value: 0x7b },
         { name: "OPLL_REG_PORT", value: 0xf0 },
         { name: "OPLL_DATA_PORT", value: 0xf1  },
-    ],
-    [
         { name: "AUDIO_CONTROL_PORT", value: 0xf2 },
     ],
     [
@@ -46,12 +52,37 @@ var defines = [
         { name: "CHAN_FLAG_NOTE_ON", value: 0x02 },
         { name: "CHAN_FLAG_LEGATO", value: 0x04 },
         { name: "CHAN_FLAG_PITCH_CHANGED", value: 0x08 },
+        { name: "CHAN_FLAG_VOLUME_MACRO", value: 0x10 },
+        { name: "CHAN_FLAG_VIBRATO", value: 0x20 },
+        { name: "CHAN_FLAG_ARPEGGIO", value: 0x40 },
+        { name: "CHAN_FLAG_SLIDE", value: 0x80 },
+    ],
+    [
+        { name: "CHAN_FLAG_BIT_MUTED", value: 0 },
+        { name: "CHAN_FLAG_BIT_NOTE_ON", value: 1 },
+        { name: "CHAN_FLAG_BIT_LEGATO", value: 2 },
+        { name: "CHAN_FLAG_BIT_PITCH_CHANGED", value: 3 },
+        { name: "CHAN_FLAG_BIT_VOLUME_MACRO", value: 4 },
+        { name: "CHAN_FLAG_BIT_VIBRATO", value: 5 },
+        { name: "CHAN_FLAG_BIT_ARPEGGIO", value: 6 },
+        { name: "CHAN_FLAG_BIT_SLIDE", value: 7 },
     ],
     [
         { name: "BANJO_MAGIC_BYTE", value: 0xba },
     ],
     [
         { name: "SLOT_2_BANK_CHANGE", value: 0xffff },
+    ],
+    [
+        { name: "MODE_FM",             value: 1 },
+        { name: "MODE_SN",             value: 2 },
+        { name: "MODE_SN_FM",          value: 3 },
+        { name: "MODE_FM_DRUMS",       value: 5 },
+        { name: "MODE_DUAL_SN",        value: 6 },
+        { name: "MODE_SN_FM_DRUMS",    value: 7 },
+    ],
+    [
+        { name: "VIBRATO_CENTRE",       value: 64 },
     ]
 ];
 
@@ -60,7 +91,6 @@ var structs = [
         name: "instrument",
         members: [
             { name: "volume_macro_len", size: "db" },
-            { name: "volume_macro_mode", size: "db" },
             { name: "volume_macro_loop", size: "db" },
             { name: "volume_macro_ptr", size: "dw" },
             
@@ -91,9 +121,14 @@ var structs = [
             
             { name: "slide_amount", size: "db", comment: "how much to add/subtract per tic" },
             { name: "slide_type", size: "db", comment: "type of slide (up/down/portamento)" },
+            
+            { name: "vibrato_current", size: "db" },
+            { name: "vibrato_target", size: "db" },
+            { name: "vibrato_counter", size: "db" },
+            { name: "vibrato_counter_add", size: "db" },
 
             { name: "arpeggio_pos", size: "db"},
-            { name: "arpeggio", size: 2 },
+            { name: "arpeggio", size: "db" },
 
             { name: "order_table_ptr", size: "dw", comment: "pointer to the current order"},
             { name: "pattern_ptr", size: "dw", comment: "pointer to the current pattern" },
@@ -101,15 +136,10 @@ var structs = [
             
             { name: "volume_macro_len", size: "db"},
             { name: "volume_macro_pos", size: "db"},
-            
-            { name: "volume_macro_mode", size: "db"},
             { name: "volume_macro_loop", size: "db"},
-            
             { name: "volume_macro_ptr", size: "dw"},
             
             { name: "fm_patch_shifted", size: "db"},
-            
-            { name: "fm_base_reg", size: "db" },
             { name: "fm_drum_trigger", size: "db" },
             { name: "fm_drum_volume_mask", size: "db" },
         ]
@@ -117,6 +147,7 @@ var structs = [
     {
         name: "music_state",
         members: [
+            { name: "magic_byte", size: "db", },
             { name: "bank", size: "db", },
             { name: "channel_count", size: "db", },
 
@@ -137,8 +168,6 @@ var structs = [
                 
             { name: "instrument_ptrs", size: "dw", },
             { name: "order_ptrs", size: "dw", },
-                
-            { name: "channel_types", size: 32, },
 
             { name: "subtic", size: "db", },
             { name: "tic", size: "db", },
@@ -148,6 +177,9 @@ var structs = [
             { name: "process_new_line", size: "db", },
             
             { name: "noise_mode", size: "db", },
+            { name: "panning", size: "db" },
+
+            { name: "channel_types", size: 32, },
         ]
     },
 ];

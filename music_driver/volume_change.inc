@@ -1,0 +1,82 @@
+
+; banjo sound driver
+; Joe Kennedy 2024
+
+music_volume_change_sn:
+
+    ; restore original hl
+	ex de, hl
+
+	; update local volume variable
+    inc hl
+	ld a, (hl)
+    ld (ix + channel.volume), a
+
+    ; preserve volume in c
+    ld c, a
+
+    ; don't update chip volume if
+    ; channel is muted, volume macro is active or note-on is false
+    ld a, (ix + channel.flags)
+    xor a, CHAN_FLAG_NOTE_ON
+    and a, CHAN_FLAG_MUTED + CHAN_FLAG_NOTE_ON + CHAN_FLAG_VOLUME_MACRO
+    jr nz, mvc_sn_dont_update_chip
+
+        ; get volume back into a
+        ; and write it to the chip
+        ld a, c
+        ld c, (ix + channel.port)
+        out (c), a
+
+    mvc_sn_dont_update_chip:
+	inc hl
+	jp music_process_new_line_subloop
+
+music_volume_change_fm:
+
+    ; restore original hl
+	ex de, hl
+
+    ; update local volume variable
+    inc hl
+    ld a, (hl)
+    and a, 0xf
+    ld (ix + channel.volume), a
+
+    ; preserve volume in c
+    ld c, a
+
+    ; don't update chip volume if
+    ; channel is muted, volume macro is active or note-on is false
+    ld a, (ix + channel.flags)
+    xor a, CHAN_FLAG_NOTE_ON
+    and a, CHAN_FLAG_MUTED + CHAN_FLAG_NOTE_ON + CHAN_FLAG_VOLUME_MACRO
+    jr nz, mvc_fm_dont_update_chip
+
+        ; select volume/patch register
+        ld a, (ix + channel.subchannel)
+        add a, 0x30
+        out (OPLL_REG_PORT), a
+
+        ; get volume back into a
+        ; combine with patch number and write to chip
+        ld a, c
+        or a, (ix + channel.fm_patch_shifted)
+        out (OPLL_DATA_PORT), a
+
+    mvc_fm_dont_update_chip:
+	inc hl
+	jp music_process_new_line_subloop
+
+music_volume_change_fm_drums:
+
+    ; restore original hl
+	ex de, hl
+
+    ; update local volume variable
+    inc hl
+    ld a, (hl)
+    ld (ix + channel.volume), a
+
+	inc hl
+	jp music_process_new_line_subloop

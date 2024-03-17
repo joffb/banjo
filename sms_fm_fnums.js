@@ -35,7 +35,9 @@ for (var oct = 0; oct < 8; oct++)
 }
 
 // output an include file with the sn note data
-let outfile = fs.openSync("fm_fnums.inc", "w+");
+let outfile = fs.openSync("fnums_fm.inc", "w+");
+
+fs.writeSync(outfile, "fm_tone_lookup:\n");
 
 for (var i = 0; i < notes.length; i++)
 {

@@ -2,6 +2,8 @@
 ; banjo sound driver
 ; Joe Kennedy 2023
 
+; see MODE_* definitions for indexes
+; e.g. MODE_FM == 1 == 9 channels
 banjo_mode_channel_counts:
     .db 0, 9, 4, 13, 8, 11, 0, 15
 
@@ -9,7 +11,8 @@ banjo_mode_channel_counts:
 ; a: mode
 banjo_init:
 
-    ; preserve the mode in c
+    ; preserve the mode in variable and in c 
+    ld (banjo_mode), a
     ld c, a
 
     ; get the number of channels for this mode
@@ -28,7 +31,7 @@ banjo_init:
 	ld de, song_channels
 	ld hl, song_channel_ptrs
 
-	music_init_song_channel_pointer_loop:
+	bi_song_channel_pointer_loop:
 
 		; write de to (hl)
 		ld (hl), e
@@ -44,12 +47,16 @@ banjo_init:
 		sub a, e
 		ld d, a
 
-		djnz music_init_song_channel_pointer_loop
+		djnz bi_song_channel_pointer_loop
 
+    ; initialise queues
 	ld a, 0xff
 	ld (queue_sfx), a
+    ld (queue_sfx_loop), a
 	ld (queue_song), a
+    ld (queue_song_loop), a
 	
+    ; no songs or sfx should be playing intially
 	ld a, 0
 	ld (song_playing), a
 	ld (sfx_playing), a
@@ -59,9 +66,15 @@ banjo_init:
 	ld a, 60
 	ld (music_framerate), a
 
-	; mute all channels
-	call music_mute_all_fm
-	call music_mute_all_sn
+	; mute channels depending on the mode
+
+    ; mode bit 0 == 1 means fm
+    bit 0, c
+	call nz, music_mute_all_fm
+
+    ; mode bit 1 == 1 means sn
+    bit 1, c
+	call nz, music_mute_all_sn
 	
     ; enable/disable the FM and SN depending on the mode
     ld a, c
@@ -70,7 +83,17 @@ banjo_init:
 
 	ret
 
-banjo_check_fm_unit_present:
+banjo_set_song_table:
+    ld (song_table_ptr), hl
+    ret 
+
+banjo_set_sfx_table:
+    ld (sfx_table_ptr), hl
+    ret 
+
+banjo_check_hardware:
+
+    ; check for fm unit
 
     ; get current state of control port and keep in d
     in a, (AUDIO_CONTROL_PORT)
@@ -116,6 +139,79 @@ banjo_check_fm_unit_present:
     ld a, e
     cpl
     and a, 0x1
-    ld (fm_unit_present), a
+    ld (banjo_fm_unit_present), a
+
+    ; check for game gear mode
+
+    ; read from i/o port 0
+    ; if there's anything in the lowest 6 bits, we're not in game gear mode
+    ; on sms 1 the port should read 0x78 which is the last byte of the  "in a, (c)" mpnl_instruction_check_done
+    ; on sms 2 the port should read 0xff
+    ; on game gear bits 0-5 should be empty and bits 6 and 7 depend on region and whether the start button is being held down
+
+    ld c, GAME_GEAR_PORT_0
+    in a, (c)
+
+    ; isolate lower bits
+    and a, 0x3f
+    jr nz, bch_not_game_gear
+
+        ld a, 1
+        jr bch_done
+
+    bch_not_game_gear:
+
+        ld a, 0
+
+    bch_done:
+    ld (banjo_game_gear_mode), a
+
+
+    ; check for Sega System E by seeing if there's 16kb of RAM 
+    ; rather than 8kb with 0xe000 being a mirror of 0xc000
+
+    ; get byte at 0xc000 and save it
+    ld de, 0xe000
+    ld hl, 0xc000
+    ld a, (hl)
+    push af
+
+    ; number of values to write for test
+    ld b, 8
+
+    ; number of matched mirror read/writes
+    ld c, 0
+
+    bch_check_system_e:
+
+        ; write b to 0xc000
+        ld (hl), b
+
+        ; read 0xe000 and compare it
+        ld a, (de)
+        cp a, (hl)
+        jr z, bch_not_mirrored
+
+            ; 0xc000 write != 0xe000 read
+            inc c
+
+        bch_not_mirrored:
+        djnz bch_check_system_e
+
+    ; restore byte at 0xc000
+    pop af
+    ld (hl), a
+
+    ; c == 0 if all 0xe000 reads matched the 0xc000 writes
+    ld a, c
+    or a, a
+    jr z, bch_check_system_e_done
+
+        ld a, 1
+
+    bch_check_system_e_done:
+
+    ; update variable with flag
+    ld (banjo_system_e), a
 
     ret

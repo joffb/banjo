@@ -2,159 +2,111 @@
 ; banjo sound driver
 ; Joe Kennedy 2023
 
+music_update_pitch_slide_jump_table:
+
+	; sn slide type jump table
+	jp music_update_pitch_slide_done
+	jp music_update_sn_pitch_slide_upward
+	jp music_update_sn_pitch_slide_downward 
+	jp music_update_sn_portamento
+
+	; fm slide type jump table
+	jp music_update_pitch_slide_done
+	jp music_update_fm_pitch_slide_upward
+	jp music_update_fm_pitch_slide_downward 
+	jp music_update_fm_portamento
+
+	; fm drums slide type jump table
+	jp music_update_pitch_slide_done
+	jp music_update_pitch_slide_done
+	jp music_update_pitch_slide_done
+	jp music_update_pitch_slide_done
+
 ; update the pitch slides or portamento for a channel
 ; ix: channel
 ; iy: state
 music_update_pitch_slide:
 
 	; flag that we need to update the pitch
-	ld a, (ix + channel.flags)
-	or a, CHAN_FLAG_PITCH_CHANGED
-	ld (ix + channel.flags), a
+	set CHAN_FLAG_BIT_PITCH_CHANGED, (ix + channel.flags)
 
 	; get current freq into de
 	ld e, (ix + channel.freq)
 	ld d, (ix + channel.freq + 1)
 
-	; check whether this is an SN or OPLL channel
+	; offset into jump table by channel.type * 4
 	ld a, (ix + channel.type)
-	or a, a 
-	jr z, music_update_sn_pitch_slide
-	jr music_update_fm_pitch_slide
+	rlca
+	rlca
+
+	; offset into jump table by slide type
+	add a, (ix + channel.slide_type)
+
+	; triple it as jump instructions are 3 bytes in size
+	ld c, a
+	add a, a
+	add a, c
+
+	; get address in table to jump to
+	add a, <music_update_pitch_slide_jump_table
+	ld l, a
+	adc a, >music_update_pitch_slide_jump_table
+	sub a, l
+	ld h, a
+
+	; jump to it
+	jp (hl)
 
 	music_update_pitch_slide_done:
 
-	; update freq with new value
-	ld (ix + channel.freq), e
-	ld (ix + channel.freq + 1), d
+		; update freq with new value
+		ld (ix + channel.freq), e
+		ld (ix + channel.freq + 1), d
 
-	jp mpct_check_arpeggio
+		ret
+
+
+; SN Pitch Slides
+
+; slide type == 1, upward slide
+music_update_sn_pitch_slide_upward:
+
+	; sub slide_amount from freq
+	ld l, (ix + channel.slide_amount)
+	ld h, 0
+	ex de, hl
+	sbc hl, de
+
+	; if carry, de has gone < 0, so cap the pitch
+	jr nc, mu_sn_psu_done
+
+		ld hl, 10
+
+	; done
+	mu_sn_psu_done:
+	ex de, hl
+	jr music_update_pitch_slide_done
+
+; slide type == 2, downward slide
+music_update_sn_pitch_slide_downward:
+
+	; add slide_amount to freq
+	ld l, (ix + channel.slide_amount)
+	ld h, 0
+	add hl, de
 	
-; SN Pitch Slide
-music_update_sn_pitch_slide:
+	; check if h < 1024 so has gone beyond the bottom pitch
+	ld a, h
+	cp a, 4
+	jr c, mu_sn_psd_done
 
-	; check if this is a portamento
-	ld a, (ix + channel.slide_type)
-	cp a, SLIDE_TYPE_PORTA
-	jp z, music_update_sn_portamento
+		; cap pitch
+		ld hl, 1017
 
-	; slide type == 1, upward slide
-	cp a, SLIDE_TYPE_UP
-	jr nz, music_update_sn_pitch_slide_downward
-
-	music_update_sn_pitch_slide_upward:
-
-		; sub slide_amount from lower byte
-		ld a, e
-		sub a, (ix + channel.slide_amount)
-		ld e, a
-
-		; sub carry from upper byte
-		ld a, d
-		sbc a, e
-		add a, e
-		ld d, a
-
-		; done
-		jr music_update_pitch_slide_done
-
-	; slide type == 2, downward slide
-	music_update_sn_pitch_slide_downward:
-
-		; add slide_amount to lower byte
-		ld a, e
-		add a, (ix + channel.slide_amount)
-		ld e, a
-
-		; add carry to upper byte
-		adc a, d
-		sub a, e
-		ld d, a
-
-		; done
-		jr music_update_pitch_slide_done
-
-; OPLL Pitch slide
-music_update_fm_pitch_slide:
-
-	; check if it's portamento
-	ld a, (ix + channel.slide_type)
-	cp a, SLIDE_TYPE_PORTA
-	jp z, music_update_fm_portamento
-
-	; slide type == 1, upward slide
-	cp a, SLIDE_TYPE_UP
-	jr nz, music_update_fm_pitch_slide_downward
-
-	music_update_fm_pitch_slide_upward:
-
-		; get current upper byte and isolate the octave bits, store them in c
-		ld a, d
-		and a, 0xe
-		ld c, a
-
-		; add slide_amount to lower byte
-		ld a, e
-		add a, (ix + channel.slide_amount)
-		ld e, a
-
-		; add carry to upper byte
-		adc a, d
-		sub a, e
-		and a, 0xf
-		ld d, a
-
-		; check if the octave bits have changed as the fnum gets > 511
-		and a, 0xe
-		cp a, c
-		jr z, music_update_pitch_slide_done
-
-			; if the octave has changed, we add 256 to the fnum as it's effectively 512
-			; but we just went up an octave, so we should halve the fnum to 256
-			srl e
-			ld a, d
-			or a, 0x1
-			ld d, a
-
-			; done
-			jr music_update_pitch_slide_done
-
-	; slide type == 2, downward slide
-	music_update_fm_pitch_slide_downward:
-
-		; sub slide_amount from lower byte
-		ld a, e
-		sub a, (ix + channel.slide_amount)
-		ld e, a
-
-		; sub carry from upper byte
-		ld a, d
-		sbc a, e
-		add a, e
-		and a, 0xf
-		ld d, a
-
-		; get 7th, 8th and 9th bit of fnum in a byte to see if the fnum is < 128
-		and a, 0x1
-		ld c, a
-		ld a, e
-		and a, 0x80
-		or a, c
-
-		; if it's zero, we're < 128
-		jr nz, music_update_pitch_slide_done
-
-			; lower the octave and double the fnum to go from 128 on one octave
-			; to 256 on the other to give some room to descend further
-			ld a, d
-			sub a, 1 << 1
-			and a, 0xf
-			ld d, a
-			sla e
-
-			; done
-			jr music_update_pitch_slide_done
-
+	; done
+	mu_sn_psd_done:
+	ex de, hl
+	jr music_update_pitch_slide_done
 
 ; handle SN chip portamento
 ; ix: current channel
@@ -231,6 +183,96 @@ music_update_sn_portamento:
 
 		jp music_update_pitch_slide_done
 
+
+; OPLL Pitch slides
+
+; slide type == 1, upward slide
+music_update_fm_pitch_slide_upward:
+
+	; add slide_amount to lower byte
+	ld a, e
+	add a, (ix + channel.slide_amount)
+	ld e, a
+
+	; add carry to upper byte
+	adc a, d
+	sub a, e
+	ld d, a
+
+	; we want to check if fnum > 325
+
+	; isolate bit 8 of fnum
+	and a, 0x1
+	; combine with low byte of fnum - we don't care about the lowest bit
+	or a, e
+	; rotate so a now contains top 8 bits of the 9-bit fnum
+	rrca
+
+	; a now contains the fnum / 2
+	; check if a > (325 / 2)
+	cp a, 162
+	jp c, music_update_pitch_slide_done
+
+		; a already contains half of the fnum so we can load that into e
+		ld e, a
+
+		; clear upper bit of fnum (lowest bit of d) and add 1 to block
+		ld a, d
+		and a, 0xfe
+		add a, 0x2
+		ld d, a
+
+		; has block overflowed?
+		and a, 0xf0
+		jp z, music_update_pitch_slide_done
+
+			; cap pitch
+			ld de, 3990
+			jp music_update_pitch_slide_done
+
+
+; slide type == 2, downward slide
+music_update_fm_pitch_slide_downward:
+
+	; sub slide_amount from lower byte
+	ld a, e
+	sub a, (ix + channel.slide_amount)
+	ld e, a
+
+	; sub carry from upper byte
+	ld a, d
+	sbc a, e
+	add a, e
+	ld d, a
+
+	; isolate bit 8 of fnum
+	and a, 0x1
+	; combine with low byte of fnum - we don't care about the lowest bit
+	or a, e
+	; rotate so a now contains top 8 bits of the 9-bit fnum
+	rrca
+
+	; a now contains the fnum / 2
+	; check if a < (120 / 2)
+	cp a, 60
+	jp nc, music_update_pitch_slide_done
+
+		; double the fnum
+		sla e
+		sla e
+
+		; subtract 1 from the block
+		ld a, d
+		and a, 0xfe
+		sub a, 0x2
+		ld d, a
+
+		; has block underflowed?
+		jp nc, music_update_pitch_slide_done
+
+			; if it has, cap pitch
+			ld de, 110
+			jp music_update_pitch_slide_done
 
 ; handle OPLL portamento
 ;   note that as the ranges of fnums we're using for the notes C to B span from
@@ -357,4 +399,3 @@ music_update_fm_portamento:
 	mufm_porta_done:
 
 	    jp music_update_pitch_slide_done
-	

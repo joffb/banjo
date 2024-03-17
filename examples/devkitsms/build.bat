@@ -17,5 +17,5 @@ sdcc -c -mz80 --codeseg BANK2 cmajor.c
 sdcc -c -mz80 --codeseg BANK3 cmajor_sn.c
 sdcc -c -mz80 --codeseg BANK2 sfx_test.c
 sdcc -c -mz80 --codeseg BANK3 sfx_test_sn.c
-sdcc -o dktest.ihx -mz80 --no-std-crt0 --data-loc 0xC000 -Wl-b_BANK1=0x18000 -Wl-b_BANK2=0x28000 -Wl-b_BANK3=0x38000 crt0_sms.rel SMSlib.lib ..\..\music_driver.rel main.rel bank1.rel sfx_test.rel sfx_test_sn.rel cmajor.rel cmajor_sn.rel
+sdcc -o dktest.ihx -mz80 --no-std-crt0 --data-loc 0xC000 -Wl-b_BANK1=0x18000 -Wl-b_BANK2=0x28000 -Wl-b_BANK3=0x38000 crt0_sms.rel SMSlib.lib ..\..\music_driver_sdas\lib\music_driver_fm_drums.rel main.rel bank1.rel sfx_test.rel sfx_test_sn.rel cmajor.rel cmajor_sn.rel
 makesms dktest.ihx dktest.sms

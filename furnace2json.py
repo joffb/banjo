@@ -90,7 +90,7 @@ chip_channels = {
 	0x96:  4, # WonderSwan - 4 channels
 	0x97:  6, # Philips SAA1099 - 6 channels
 	0x98:  8, # OPZ (YM2414) - 8 channels
-	0x99:  1, # Pokémon Mini - 1 channel
+	0x99:  1, # Pokemon Mini - 1 channel
 	0x9a:  3, # AY8930 - 3 channels
 	0x9b: 16, # SegaPCM - 16 channels
 	0x9c:  6, # Virtual Boy - 6 channels
@@ -183,7 +183,7 @@ infile.close()
 print ("Loaded " + sys.argv[1])
 
 # file is zlib compressed, decompress it
-if data[0] == 0x78:
+if data[0:1].decode("utf-8") == "x":
     print (".fur is zlib compresed, decompressing")
     data = zlib.decompress(data)
 
@@ -198,20 +198,20 @@ song['song_info_pointer'] = struct.unpack("<I", data[20:24])[0]
 
 sip = song['song_info_pointer']
 
-song['time_base'] = data[sip + 8]
-song['speed_1'] = data[sip + 9]
-song['speed_2'] = data[sip + 10]
-song['tics_per_second'] = struct.unpack("f", data[sip + 12:sip + 16])[0]
+song['time_base'] = struct.unpack("B", data[sip + 8 : sip + 9])[0]
+song['speed_1'] = struct.unpack("B", data[sip + 9 : sip + 10])[0]
+song['speed_2'] = struct.unpack("B", data[sip + 10 : sip + 11])[0]
+song['tics_per_second'] = struct.unpack("f", data[sip + 12 : sip + 16])[0]
 
-song['pattern_length'] = struct.unpack("<H", data[sip + 16:sip + 18])[0]
-song['orders_length'] = struct.unpack("<H", data[sip + 18:sip + 20])[0]
+song['pattern_length'] = struct.unpack("<H", data[sip + 16 : sip + 18])[0]
+song['orders_length'] = struct.unpack("<H", data[sip + 18 : sip + 20])[0]
 
-song['instrument_count'] = struct.unpack("<H", data[sip + 22:sip + 24])[0]
-song['wavetable_count'] = struct.unpack("<H", data[sip + 24:sip + 26])[0]
-song['sample_count'] = struct.unpack("<H", data[sip + 26:sip + 28])[0]
-song['pattern_count'] = struct.unpack("<I", data[sip + 28:sip + 32])[0]
+song['instrument_count'] = struct.unpack("<H", data[sip + 22 : sip + 24])[0]
+song['wavetable_count'] = struct.unpack("<H", data[sip + 24 : sip + 26])[0]
+song['sample_count'] = struct.unpack("<H", data[sip + 26 : sip + 28])[0]
+song['pattern_count'] = struct.unpack("<I", data[sip + 28 : sip + 32])[0]
 
-song['sound_chips'] = struct.unpack_from("B" * 32, data[sip+32:sip+64])
+song['sound_chips'] = struct.unpack_from("B" * 32, data[sip + 32 : sip + 64])
 song['sound_chips'] = list(filter(lambda x: x > 0, song['sound_chips']))
 
 # calculate number of channels in this song
@@ -224,18 +224,18 @@ for chip in song['sound_chips']:
 song_name_start = sip + 256
 song_name_end = sip + 256
 
-while data[song_name_end] != 0:
+while struct.unpack("B", data[song_name_end:song_name_end+1])[0] != 0:
     song_name_end += 1
 
 # get song author from null terminated string
 song_author_start = song_name_end + 1
 song_author_end = song_author_start
 
-while data[song_author_end] != 0:
+while struct.unpack("B", data[song_name_end:song_name_end+1])[0] != 0:
     song_author_end += 1
 
-song['song_name'] = data[song_name_start:song_name_end].decode()
-song['song_author'] = data[song_author_start:song_author_end].decode()
+song['song_name'] = data[song_name_start:song_name_end].decode("utf-8")
+song['song_author'] = data[song_author_start:song_author_end].decode("utf-8")
 
 
 # instrument pointers start 24 bytes after the song author
@@ -291,12 +291,13 @@ if song['format_version'] < 157:
 
 		pattern_pointer = song['pattern_pointers'][i]
 
-		pattern_channel = struct.unpack("<H", data[pattern_pointer + 8:pattern_pointer + 10])[0]
-		pattern_index = struct.unpack("<H", data[pattern_pointer + 10:pattern_pointer + 12])[0]
+		pattern_header = struct.unpack("<IIHHHH", data[pattern_pointer : pattern_pointer + 16])
+
+		pattern_channel = pattern_header[2]
 
 		pattern = {
 			'channel': pattern_channel,
-			'index': pattern_index,
+			'index': pattern_header[3],
 			'data': [],
 		}
 		
@@ -309,12 +310,14 @@ if song['format_version'] < 157:
 		for j in range (0, song['pattern_length']):
 
 			pattern_row_pointer = pattern_data_pointer + (pattern_row_size * j)
+
+			pattern_row_data = struct.unpack("<hhhh", data[pattern_pointer : pattern_pointer + 8])
 			
 			line = {
-				'note': struct.unpack("<h", data[pattern_row_pointer:pattern_row_pointer + 2])[0],
-				'octave': struct.unpack("<h", data[pattern_row_pointer + 2:pattern_row_pointer + 4])[0],
-				'instrument': struct.unpack("<h", data[pattern_row_pointer + 4:pattern_row_pointer + 6])[0],
-				'volume': struct.unpack("<h", data[pattern_row_pointer + 6:pattern_row_pointer + 8])[0],
+				'note': pattern_row_data[0],
+				'octave': pattern_row_data[1],
+				'instrument': pattern_row_data[2],
+				'volume': pattern_row_data[3],
 				'effects': []
 			}
 			
@@ -323,13 +326,12 @@ if song['format_version'] < 157:
 				
 				effect_data_pointer = pattern_row_pointer + 8 + (k * 2)
 
-				effect_type = struct.unpack("b", data[effect_data_pointer:effect_data_pointer + 1])[0]
-				effect_value = struct.unpack("b", data[effect_data_pointer + 1:effect_data_pointer + 2])[0]
+				effect = struct.unpack("bb", data[effect_data_pointer:effect_data_pointer + 2])
 
 				# only add to json if the effect is valid
-				if (effect_type != -1 or effect_value != -1):
-					line['effects'].append(effect_type)
-					line['effects'].append(effect_value)
+				if (effect[0] != -1 or effect[1] != -1):
+					line['effects'].append(effect[0])
+					line['effects'].append(effect[1])
 			
 			# add line to pattern
 			pattern['data'].append(line)
@@ -343,10 +345,13 @@ else:
 	for i in range(0, song['pattern_count']):
 
 		pattern_pointer = song['pattern_pointers'][i]
+
+		pattern_header = struct.unpack("<IIBBH", data[pattern_pointer + 0 : pattern_pointer + 12])
+
 		pattern = {
 			#'_debug': [],
-			'channel': data[pattern_pointer + 9],
-			'index': struct.unpack("<H", data[pattern_pointer+10:pattern_pointer+12])[0],
+			'channel': pattern_header[3],
+			'index': pattern_header[4],
 			'name': "",
 			'data': []
 		}		
@@ -358,7 +363,7 @@ else:
 
 		# pattern name
 		while True:
-			read_byte = data[pattern_data_pointer]
+			read_byte = struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0]
 			pattern_data_pointer +=  1
 
 			# done when reach end of null terminated string
@@ -370,7 +375,7 @@ else:
 		# pattern_data_pointer now pointing at pattern data
 		while True:
 
-			read_byte = data[pattern_data_pointer]
+			read_byte = struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0]
 			pattern_data_pointer += 1
 
 			# done when we hit 0xff
@@ -416,13 +421,13 @@ else:
 				# bit 0: note present
 				if (read_byte & 0x1):
 				
-					line['note'] = data[pattern_data_pointer]
+					line['note'] = struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0]
 					pattern_data_pointer += 1
 
 					# convert note data to version compatible with older (< 157) pattern
 					if (line['note'] > 0) and (line['note'] <= 179):
 					
-						line['octave'] = math.floor(line['note'] / 12) - 5
+						line['octave'] = int(math.floor(line['note'] / 12) - 5)
 						line['note'] = line['note'] % 12
 					
 					else:
@@ -432,13 +437,13 @@ else:
 				# bit 1: ins present
 				if (read_byte & 0x2):
 				
-					line['instrument'] = data[pattern_data_pointer]
+					line['instrument'] = struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0]
 					pattern_data_pointer += 1
 				
 				# bit 2: volume present
 				if (read_byte & 0x4):
 				
-					line['volume'] = data[pattern_data_pointer]
+					line['volume'] = struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0]
 					pattern_data_pointer += 1
 
 				# if bit 5 is present, we'll get the bytes for effect 0 at the next stage
@@ -449,14 +454,14 @@ else:
 					# bit 4: effect value 0 present
 					if ((read_byte & 0x8) and (read_byte & 0x10)):
 					
-						line['effects'].append(data[pattern_data_pointer])
+						line['effects'].append(struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0])
 						pattern_data_pointer += 1
-						line['effects'].append(data[pattern_data_pointer])
+						line['effects'].append(struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0])
 						pattern_data_pointer += 1
 					
 					elif (read_byte & 0x8):
 					
-						line['effects'].append(data[pattern_data_pointer])
+						line['effects'].append(struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0])
 						pattern_data_pointer += 1
 
 						line['effects'].append(-1)
@@ -465,7 +470,7 @@ else:
 					
 						line['effects'].append(-1)
 						
-						line['effects'].append(data[pattern_data_pointer])
+						line['effects'].append(struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0])
 						pattern_data_pointer += 1
 
 				# get effect data
@@ -479,14 +484,14 @@ else:
 					
 						if ((fx_byte & 0x3) == 0x3):
 						
-							line['effects'].append(data[pattern_data_pointer])
+							line['effects'].append(struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0])
 							pattern_data_pointer += 1
-							line['effects'].append(data[pattern_data_pointer])
+							line['effects'].append(struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0])
 							pattern_data_pointer += 1
 						
 						elif (fx_byte & 0x1):
 						
-							line['effects'].append(data[pattern_data_pointer])
+							line['effects'].append(struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0])
 							pattern_data_pointer += 1
 
 							line['effects'].append(-1)
@@ -495,7 +500,7 @@ else:
 						
 							line['effects'].append(-1)
 
-							line['effects'].append(data[pattern_data_pointer])
+							line['effects'].append(struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0])
 							pattern_data_pointer += 1
 						
 						fx_byte = fx_byte >> 2
@@ -526,10 +531,12 @@ for i in range (0, song['instrument_count']):
 	
 	instrument_pointer = song['instrument_pointers'][i]
 
+	instrument_header = struct.unpack("<IIHH", data[instrument_pointer:instrument_pointer + 12])
+
 	instrument = {
 		'name': "",
-		'type': struct.unpack("<H", data[instrument_pointer + 10:instrument_pointer + 12])[0],
-		'size': struct.unpack("<I", data[instrument_pointer + 4:instrument_pointer + 8])[0],
+		'type': instrument_header[3],
+		'size': instrument_header[1],
 		'macros': [],
 		'features': [],
 	}
@@ -539,9 +546,11 @@ for i in range (0, song['instrument_count']):
 	
 	while (feature_pointer < instrument_pointer + instrument['size']):
 	
+		feature_header = struct.unpack("<HH", data[feature_pointer:feature_pointer + 4])
+
 		feature = {
 			'code': data[feature_pointer:feature_pointer + 2].decode(),
-			'length': struct.unpack("<H", data[feature_pointer + 2:feature_pointer + 4])[0],
+			'length': feature_header[1],
 			'data': [],
 		}
 		
@@ -551,7 +560,7 @@ for i in range (0, song['instrument_count']):
 		# Instrument name feature
 		if (feature['code'] == "NA"):
 		
-			instrument['name'] = data[feature_pointer:feature_pointer + feature['length'] - 1].decode()
+			instrument['name'] = data[feature_pointer : feature_pointer + feature['length'] - 1].decode()
 		
 		# End features if we reach this code
 		elif (feature['code'] == "EN"):
@@ -561,31 +570,36 @@ for i in range (0, song['instrument_count']):
 		# OPL drums 
 		elif (feature['code'] == "LD"):
 		
+			opll_drum_data = struct.unpack("<BHHH", data[feature_pointer:feature_pointer + 7])
+
 			instrument['opl_drums'] = {
-				'fixed_freq': data[feature_pointer],
-				'kick_freq': struct.unpack("<H", data[feature_pointer + 1:feature_pointer + 3])[0],
-				'snare_hat_freq': struct.unpack("<H", data[feature_pointer + 3:feature_pointer + 5])[0],
-				'tom_top_freq': struct.unpack("<H", data[feature_pointer + 5:feature_pointer + 7])[0],
+				'fixed_freq': opll_drum_data[0],
+				'kick_freq': opll_drum_data[1],
+				'snare_hat_freq': opll_drum_data[2],
+				'tom_top_freq': opll_drum_data[3],
 			}
 		
 		# Macros
 		elif (feature['code'] == "MA"):
 		
 			header_length = struct.unpack("<H", data[feature_pointer:feature_pointer + 2])[0]
+
 			macro_pointer = feature_pointer + 2
 			
 			while (macro_pointer < feature_pointer + feature['length']):
 			
+				macro_data = struct.unpack("BBBBBBBB", data[macro_pointer : macro_pointer + 8])
+
 				macro = {
-					'code': data[macro_pointer],
-					'length': data[macro_pointer + 1],						
-					'loop': data[macro_pointer + 2],
-					'release': data[macro_pointer + 3],
-					'mode': data[macro_pointer + 4],
-					'word_size': macro_word_size_convert[(data[macro_pointer + 5] >> 6) & 0x3],
-					'type': (data[feature_pointer + 5] >> 1) & 0x3,
-					'delay': data[feature_pointer + 6],
-					'speed': data[feature_pointer + 7],
+					'code': macro_data[0],
+					'length': macro_data[1],						
+					'loop': macro_data[2],
+					'release': macro_data[3],
+					'mode': macro_data[4],
+					'word_size': macro_word_size_convert[(macro_data[5] >> 6) & 0x3],
+					'type': (macro_data[5] >> 1) & 0x3,
+					'delay': macro_data[6],
+					'speed': macro_data[7],
 					'data': []
 				}
 				
@@ -604,7 +618,7 @@ for i in range (0, song['instrument_count']):
 					macro['data'].append(
 						struct.unpack(
 							macro_word_struct_string[macro['word_size']],
-							data[macro_data_pointer:macro_data_pointer + macro['word_size']]
+							data[macro_data_pointer : macro_data_pointer + macro['word_size']]
 						)[0]
 					)
 				
@@ -625,20 +639,21 @@ for i in range (0, song['instrument_count']):
 		elif (feature['code'] == "FM"):
 		
 			fm_pointer = feature_pointer
+			fm_data = struct.unpack("BBBB", data[fm_pointer : fm_pointer + 4])
 			
 			instrument['fm'] = {
-				'op_count': data[fm_pointer] & 0xf,
-				'op_enabled': data[fm_pointer] >> 4,
+				'op_count': fm_data[0] & 0xf,
+				'op_enabled': fm_data[0] >> 4,
 				
-				'feedback': data[fm_pointer + 1] & 0x7,
-				'algorithm': (data[fm_pointer + 1] >> 4) & 0x7,
+				'feedback': fm_data[1] & 0x7,
+				'algorithm': (fm_data[1] >> 4) & 0x7,
 				
-				'fms': data[fm_pointer + 2] & 0x7,
-				'ams': (data[fm_pointer + 2] >> 3) & 0x3,
-				'fms2': (data[fm_pointer + 2] >> 5) & 0x7,
+				'fms': fm_data[2] & 0x7,
+				'ams': (fm_data[2] >> 3) & 0x3,
+				'fms2': (fm_data[2] >> 5) & 0x7,
 				
-				'opll_patch': data[fm_pointer + 3] & 0x1f,
-				'am2': (data[fm_pointer + 3] >> 6) & 0x3,
+				'opll_patch': fm_data[3] & 0x1f,
+				'am2': (fm_data[3] >> 6) & 0x3,
 				
 				'operator_data': [],
 			}
@@ -648,35 +663,37 @@ for i in range (0, song['instrument_count']):
 			# get operator data for each operator
 			for j in range (0, instrument['fm']['op_count']): 
 			
+				operator_data = struct.unpack("BBBBBBBB", data[operator_pointer : operator_pointer + 8])
+
 				operator = {
-					'mult': data[operator_pointer] & 0xf,
-					'dt': (data[operator_pointer] >> 4) & 0x7,
-					'ksr': data[operator_pointer] >> 7,
+					'mult': operator_data[0] & 0xf,
+					'dt': (operator_data[0] >> 4) & 0x7,
+					'ksr': operator_data[0] >> 7,
 					
-					'tl': data[operator_pointer + 1] & 0x7f,
-					'sus': data[operator_pointer + 1] >> 7,
+					'tl': operator_data[1] & 0x7f,
+					'sus': operator_data[1] >> 7,
 					
-					'ar': data[operator_pointer + 2] & 0x1f,
-					'vib': (data[operator_pointer + 2] >> 5) & 0x1,
-					'rs': (data[operator_pointer + 2] >> 6) & 0x3,
+					'ar': operator_data[2] & 0x1f,
+					'vib': (operator_data[2] >> 5) & 0x1,
+					'rs': (operator_data[2] >> 6) & 0x3,
 					
-					'dr': data[operator_pointer + 3] & 0x1f,
-					'ksl': (data[operator_pointer + 3] >> 5) & 0x3,
-					'am': data[operator_pointer + 3] >> 7,
+					'dr': operator_data[3] & 0x1f,
+					'ksl': (operator_data[3] >> 5) & 0x3,
+					'am': operator_data[3] >> 7,
 					
-					'd2r': data[operator_pointer + 4] & 0x1f,
-					'kvs': (data[operator_pointer + 4] >> 5) & 0x3,
-					'egt': data[operator_pointer + 4] >> 7,
+					'd2r': operator_data[4] & 0x1f,
+					'kvs': (operator_data[4] >> 5) & 0x3,
+					'egt': operator_data[4] >> 7,
 					
-					'rr': data[operator_pointer + 5] & 0xf,
-					'sl': data[operator_pointer + 5] >> 4,
+					'rr': operator_data[5] & 0xf,
+					'sl': operator_data[5] >> 4,
 					
-					'ssg': data[operator_pointer + 6] & 0xf,
-					'dvb': data[operator_pointer + 6] >> 4,
+					'ssg': operator_data[6] & 0xf,
+					'dvb': operator_data[6] >> 4,
 					
-					'ws': data[operator_pointer + 7] & 0x7,
-					'dt2': (data[operator_pointer + 7] >> 3) & 0x3,
-					'dam': (data[operator_pointer + 7] >> 5) & 0x7,
+					'ws': operator_data[7] & 0x7,
+					'dt2': (operator_data[7] >> 3) & 0x3,
+					'dam': (operator_data[7] >> 5) & 0x7,
 				}
 									
 				instrument['fm']['operator_data'].append(operator)
@@ -716,7 +733,7 @@ for i in range(0, song['wavetable_count']):
 
 	while True:
 
-		read_byte = data[wavetable_pointer]
+		read_byte = struct.unpack("B", data[wavetable_pointer])[0]
 		wavetable_pointer += 1
 
 		if read_byte == 0:
@@ -738,7 +755,7 @@ for i in range(0, song['wavetable_count']):
 
 
 try:
-	outfile = open(sys.argv[2], 'w', encoding='utf-8')
+	outfile = open(sys.argv[2], 'w')
 except OSError:
 	print ("Error writing to output file: " + sys.argv[2])
 	sys.exit()

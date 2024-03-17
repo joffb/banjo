@@ -3,59 +3,50 @@
 ; Joe Kennedy 2023
 
 ; get fnum for note into de
-; h;: tone lookup table address
+; hl: tone lookup table address
 ; ix: channel
 ; iy: state
 music_calc_fnum: 
 	
 	; check if we have a pitch slide going as
 	; it takes precedence over arpeggios
-	ld a, channel.slide_amount(ix)
-	or a, a
+	bit CHAN_FLAG_BIT_SLIDE, channel.flags(ix)
 	jr nz, mcf_no_arp
 
 		; check if we have an arpeggio running
+		bit CHAN_FLAG_BIT_ARPEGGIO, channel.flags(ix)
+		jr z, mcf_no_arp
+
+		; check arpeggio pos
 		ld a, channel.arpeggio_pos(ix)
-		
-		; do nothing if arp pos == 0
 		or a, a
-		jr z, mcf_no_arp
+		jr z, mcf_arp_pos_0
 
-		; do nothing if arp pos == 0xff
-		cp a, #0xff
-		jr z, mcf_no_arp
-
-		; arpeggio pos == 1
-		cp a, #0x1
-		jr nz, mcf_arp_2
-
+			; isolate lower nibble
+			; the arpeggio nibbles will be swapped in music_process_channels_tic
 			ld a, channel.arpeggio(ix)
-			jr mcf_arp_note_done
+			and a, #0xf
 
-		; arpeggio pos == 2
-		mcf_arp_2: 
+		mcf_arp_pos_0: 
 
-			ld a, channel.arpeggio+1(ix)
+		; add the channel's midi note to the arpeggio note
+		; double it to make it an offset into the fnum table
+		add a, channel.midi_note(ix)
+		add a, a
 
-		mcf_arp_note_done: 
+		; add to tone lookup table address in hl
+		add a, l
+		ld l, a
+		adc a, h
+		sub a, l
+		ld h, a
 
-			; add the channel's midi note to the arpeggio note
-			; double it to make it an offset into the fnum table
-			add a, channel.midi_note(ix)
-			sla a
-
-			; add to tone lookup table address in hl
-			add a, l
-			ld l, a
-			adc a, h
-			sub a, l
-			ld h, a
-
-			ld e, (hl)
-			inc hl
-			ld d, (hl)
-			
-			ret 
+		; get frequency from table into de
+		ld e, (hl)
+		inc hl
+		ld d, (hl)
+		
+		ret 
 
 	mcf_no_arp: 
 	
@@ -100,7 +91,7 @@ music_update_pitch_registers:
 			; get channel number (pre-shifted into correct position)
 			ld c, channel.subchannel(ix)
 
-		; for pitched noise it uses the last square channel's pitch
+		; for pitched noise it uses channel 3's pitch
 		mup_sn_pitched_noise_channel: 
 		
 			; get note fnum in de
@@ -148,6 +139,7 @@ music_update_pitch_registers:
 			
 			; get midi number
 			ld a, channel.midi_note(ix)
+			sub a, #3
 			
 			; mod 12
 			fixed_noise_mod_12: 
@@ -177,66 +169,66 @@ music_update_pitch_registers:
 			jr music_update_pitch_done
 
 	music_update_pitch_is_opll: 
-	; don't update pitch for drum channels
-	cp a, #CHAN_OPLL_DRUMS
-	jr z, music_update_pitch_done
 
-		; get note fnum in de
-		ld hl, #fm_tone_lookup
-		call music_calc_fnum
+		; don't update pitch for drum channels
+		cp a, #CHAN_OPLL_DRUMS
+		jr z, music_update_pitch_done
 
-		; get f-number register to write to for this channel
-		ld a, channel.fm_base_reg(ix)
-        ld c, a
-		out (#OPLL_REG_PORT), a
-		
-		; lower 8 bits of f number
-		ld a, e
-		out (#OPLL_DATA_PORT), a
-		
-		nop 
-		nop 
-		nop 
-		nop 
-		nop 
-		nop 
-		
-		; store for later
-		ld channel.freq(ix), a
-		
-		; get octave + key on register to write to for this channel
-        ; by adding to base_reg from earlier
-		ld a, c
-        add a, #0x10
-		out (#OPLL_REG_PORT), a
-		
-		; get octave and 9th bit of f number
-		ld a, d
-		
-		; store for later
-		ld channel.freq+1(ix), a
-		
-		; set key on bit and write
-		and a, #0xf
-		or a, #0x10
-		out (#OPLL_DATA_PORT), a
-		
-		nop 
-		nop 
-		nop 
-		nop 
-		nop 
-		nop 
+			; get note fnum in de
+			ld hl, #fm_tone_lookup
+			call music_calc_fnum
 
-		jr music_update_pitch_done
+			; get f-number register to write to for this channel
+			ld a, channel.subchannel(ix)
+			add a, #0x10
+			ld c, a
+			out (#OPLL_REG_PORT), a
+			
+			; lower 8 bits of f number
+			ld a, e
+			out (#OPLL_DATA_PORT), a
+			
+			nop 
+			nop 
+			nop 
+			nop 
+			nop 
+			nop 
+			
+			; store for later
+			ld channel.freq(ix), a
+			
+			; get octave + key on register to write to for this channel
+			; by adding to base_reg from earlier
+			ld a, c
+			add a, #0x10
+			out (#OPLL_REG_PORT), a
+			
+			; get octave and 9th bit of f number
+			ld a, d
+			
+			; store for later
+			ld channel.freq+1(ix), a
+			
+			; set key on bit and write
+			and a, #0xf
+			or a, #0x10
+			out (#OPLL_DATA_PORT), a
+			
+			nop 
+			nop 
+			nop 
+			nop 
+			nop 
+			nop 
+
+			jr music_update_pitch_done
 
 
 	music_update_pitch_done: 
 
 	; reset pitch_changed flag
-	ld a, channel.flags(ix)
-	and a, #~CHAN_FLAG_PITCH_CHANGED
-	ld channel.flags(ix), a
+	res CHAN_FLAG_BIT_PITCH_CHANGED, channel.flags(ix)
 
 	pop bc
 

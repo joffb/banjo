@@ -22,6 +22,9 @@ const PITCH_SLIDE_DOWN	= 0x07;
 const ARPEGGIO			= 0x08;
 const PORTAMENTO		= 0x09;
 const LINE_WAIT			= 0x0a;
+const VIBRATO			= 0x0b;
+const LEGATO_ON			= 0x0c;
+const LEGATO_OFF		= 0x0d;
 const END_PATTERN_LINE	= 0xff;
 
 const INSTRUMENT_SIZE	= 16;
@@ -410,6 +413,28 @@ async function main (song_prefix, input_file, output_file, sfx, sfx_channel)
 						{
 							pattern_bin.push("PORTAMENTO");
 							pattern_bin.push(line.effects[eff + 1]);
+						}
+
+						// VIBRATO
+						else if (line.effects[eff] == 0x04)
+						{
+							pattern_bin.push("PORTAMENTO");
+							pattern_bin.push(line.effects[eff + 1] >> 4);
+							pattern_bin.push(line.effects[eff + 1] & 0xf);
+						}
+
+
+						// LEGATO
+						else if (line.effects[eff] == 0xea)
+						{
+							if (line.effects[eff + 1] > 0)
+							{
+								pattern_bin.push("LEGATO_ON");
+							}
+							else
+							{
+								pattern_bin.push("LEGATO_OFF");
+							}
 						}
 					}
 					

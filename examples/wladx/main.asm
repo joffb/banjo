@@ -125,26 +125,46 @@ init:
 		or a, e
 		jr nz, clear_vram_loop
 
+	; check whether we're on a game gear in game gear mode
+	; and whether there's an fm unit installed
+	call banjo_check_hardware
 
-	ld a, CHANNEL_COUNT
-	call banjo_init
-
-	; check if an fm unit is installed
-	; and play different songs depending
-	ld a, (fm_unit_present)
+	ld a, (banjo_fm_unit_present)
 	or a, a
-	jr z, queue_song_sn
+	jr z, banjo_init_no_fm
 
-		ld a, 0
-		ld (queue_song), a
-		jr queue_song_done
+		; initialise channels and FM
+		ld a, MODE_FM
+		call banjo_init
 
-	queue_song_sn:
+		; use fm song and sfx tables
+		ld hl, song_table_fm
+		call banjo_set_song_table
 
-		ld a, 1
-		ld (queue_song), a
-	
-	queue_song_done:
+		ld hl, sfx_table_fm
+		call banjo_set_sfx_table
+
+		jr banjo_init_done
+
+	banjo_init_no_fm:
+
+		; initialise channels
+		ld a, MODE_SN
+		call banjo_init
+
+		; use sn song and sfx tables
+		ld hl, song_table_sn
+		call banjo_set_song_table
+
+		ld hl, sfx_table_sn
+		call banjo_set_sfx_table
+
+	banjo_init_done:
+
+	; queue up song 0
+	ld a, 0
+	call banjo_queue_song
+
 	ld a, 0
 	ld (tic), a
 
@@ -165,24 +185,6 @@ init:
 		inc a
 		ld (tic), a
 
-		cp a, 0xff
-		jr nz, wait_vblank_no_sfx
-
-			ld a, (fm_unit_present)
-			or a, a
-			jr z, vblank_sfx_sn
-
-				ld a, 0
-				ld (queue_sfx), a
-				jr wait_vblank_no_sfx
-
-			vblank_sfx_sn:
-
-				ld a, 1
-				ld (queue_sfx), a
-
-		wait_vblank_no_sfx:
-		
 		; set background colour
 		ld c, VDP_CONTROL_PORT
 
@@ -191,6 +193,22 @@ init:
 		out (c), l
 		out (c), h
 
+		in a, (0xdc)
+		and a, 0x10
+		jr nz, +
+
+			ld a, (song_playing)
+			or a, a
+			call z, banjo_song_resume
+			call nz, banjo_song_stop
+
+		+;
+		in a, (0xdc)
+		and a, 0x20
+		ld a, 0
+		call z, banjo_queue_sfx
+
+		; run update every frame!
 		call banjo_update
 
 		; reset background colour
@@ -202,25 +220,25 @@ init:
 		
 		jr wait_vblank
 
-
-; set channel count
-.define CHANNEL_COUNT 9
-
 .incdir "../../music_driver/"
 .include "music_driver.asm"
 
+; song table
+; SONG_DEF(SONG_LABEL)
+song_table_fm:
+	SONG_DEF(cmajor)
+
+song_table_sn:
+	SONG_DEF(cmajor_sn)
 
 ; sfx table
 ; SFX_DEF(SFX_LABEL, SFX_PRIORITY)
-sfx_table:
+sfx_table_fm:
 	SFX_DEF(sfx_test, 10)
+
+sfx_table_sn:
 	SFX_DEF(sfx_test_sn, 10)
 
-; song table
-; SONG_DEF(SONG_LABEL)
-song_table:
-	SONG_DEF(cmajor)
-	SONG_DEF(cmajor_sn)
 
 .BANK 2
 .SLOT 2
