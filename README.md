@@ -145,11 +145,11 @@ It's in this function that the queues are checked and playback of a new Song or 
 ### Song data
 The converted Song/SFX data is similar to the tracker data. Each Channel has an Order array which has an array of pointers to Patterns in the order they're to be played back.
 
-A Pattern for a Channel is an array of bytes which map to commands. The end of a line is signified by END_PATTERN_LINE (0xff) or LINE_WAIT (0xa). END_PATTERN_LINE says the current tracker Line is done so we can stop processing this channel's commands until the next Line is reached. LINE_WAIT stops processing the channel's commands and waits for a variable number of Lines before processing begins again. A list of commands in the pattern might look like:
+A Pattern for a Channel is an array of bytes which map to commands. The end of a line is signified by a byte with bit 7 set, so anything >= 0x80 (LINE_WAIT). When this is reached it stops processing the channel's commands and waits for a variable number of Lines before processing begins again, with the number of lines to wait defined by the lower 7 bits. A list of commands in the pattern might look like:
 
-`INSTRUMENT_CHANGE, 3, ARPEGGIO, 5, 12, NOTE_ON, 15, LINE_END + 15 `
+`INSTRUMENT_CHANGE, 3, ARPEGGIO, 87, NOTE_ON, 15, (LINE_END | 15), NOTE_OFF`
 
-Which means change the channel's instrument to 3, start an arpeggio that goes [0, 5, 12], start playing note 15 at full volume (the value 176 has all the bits set so it can be sent straight to the chip to update the volume) and then wait for 15 lines.
+Which would mean change the channel's instrument to 3, start an arpeggio that goes [0, 5, 7] (87 == 0x57), start playing note number 15, stop processing this line and wait for 15 lines, then stop playing the note.
 
 ## Functions
 
