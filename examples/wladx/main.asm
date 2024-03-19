@@ -28,6 +28,8 @@ jp init
 .RAMSECTION "Main Vars" bank 0 slot 3
 
 	tic: db
+	input_last: db
+	input_pressed: db
 
 .ENDS
 
@@ -185,6 +187,23 @@ init:
 		inc a
 		ld (tic), a
 
+		; get controller 1 input
+		in a, (0xdc)
+		ld c, a
+
+		; this will combine the new input and the last input
+		; so that only a bit which is 0 this frame and was 1 last frame
+		; will be 0 this frame (i.e. the button was just pressed)
+		ld a, (input_last)
+		xor a, c
+		cpl
+		or a, c 
+		ld (input_pressed), a
+
+		; update input_last
+		ld a, c
+		ld (input_last), a
+
 		; set background colour
 		ld c, VDP_CONTROL_PORT
 
@@ -193,7 +212,8 @@ init:
 		out (c), l
 		out (c), h
 
-		in a, (0xdc)
+		; button 1 stops or starts play
+		ld a, (input_pressed)
 		and a, 0x10
 		jr nz, +
 
@@ -203,7 +223,9 @@ init:
 			call nz, banjo_song_stop
 
 		+;
-		in a, (0xdc)
+
+		; button 2 plays an sfx
+		ld a, (input_pressed)
 		and a, 0x20
 		ld a, 0
 		call z, banjo_queue_sfx

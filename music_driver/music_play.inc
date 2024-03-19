@@ -206,7 +206,9 @@ music_play:
 	ld (SLOT_2_BANK_CHANGE), a
 
 	; copy over song header
-	ld b, _sizeof_music_state
+	; at the end of the song header is the 32-byte channel types array
+	; don't copy that just yet
+	ld b, _sizeof_music_state - 32 
 	
 	; put music state header address into de
 	push iy
@@ -222,6 +224,22 @@ music_play:
 		
 		djnz music_play_copy_header
 	
+	; copy over channel types array
+	; but only for the active channels
+	ld a, (iy + music_state.channel_count)
+	add a, a
+	ld b, a
+
+	music_play_copy_channel_types:
+
+		ld a, (hl)
+		ld (de), a
+		
+		inc hl
+		inc de
+
+		djnz music_play_copy_channel_types
+
 	pop bc
 
 	; store song bank in music state

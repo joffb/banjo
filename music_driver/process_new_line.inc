@@ -155,7 +155,6 @@ mpnl_note_on:
 		; don't do anything if channel muted
 		inc hl
 		inc hl
-		inc hl
 		jp music_process_new_line_subloop
 	
 	mpnl_note_on_not_muted:

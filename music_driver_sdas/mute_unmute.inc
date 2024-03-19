@@ -21,7 +21,7 @@ music_mute_song_channel:
 
     ; this falls through!
 
-; hl: channel to mute
+; hl: pointer to channel to mute
 music_mute_channel: 
 
     ; mute channel by setting channel.muted = 1
@@ -95,15 +95,29 @@ music_unmute_song_channel:
     cp a, #CHAN_OPLL
     jr nz, music_unmute_channel_done
 
+        ; preserve ix and iy
+        push ix
+        push iy
+
         ; get channel in ix
         dec hl
         push hl
         pop ix
 
+        ; get song state in iy
+        ld iy, #_song_state
+
+        ; change to song bank
+        ld a, music_state.bank(iy)
+        ld (SLOT_2_BANK_CHANGE), a
+
         ; get the current instrument number for this channel
         ld a, channel.instrument_num(ix)
-        ld iy, #_song_state
         call music_instrument_change
+
+        ; restore ix and iy
+        pop iy
+        pop ix
 
     music_unmute_channel_done: 
 	ret 

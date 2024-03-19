@@ -72,11 +72,10 @@ music_update:
 	
 	; inc subtic
 	inc (iy + music_state.subtic)
-	ld b, (iy + music_state.subtic)
+	ld a, (iy + music_state.subtic)
 	
 	; check if subtic == time_base
-	ld a, (iy + music_state.time_base)
-	cp a, b
+	cp a, (iy + music_state.time_base)
 	jp nz, music_update_tics_done
 	
 		; wrap subtic around to 0
@@ -87,8 +86,7 @@ music_update:
 		ld b, (iy + music_state.tic)
 		
 		; check if even or odd row
-		ld a, (iy + music_state.line)
-		and a, 0x1
+		bit 0, (iy + music_state.line)
 		jr nz, mu_odd_row
 		
 			; even row
@@ -116,9 +114,8 @@ music_update:
 			ld (iy + music_state.process_new_line), 1
 	
 			; check if we need to move to the next pattern
-			ld b, (iy + music_state.line)
 			ld a, (iy + music_state.pattern_length)
-			cp a, b
+			cp a, (iy + music_state.line)
 			jr nz, music_update_tics_done
 				
 				; reset line count
@@ -126,11 +123,10 @@ music_update:
 				
 				; move to next pattern in order
 				inc (iy + music_state.order)
-				ld b, (iy + music_state.order)
-				
+
 				; check if we've reached the last order
 				ld a, (iy + music_state.orders_length)
-				cp a, b
+				cp a, (iy + music_state.order)
 				jr nz, music_update_not_last_order
 				
 					; looping back to order 0
@@ -149,9 +145,7 @@ music_update:
 						mu_sfx_loop:
 
 							; return to start 
-							push ix
 							call music_reset_channels_order_and_pattern
-							pop ix
 
 							jr music_update_tics_done
 
@@ -164,7 +158,12 @@ music_update:
 							; update priority variable
 							ld (sfx_priority), a
 						
-							; unmute sfx channel
+							; mute sfx channel
+							push ix
+							pop hl
+							call music_mute_channel
+
+							; unmute song channel
 							ld a, (iy + music_state.sfx_channel)
 							call music_unmute_song_channel
 						
@@ -181,9 +180,7 @@ music_update:
 						mu_song_loop:
 
 							; return to start 
-							push ix
 							call music_reset_channels_order_and_pattern
-							pop ix
 
 							jr music_update_tics_done
 
@@ -229,6 +226,8 @@ music_update:
 ; iy: state
 music_reset_channels_order_and_pattern:
 
+	push ix
+
 	; get pointer to order_ptrs in hl
 	ld l, (iy + music_state.order_ptrs)
 	ld h, (iy + music_state.order_ptrs + 1)
@@ -263,6 +262,8 @@ music_reset_channels_order_and_pattern:
 		add ix, de
 
 		djnz mrcoap_loop
+
+	pop ix
 
 	ret
 

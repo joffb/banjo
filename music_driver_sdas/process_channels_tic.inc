@@ -11,13 +11,11 @@ music_process_channels_tic:
 	
 	music_process_channels_tic_loop: 
 	
-		; check if this channel is currently playing
-		bit CHAN_FLAG_BIT_NOTE_ON, channel.flags(ix)
-		jp z, mpct_next_channel
-
-		; check if this channel is currently playing
-		bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
-		jp nz, mpct_next_channel
+		; check that the note is on and the channel isn't muted
+		ld a, channel.flags(ix)
+		and a, #CHAN_FLAG_MUTED|CHAN_FLAG_NOTE_ON
+		cp a, #CHAN_FLAG_NOTE_ON
+		jr nz, mpct_next_channel
 
 		; apply volume macro
 		bit CHAN_FLAG_BIT_VOLUME_MACRO, channel.flags(ix)
@@ -44,8 +42,7 @@ music_process_channels_tic:
 			; next channel
 			ld de, #_sizeof_channel
 			add ix, de
-			
-			dec b
-			jp nz, music_process_channels_tic_loop
+
+			djnz music_process_channels_tic_loop
 
 			ret 

@@ -7,6 +7,7 @@ unsigned char tic;
 
 void main(void)
 {
+	unsigned int keys;
 
 	SMS_VRAMmemsetW(0, 0x0000, 16384);
 	SMS_setBGPaletteColor(0, RGBHTML(0x0000FF));
@@ -42,14 +43,11 @@ void main(void)
 
 		SMS_waitForVBlank();
 
-		// play an sfx every 256 tics
-		if (tic == 64)
+		keys = SMS_getKeysPressed();
+
+		if (keys & 0x20)
 		{
-			//banjo_queue_sfx(0);
-		}
-		else if (tic == 80)
-		{
-			//banjo_sfx_stop();
+			banjo_queue_sfx(0);
 		}
 
 		banjo_update();
