@@ -36,7 +36,7 @@ _banjo_sfx_stop:
     jr z, banjo_sfx_stop_done
 
         ; mute the sfx channel
-        ld hl, #sfx_channel
+        ld hl, #_sfx_channel
         call music_mute_channel
 
         ; check if a song is playing
@@ -45,7 +45,7 @@ _banjo_sfx_stop:
         jr z, banjo_sfx_stop_done
             
             ; get the sfx channel
-            ld iy, #sfx_state
+            ld iy, #_sfx_state
             ld a, music_state.sfx_channel(iy)
 
             ; unmute the channel in the song

@@ -15,15 +15,15 @@ S _banjo_init Def000008
 S _banjo_sfx_stop Def000343
 A _SMS_SRAM size 396 flags 0 addr 0
 S _song_channels Def000042
-S sfx_channel Def00036E
 S song_playing Def000009
-S sfx_state Def000336
 S queue_sfx Def000001
 S _song_state Def00000A
 S _banjo_fm_unit_present Def000005
 S sfx_playing Def000334
 S _banjo_game_gear_mode Def000006
+S _sfx_channel Def00036E
 S _banjo_mode Def000008
+S _sfx_state Def000336
 S _banjo_system_e Def000007
 S sfx_priority Def000335
 S queue_song Def000002

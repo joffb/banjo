@@ -40,8 +40,8 @@ _banjo_update:
         jr z, banjo_update_done
 
             ; if it is, run the updates
-            ld ix, #sfx_channel
-            ld iy, #sfx_state
+            ld ix, #_sfx_channel
+            ld iy, #_sfx_state
             call music_update
 
             jr banjo_update_done

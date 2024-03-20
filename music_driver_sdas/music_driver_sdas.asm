@@ -31,8 +31,8 @@
 	; state and channel data for sfx
 	sfx_playing: .ds 1
 	sfx_priority: .ds 1
-    sfx_state: .ds _sizeof_music_state
-    sfx_channel: .ds _sizeof_channel
+    _sfx_state: .ds _sizeof_music_state
+    _sfx_channel: .ds _sizeof_channel
 	
 	; pointers to song and sfx tables
 	song_table_ptr: .ds 2
@@ -44,13 +44,13 @@
 .area _CODE (REL,CON)
 
     .globl _song_state, _song_channels
+    .globl _sfx_state, _sfx_channel
     .globl _banjo_set_song_table, _banjo_set_sfx_table
     .globl _banjo_song_stop, _banjo_sfx_stop
     .globl _banjo_init, _banjo_update, _banjo_queue_song, _banjo_queue_sfx
     .globl _banjo_check_hardware, _banjo_fm_unit_present, _banjo_mode, _banjo_game_gear_mode, _banjo_system_e
     .globl _banjo_queue_song_loop_mode, _banjo_queue_sfx_loop_mode
 
-    .globl sfx_state, sfx_channel
     .globl queue_song, song_playing
     .globl queue_sfx, sfx_playing, sfx_priority
 

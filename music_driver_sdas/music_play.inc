@@ -125,8 +125,8 @@ music_handle_sfx_queue:
 			
 			ld a, (queue_sfx_loop)
 			ld b, a
-			ld ix, #sfx_channel
-			ld iy, #sfx_state
+			ld ix, #_sfx_channel
+			ld iy, #_sfx_state
 			call music_play
 
 			; sfx is now playing
