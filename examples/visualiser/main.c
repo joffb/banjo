@@ -4,17 +4,36 @@
 #include "song_table.h"
 
 #include "bank2.h"
-#include "key_offsets_tiles.h"
+#include "key_x_tile.h"
 
 unsigned char tic;
+
+void draw_keyboard(unsigned char tile_y)
+{
+	unsigned char i;
+	
+	// draw top row of piano key tiles
+	SMS_setNextTileatXY(0, tile_y);
+
+	for (i = 0; i < 32; i++)
+	{
+		SMS_setTile((i % 7) + 16);
+	}
+
+	// draw bottom row of piano key tiles
+	SMS_setNextTileatXY(0, tile_y + 1);
+
+	for (i = 0; i < 32; i++)
+	{
+		SMS_setTile((i % 7) + 16 + 7);
+	}
+}
 
 void main(void)
 {
 	channel_t *channel;
-	const offset_tile_t *offset_tile;
 
-	unsigned char i, j, chan_count;
-	unsigned int keys;
+	unsigned char i;
 
 	SMS_VRAMmemsetW(0, 0x0000, 16384);
 	SMS_setSpriteMode(1);
@@ -26,21 +45,9 @@ void main(void)
 	SMS_loadBGPalette(palette_bin);
 	SMS_loadSpritePalette(palette_bin);
 
-	SMS_setNextTileatXY(0, 1);
-
-	// draw piano keys
-	for (i = 0; i < 32; i++)
-	{
-		SMS_setTile((i % 7) + 16);
-	}
-
-	SMS_setNextTileatXY(0, 2);
-
-	// draw piano keys
-	for (i = 0; i < 32; i++)
-	{
-		SMS_setTile((i % 7) + 16 + 7);
-	}
+	draw_keyboard(1);
+	draw_keyboard(5);
+	draw_keyboard(9);
 
 	/* Turn on the display */
 	SMS_displayOn();
@@ -75,16 +82,20 @@ void main(void)
 
 		SMS_initSprites();
 
+		// check we're playing a valid song
 		if (song_state.magic_byte == 0xBA)
 		{
-			chan_count = song_state.channel_count;
-
-			for (i = 0; i < chan_count; i++)
+			// go through all song channels
+			for (i = 0; i < song_state.channel_count; i++)
 			{
 				channel = &song_channels[i];
-				offset_tile = &key_offsets_tiles[channel->midi_note];
 
-				SMS_addSprite(offset_tile->x, 8, offset_tile->tile);
+				// does the channel have a note-on?
+				if (channel->flags & CHAN_FLAG_NOTE_ON)
+				{
+					// draw key sprite for this note-on
+					SMS_addSprite_f(8 + (channel->type * 32), key_x_tile[channel->midi_note]);
+				}
 			}
 		}
 

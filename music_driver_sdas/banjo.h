@@ -25,19 +25,21 @@
 #define GAME_GEAR_PAN       0x10
 #define END_LINE            0x80
 
-#define MAX_CHANNELS_SN             4
-#define MAX_CHANNELS_DUAL_SN        8
-#define MAX_CHANNELS_FM             9
-#define MAX_CHANNELS_FM_DRUMS       11
-#define MAX_CHANNELS_SN_FM          13
-#define MAX_CHANNELS_SN_FM_DRUMS    15
-
 #define MODE_FM             1
 #define MODE_SN             2
 #define MODE_SN_FM          3
 #define MODE_DUAL_SN        4
 #define MODE_FM_DRUMS       5
 #define MODE_SN_FM_DRUMS    7
+
+#define CHAN_FLAG_MUTED         0x01
+#define CHAN_FLAG_NOTE_ON       0x02
+#define CHAN_FLAG_LEGATO        0x04
+#define CHAN_FLAG_PITCH_CHANGE  0x08
+#define CHAN_FLAG_VOLUME_MACRO  0x10
+#define CHAN_FLAG_VIBRATO       0x20
+#define CHAN_FLAG_ARPEGGIO      0x40
+#define CHAN_FLAG_SLIDE         0x80
 
 // used in song/sfx table definitions
 #define SFX_DEF(SFX_LABEL, SFX_BANK, SFX_PRIORITY) { SFX_PRIORITY, SFX_BANK, &SFX_LABEL }
@@ -145,14 +147,14 @@ extern channel_t sfx_channel;
 
 // sets banjo_fm_unit_present to 1 if an fm unit is installed, 0 otherwise
 // sets banjo_game_gear_mode to 1 if it's detected that wer're running on a game gear in game gear mode, 0 otherwise
-void banjo_check_hardware();
+void banjo_check_hardware(void);
 
 // initialise banjo for the given mode
 void banjo_init(unsigned char mode);
 
 // update song and sfx
 // this will change the bank for slot 2 (i.e. 0x8000 to 0xbfff (writes to mapper at 0xffff))
-void banjo_update();
+void banjo_update(void);
 
 // queue song/sfx to be played back starting on next banjo_update
 void banjo_queue_song(unsigned char song);
@@ -168,12 +170,12 @@ void banjo_set_song_table(song_t const *song_table_ptr);
 void banjo_set_sfx_table(song_t const *sfx_table_ptr);
 
 // stop the currently playing song
-void banjo_song_stop();
+void banjo_song_stop(void);
 
 // stop the currently playing sfx
-void banjo_sfx_stop();
+void banjo_sfx_stop(void);
 
 // resume playback of a stopped song
-void banjo_song_resume ();
+void banjo_song_resume(void);
 
 #endif
