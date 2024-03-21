@@ -139,8 +139,7 @@ music_update_pitch_registers:
 			
 			; get midi number
 			ld a, (ix + channel.midi_note)
-			sub a, 3
-			
+						
 			; mod 12
 			fixed_noise_mod_12:
 				sub a, 12

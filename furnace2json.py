@@ -383,8 +383,8 @@ else:
 				break
 
 			line = {
-				'note': 0,
-				'octave': 0,
+				'note': -1,
+				'octave': -1,
 				'instrument': -1,
 				'volume': -1,
 				'effects': []
@@ -425,7 +425,7 @@ else:
 					pattern_data_pointer += 1
 
 					# convert note data to version compatible with older (< 157) pattern
-					if (line['note'] > 0) and (line['note'] <= 179):
+					if (line['note'] >= 0) and (line['note'] <= 179):
 					
 						line['octave'] = int(math.floor(line['note'] / 12) - 5)
 						line['note'] = line['note'] % 12
@@ -515,8 +515,8 @@ else:
 		# pattern data for all rows - so fill in rest of pattern
 		while len(pattern['data']) < song['pattern_length']:
 			pattern['data'].append({
-				'note': 0,
-				'octave': 0,
+				'note': -1,
+				'octave': -1,
 				'instrument': -1,
 				'volume': -1,
 				'effects': []

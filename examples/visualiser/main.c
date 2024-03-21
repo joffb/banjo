@@ -7,13 +7,50 @@
 #include "key_x_tile.h"
 
 unsigned char tic;
+const unsigned char channel_lit_tiles[16] = {0, 8, 16, 24, 32, 40, 48, 0, 8, 16, 24, 32, 40, 48, 0, 8};
 
-void draw_keyboard(unsigned char tile_y)
+void draw_logo(unsigned char tile_x, unsigned char tile_y)
 {
 	unsigned char i;
 	
 	// draw top row of piano key tiles
+	SMS_setNextTileatXY(tile_x, tile_y);
+
+	for (i = 0; i < 6; i++)
+	{
+		SMS_setTile(i + 32);
+	}
+
+	// draw bottom row of piano key tiles
+	SMS_setNextTileatXY(tile_x, tile_y + 1);
+
+	for (i = 0; i < 6; i++)
+	{
+		SMS_setTile(i + 32 + 6);
+	}
+}
+
+void draw_keyboard(unsigned char tile_y, unsigned char type)
+{
+	unsigned char i;
+	type = (type * 2) + 4;
+	
+	// draw top row of piano key tiles
 	SMS_setNextTileatXY(0, tile_y);
+
+	SMS_setTile(1);
+	SMS_setTile(type);
+	SMS_setTile(type + 1);
+
+	for (i = 0; i < 28; i++)
+	{
+		SMS_setTile(2);
+	}
+
+	SMS_setTile(3);
+
+	// draw top row of piano key tiles
+	SMS_setNextTileatXY(0, tile_y + 1);
 
 	for (i = 0; i < 32; i++)
 	{
@@ -21,7 +58,7 @@ void draw_keyboard(unsigned char tile_y)
 	}
 
 	// draw bottom row of piano key tiles
-	SMS_setNextTileatXY(0, tile_y + 1);
+	SMS_setNextTileatXY(0, tile_y + 2);
 
 	for (i = 0; i < 32; i++)
 	{
@@ -33,21 +70,25 @@ void main(void)
 {
 	channel_t *channel;
 
-	unsigned char i;
+	unsigned char i, key_lit_tile;
 
 	SMS_VRAMmemsetW(0, 0x0000, 16384);
 	SMS_setSpriteMode(1);
 	
 	SMS_initSprites();
 
+	SMS_loadTiles(labels_tiles_bin, 1, labels_tiles_bin_size);
+	SMS_loadTiles(banjo_tiles_bin, 32, banjo_tiles_bin_size);
 	SMS_loadTiles(keyboard_tiles_bin, 16, keyboard_tiles_bin_size);
 	SMS_loadTiles(keys_lit_tiles_bin, 256, keys_lit_tiles_bin_size);
 	SMS_loadBGPalette(palette_bin);
-	SMS_loadSpritePalette(palette_bin);
+	SMS_loadSpritePalette(sprite_palette_bin);
 
-	draw_keyboard(1);
-	draw_keyboard(5);
-	draw_keyboard(9);
+	draw_keyboard(4, 0);
+	draw_keyboard(8, 1);
+	draw_keyboard(12, 2);
+
+	draw_logo(1, 1);
 
 	/* Turn on the display */
 	SMS_displayOn();
@@ -93,8 +134,10 @@ void main(void)
 				// does the channel have a note-on?
 				if (channel->flags & CHAN_FLAG_NOTE_ON)
 				{
+					key_lit_tile = channel_lit_tiles[i];
+
 					// draw key sprite for this note-on
-					SMS_addSprite_f(8 + (channel->type * 32), key_x_tile[channel->midi_note]);
+					SMS_addSprite_f(40 + (channel->type * 32), key_x_tile[channel->midi_note] + key_lit_tile);
 				}
 			}
 		}

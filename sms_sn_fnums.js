@@ -24,18 +24,20 @@ var sn_fnums = [];
 
 for (var i = 0; i < 128; i++)
 {
-	sn_fnums.push(MUSIC_CLOCK / ( 2 * 16 * midi_note_frequencies[i]));
+	var freq = MUSIC_CLOCK / ( 2 * 16 * midi_note_frequencies[i]);
+
+	sn_fnums.push(freq > 1023 ? 1023 : freq);
 }
 
 var output = [];
 
-for (var i = 45; i < 126; i++)
+for (var i = 36; i < 128; i++)
 {
 	var out;
 	var note_name = note_names[i % 12];
 	note_name = "midi: " + note_name + (Math.floor(i / 12) - 1) + ", fur: " + note_name + (Math.floor(i / 12) - 3);
 	
-	output.push({fnum: Math.round(sn_fnums[i]), note_name: note_name});
+	output.push({fnum: Math.round(sn_fnums[i]) & 1023, note_name: note_name});
 }
 
 // output an include file with the sn note data

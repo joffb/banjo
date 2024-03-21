@@ -1,4 +1,22 @@
 sn_tone_lookup:
+; midi: C2, fur: C0
+.dw 1023
+; midi: C#2, fur: C#0
+.dw 1023
+; midi: D2, fur: D0
+.dw 1023
+; midi: D#2, fur: D#0
+.dw 1023
+; midi: E2, fur: E0
+.dw 1023
+; midi: F2, fur: F0
+.dw 1023
+; midi: F#2, fur: F#0
+.dw 1023
+; midi: G2, fur: G0
+.dw 1023
+; midi: G#2, fur: G#0
+.dw 1023
 ; midi: A2, fur: A0
 .dw 1017
 ; midi: A#2, fur: A#0
@@ -161,3 +179,7 @@ sn_tone_lookup:
 .dw 11
 ; midi: F9, fur: F7
 .dw 10
+; midi: F#9, fur: F#7
+.dw 9
+; midi: G9, fur: G7
+.dw 9

@@ -475,24 +475,17 @@ for i in range(0, song['channel_count']):
                     current_vol = volume
 
                 # empty
-                if (line['note'] == 0 and line['octave'] == 0):
+                if (line['note'] == -1 and line['octave'] == -1):
                 
                     False
                     
                 # note on
-                elif (line['note'] <= 12):
+                elif (line['note'] >= 0 and line['note'] < 12):
                 
                     pattern_bin.append("NOTE_ON")                   
                 
-                    # note number
-                    if (channel_type == CHAN_SN76489):
-                    
-                        pattern_bin.append((line['note'] + (line['octave'] * 12) + 36 - 45) & 0x7f)
-                    
-                    else:
-                    
-                        pattern_bin.append((line['note'] + (line['octave'] * 12)) & 0x7f)
-                    
+                    # note number                    
+                    pattern_bin.append((line['note'] + (line['octave'] * 12)) & 0x7f)
                 
                 # note off
                 elif (line['note'] == 100):
