@@ -46,33 +46,81 @@ music_set_default_fm_drum_pitches:
 	ld a, #0x20
 	out (#OPLL_DATA_PORT), a
 	
+	; delay after opll data write
+	push hl
+	pop hl
+	push hl
+	pop hl
+	push hl
+	pop hl
+
 	ld a, #0x26
 	out (#OPLL_REG_PORT), a
 	ld a, #0x05
 	out (#OPLL_DATA_PORT), a
 	
+	; delay after opll data write
+	push hl
+	pop hl
+	push hl
+	pop hl
+	push hl
+	pop hl
+
 	; snare?
 	ld a, #0x17
 	out (#OPLL_REG_PORT), a
 	ld a, #0x50
 	out (#OPLL_DATA_PORT), a
 
+	; delay after opll data write
+	push hl
+	pop hl
+	push hl
+	pop hl
+	push hl
+	pop hl
+
 	ld a, #0x27
 	out (#OPLL_REG_PORT), a
 	ld a, #0x05
 	out (#OPLL_DATA_PORT), a
 	
+	; delay after opll data write
+	push hl
+	pop hl
+	push hl
+	pop hl
+	push hl
+	pop hl
+
 	; kick?
 	ld a, #0x18
 	out (#OPLL_REG_PORT), a
 	ld a, #0xc0
 	out (#OPLL_DATA_PORT), a
 
+	; delay after opll data write
+	push hl
+	pop hl
+	push hl
+	pop hl
+	push hl
+	pop hl
+
 	ld a, #0x28
 	out (#OPLL_REG_PORT), a
 	ld a, #0x01
 	out (#OPLL_DATA_PORT), a
 	
+	; delay after opll data write
+	push hl
+	pop hl
+	push hl
+	pop hl
+	push hl
+	pop hl
+
 	ret 
 
 
@@ -531,6 +579,15 @@ music_play:
 			ld a, #0xff
 			out (#OPLL_DATA_PORT), a
 			inc c
+
+			; delay after opll data write
+			push hl
+			pop hl
+			push hl
+			pop hl
+			push hl
+			pop hl
+
 			djnz music_play_fm_rhythm_vols
 
 		; set up default rhythm instrument values

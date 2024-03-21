@@ -124,13 +124,14 @@ music_fm_note_on:
 		ld a, channel.freq+1(ix)
 		and a, #0xf
 		out (#OPLL_DATA_PORT), a
-		
-		nop 
-		nop 
-		nop 
-		nop 
-		nop 
-		nop 
+
+		; delay after opll data write
+		push hl
+		pop hl
+		push hl
+		pop hl
+		push hl
+		pop hl
 		
 	mufm_no_legato_done: 
 	
@@ -232,13 +233,14 @@ music_fm_note_off:
 	ld a, channel.freq+1(ix)
 	and a, #0xf
 	out (#OPLL_DATA_PORT), a
-
-	nop 
-	nop 
-	nop 
-	nop 
-	nop 
-	nop 
+	
+	; delay after opll data write
+	push hl
+	pop hl
+	push hl
+	pop hl
+	push hl
+	pop hl
 
 	inc hl
 	jp music_process_new_line_subloop
@@ -275,9 +277,11 @@ music_fm_drums_note_on:
 		and a, c
 		out (#OPLL_DATA_PORT), a
 
-		nop 
-		nop 
-		nop 
+		; delay after opll data write
+		push hl
+		pop hl
+		push hl
+		pop hl
 		nop 
 		nop 
 		nop 
@@ -323,7 +327,9 @@ music_fm_drums_note_on:
 	nop 
 	nop 
 	nop 
-	
+	nop 
+	nop 
+
 	; update note on status 
 	set CHAN_FLAG_BIT_NOTE_ON, channel.flags(ix)
 
@@ -357,13 +363,16 @@ music_fm_drums_note_on:
         ld a, (de)
         out (#OPLL_DATA_PORT), a
         
-        nop 
-        nop 
-        nop 
-        nop 
-        nop 
-        nop 
-        
+		; delay after opll data write
+		push hl
+		pop hl
+		push hl
+		pop hl
+		nop 
+		nop 
+		nop 
+		nop 
+
         ; set register for 9th bit of f number and octave
         ld a, channel.port(ix)
         add a, #0x10
@@ -374,13 +383,18 @@ music_fm_drums_note_on:
         ld a, (de)
         out (#OPLL_DATA_PORT), a
         
-        nop 
-        nop 
-        nop 
-        nop 
-        nop 
-        nop 
-	
+		; delay after opll data write
+		push hl
+		pop hl
+		push hl
+		pop hl
+		push hl
+		pop hl
+		nop 
+		nop 
+		nop 
+		nop 
+
     mfmdno_fixed_pitch: 
 
 	; select rhythm control register
@@ -399,13 +413,16 @@ music_fm_drums_note_on:
 	; send trigger bits 
 	out (#OPLL_DATA_PORT), a
 	
+	; delay after opll data write
 	nop 
 	nop 
 	nop 
 	nop 
 	nop 
 	nop 
-	
+	nop 
+	nop 
+
 	inc hl
 	jp music_process_new_line_subloop
 
@@ -441,6 +458,9 @@ music_fm_drums_note_off:
 	; send trigger bits
 	out (#OPLL_DATA_PORT), a
 
+	; delay after opll data write
+	nop 
+	nop 
 	nop 
 	nop 
 	nop 

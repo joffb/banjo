@@ -187,13 +187,14 @@ music_update_pitch_registers:
 			ld a, e
 			out (#OPLL_DATA_PORT), a
 			
-			nop 
-			nop 
-			nop 
-			nop 
-			nop 
-			nop 
-			
+			; delay after opll data write
+			push hl
+			pop hl
+			push hl
+			pop hl
+			push hl
+			pop hl
+
 			; store for later
 			ld channel.freq(ix), a
 			
@@ -214,6 +215,8 @@ music_update_pitch_registers:
 			or a, #0x10
 			out (#OPLL_DATA_PORT), a
 			
+			nop 
+			nop 
 			nop 
 			nop 
 			nop 

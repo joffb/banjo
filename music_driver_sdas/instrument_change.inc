@@ -101,12 +101,11 @@ music_instrument_change:
 				ld a, (hl)
 				out (#OPLL_DATA_PORT), a
 				
-				nop 
-				nop 
-				nop 
-				nop 
-				nop 
-				nop 
+				; delay after opll data write
+				push hl
+				pop hl
+				push hl
+				pop hl
 				
 				; next register and next patch data
 				inc hl
@@ -191,12 +190,14 @@ music_fm_drum_change:
 
     inc de
 
-    nop 
-    nop 
-    nop 
-    nop 
-    nop 
-    nop 
+	; delay after opll data write
+	push hl
+	pop hl
+	push hl
+	pop hl
+	push hl
+	pop hl
+
 
 	ld a, #0x26
 	out (#OPLL_REG_PORT), a
@@ -205,12 +206,13 @@ music_fm_drum_change:
 
     inc de
 
-    nop 
-    nop 
-    nop 
-    nop 
-    nop 
-    nop 
+	; delay after opll data write
+	push hl
+	pop hl
+	push hl
+	pop hl
+	push hl
+	pop hl
 
 	; snare?
 	ld a, #0x17
@@ -220,12 +222,13 @@ music_fm_drum_change:
 
     inc de
 
-    nop 
-    nop 
-    nop 
-    nop 
-    nop 
-    nop 
+	; delay after opll data write
+	push hl
+	pop hl
+	push hl
+	pop hl
+	push hl
+	pop hl
 
 	ld a, #0x27
 	out (#OPLL_REG_PORT), a
@@ -234,13 +237,14 @@ music_fm_drum_change:
 
     inc de
 	
-    nop 
-    nop 
-    nop 
-    nop 
-    nop 
-    nop 
-
+	; delay after opll data write
+	push hl
+	pop hl
+	push hl
+	pop hl
+	push hl
+	pop hl
+	
 	; tom?
 	ld a, #0x18
 	out (#OPLL_REG_PORT), a
@@ -249,12 +253,13 @@ music_fm_drum_change:
 
     inc de
 	
-    nop 
-    nop 
-    nop 
-    nop 
-    nop 
-    nop 
+	; delay after opll data write
+	push hl
+	pop hl
+	push hl
+	pop hl
+	push hl
+	pop hl
 
 	ld a, #0x28
 	out (#OPLL_REG_PORT), a

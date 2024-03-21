@@ -136,6 +136,14 @@ music_mute_all_fm:
 		ld a, 0
 		out (OPLL_DATA_PORT), a
 		
+        ; delay after opll data write
+        push hl
+        pop hl
+        push hl
+        pop hl
+        push hl
+        pop hl
+
 		inc d
 		djnz music_mute_fm_noteoff
 
