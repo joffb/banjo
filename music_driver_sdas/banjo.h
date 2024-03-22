@@ -6,20 +6,20 @@
 #define __BANJO_H
 
 // instructions
-#define NOTE_ON 			0x00
-#define NOTE_OFF 			0x01
-#define INSTRUMENT_CHANGE	0x02
-#define VOLUME_CHANGE		0x03
-#define FM_DRUM 			0x04
-#define SN_NOISE_MODE		0x05
-#define SLIDE_UP	        0x06
+#define NOTE_ON             0x00
+#define NOTE_OFF            0x01
+#define INSTRUMENT_CHANGE   0x02
+#define VOLUME_CHANGE       0x03
+#define FM_DRUM             0x04
+#define SN_NOISE_MODE       0x05
+#define SLIDE_UP            0x06
 #define SLIDE_DOWN          0x07
-#define SLIDE_PORTA		    0x08
-#define SLIDE_OFF		    0x09
-#define ARPEGGIO			0x0a
-#define ARPEGGIO_OFF		0x0b
-#define VIBRATO 			0x0c
-#define VIBRATO_OFF 		0x0d
+#define SLIDE_PORTA         0x08
+#define SLIDE_OFF           0x09
+#define ARPEGGIO            0x0a
+#define ARPEGGIO_OFF        0x0b
+#define VIBRATO             0x0c
+#define VIBRATO_OFF         0x0d
 #define LEGATO_ON           0x0e
 #define LEGATO_OFF          0x0f
 #define GAME_GEAR_PAN       0x10
@@ -47,11 +47,11 @@
 
 typedef struct instrument_s {
 
-	unsigned char volume_macro_len;
-	unsigned char volume_macro_loop;
-	unsigned char const * const volume_macro_ptr;
-	unsigned char fm_preset;
-	unsigned char fm_patch[8];
+    unsigned char volume_macro_len;
+    unsigned char volume_macro_loop;
+    const unsigned char * volume_macro_ptr;
+    unsigned char fm_preset;
+    unsigned char fm_patch[8];
 
 } instrument_t;
 
@@ -69,8 +69,8 @@ typedef struct song_data_s {
     unsigned char speed_2;
     unsigned char pattern_length;
     unsigned char orders_length;
-    instrument_t const * const * const instrument_pointers;
-    unsigned char const * const * const * order_pointers;
+    const instrument_t * const * instrument_pointers;
+    const unsigned char * const * const * order_pointers;
     unsigned char subtic;
     unsigned char tic;
     unsigned char line;
@@ -78,7 +78,7 @@ typedef struct song_data_s {
     unsigned char process_new_line;
     unsigned char noise_mode;
     unsigned char panning;
-    unsigned char const channel_types[32];
+    const unsigned char channel_types[32];
 } song_data_t;
 
 typedef struct channel_s {
@@ -123,7 +123,7 @@ typedef struct song_s {
 
     unsigned char priority;
     unsigned char bank;
-    song_data_t * const song;
+    const song_data_t * song;
     
 } song_t;
 
@@ -168,15 +168,15 @@ void banjo_queue_song_loop_mode(unsigned char loop);
 void banjo_queue_sfx_loop_mode(unsigned char loop);
 
 // set up pointers to the song and sfx tables
-void banjo_set_song_table(song_t const *song_table_ptr);
-void banjo_set_sfx_table(song_t const *sfx_table_ptr);
+void banjo_set_song_table(const song_t *song_table_ptr);
+void banjo_set_sfx_table(const song_t *sfx_table_ptr);
 
 // Queues OFF:
 
 // start playing song/sfx
 // change to the song/sfx's bank before calling this
-void banjo_play_song(song_t const *song_ptr, unsigned char loop_mode);
-void banjo_play_sfx(song_t const *song_ptr, unsigned char loop_mode);
+void banjo_play_song(const song_data_t *song_ptr, unsigned char loop_mode);
+void banjo_play_sfx(const song_data_t *song_ptr, unsigned char loop_mode);
 
 // update song/sfx if one is playing
 // change to the song/sfx's bank before calling this

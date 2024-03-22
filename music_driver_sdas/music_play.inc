@@ -4,7 +4,7 @@
 
 ; hl: pointer to music data
 ; stack: loop mode
-banjo_play_song: 
+_banjo_play_song: 
 
 	; try to ensure we're playing valid data
 	ld a, (hl)
@@ -15,9 +15,6 @@ banjo_play_song:
 	ld a, #1
 	ld (song_playing), a
 
-	ld ix, #_song_channels
-	ld iy, #_song_state
-
 	; get return address into de
 	; get loop mode into b
 	pop de
@@ -27,11 +24,21 @@ banjo_play_song:
 	; put return address back on stack
 	push de
 
-	jr music_play
+	push iy
+	push ix
+
+	ld ix, #_song_channels
+	ld iy, #_song_state
+	call music_play
+
+	pop ix
+	pop iy
+
+	ret 
 
 ; hl: pointer to music data
 ; stack: loop mode
-banjo_play_sfx: 
+_banjo_play_sfx: 
 
 	; try to ensure we're playing valid data
 	ld a, (hl)
@@ -42,9 +49,6 @@ banjo_play_sfx:
 	ld a, #1
 	ld (sfx_playing), a
 
-	ld ix, #_sfx_channel
-	ld iy, #_sfx_state
-
 	; get return address into de
 	; get loop mode into b
 	pop de
@@ -54,7 +58,17 @@ banjo_play_sfx:
 	; put return address back on stack
 	push de
 
-	jr music_play
+	push iy
+	push ix
+
+	ld ix, #_sfx_channel
+	ld iy, #_sfx_state
+	call music_play
+
+	pop ix
+	pop iy
+
+	ret 
 
 ; b: loop mode
 ; c: bank

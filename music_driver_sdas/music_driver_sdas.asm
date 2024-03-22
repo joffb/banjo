@@ -47,7 +47,11 @@
     .globl _sfx_state, _sfx_channel
     .globl _banjo_set_song_table, _banjo_set_sfx_table
     .globl _banjo_song_stop, _banjo_sfx_stop
-    .globl _banjo_init, _banjo_update, _banjo_queue_song, _banjo_queue_sfx
+    .globl _banjo_init, _banjo_update
+    .globl _banjo_queue_song, _banjo_queue_sfx
+    .globl _banjo_play_song, _banjo_play_sfx
+    .globl _banjo_update_song, _banjo_update_sfx
+    .globl _banjo_mute_song_channel, _banjo_unmute_song_channel
     .globl _banjo_check_hardware, _banjo_fm_unit_present, _banjo_mode, _banjo_game_gear_mode, _banjo_system_e
     .globl _banjo_queue_song_loop_mode, _banjo_queue_sfx_loop_mode
 

@@ -158,9 +158,18 @@ async function process_lines(lines)
 	// we're expecting certain labels to be declared in C or used in C
 	// add an underscore in front of these symbols so they match the C declared ones
 	let underscore_prefix = [
-		"song_channels", "song_state", "song_table", "sfx_table", "sfx_channel", "sfx_state",
-		"banjo_init", "banjo_init:", "banjo_update", "banjo_update:",
-		"banjo_queue_song", "banjo_queue_song:", "banjo_queue_sfx", "banjo_queue_sfx:",
+		"song_channels", "song_state", "song_table", 
+		"sfx_table", "sfx_channel", "sfx_state",
+		"banjo_init", "banjo_init:", 
+		"banjo_update", "banjo_update:",
+		"banjo_queue_song", "banjo_queue_song:", 
+		"banjo_queue_sfx", "banjo_queue_sfx:",
+		"banjo_play_song", "banjo_play_song:",
+		"banjo_play_sfx", "banjo_play_sfx:",
+		"banjo_update_song", "banjo_update_song:",
+		"banjo_update_sfx", "banjo_update_sfx:",
+		"banjo_mute_song_channel", "banjo_mute_song_channel:",
+		"banjo_unmute_song_channel", "banjo_unmute_song_channel:",
 		"banjo_set_song_table:", "banjo_set_sfx_table:",
 		"banjo_check_hardware:", "banjo_song_stop:", "banjo_sfx_stop:",
 		"banjo_queue_song_loop_mode:", "banjo_queue_sfx_loop_mode:",

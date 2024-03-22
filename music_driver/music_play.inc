@@ -15,9 +15,6 @@ banjo_play_song:
 	ld a, 1
 	ld (song_playing), a
 
-	ld ix, song_channels
-	ld iy, song_state
-
 	; get return address into de
 	; get loop mode into b
 	pop de
@@ -27,7 +24,17 @@ banjo_play_song:
 	; put return address back on stack
 	push de
 
-	jr music_play
+	push iy
+	push ix
+
+	ld ix, song_channels
+	ld iy, song_state
+	call music_play
+
+	pop ix
+	pop iy
+
+	ret
 
 ; hl: pointer to music data
 ; stack: loop mode
@@ -42,9 +49,6 @@ banjo_play_sfx:
 	ld a, 1
 	ld (sfx_playing), a
 
-	ld ix, sfx_channel
-	ld iy, sfx_state
-
 	; get return address into de
 	; get loop mode into b
 	pop de
@@ -54,7 +58,17 @@ banjo_play_sfx:
 	; put return address back on stack
 	push de
 
-	jr music_play
+	push iy
+	push ix
+
+	ld ix, sfx_channel
+	ld iy, sfx_state
+	call music_play
+
+	pop ix
+	pop iy
+
+	ret
 
 ; b: loop mode
 ; c: bank
