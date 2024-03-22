@@ -9,7 +9,7 @@
 const fs = require('fs');
 const readline = require('readline');
 
-const register_names = ["a", "b", "c", "d", "e", "h", "l", "af", "bc", "de", "hl", "ix", "iy"];
+const register_names = ["a", "b", "c", "d", "e", "h", "l", "af", "bc", "de", "hl", "ix", "iy", "sp"];
 
 function rearrange(tokens)
 {

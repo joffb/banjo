@@ -6,6 +6,16 @@
 ; stack: loop mode
 banjo_play_song:
 
+	; music pointer into de
+	ex de, hl
+	; return address into hl
+	pop hl
+	dec sp
+	; swap return address with loop mode
+	ex (sp), hl
+	; music pointer in hl, loop mode in d
+	ex de, hl
+
 	; try to ensure we're playing valid data
 	ld a, (hl)
 	cp a, BANJO_MAGIC_BYTE
@@ -15,14 +25,8 @@ banjo_play_song:
 	ld a, 1
 	ld (song_playing), a
 
-	; get return address into de
-	; get loop mode into b
-	pop de
-	pop af
-	ld b, a
-
-	; put return address back on stack
-	push de
+	; loop mode into b
+	ld b, d
 
 	push iy
 	push ix
@@ -40,6 +44,16 @@ banjo_play_song:
 ; stack: loop mode
 banjo_play_sfx:
 
+	; music pointer into de
+	ex de, hl
+	; return address into hl
+	pop hl
+	dec sp
+	; swap return address with loop mode
+	ex (sp), hl
+	; music pointer in hl, loop mode in d
+	ex de, hl
+	
 	; try to ensure we're playing valid data
 	ld a, (hl)
 	cp a, BANJO_MAGIC_BYTE
@@ -49,14 +63,8 @@ banjo_play_sfx:
 	ld a, 1
 	ld (sfx_playing), a
 
-	; get return address into de
-	; get loop mode into b
-	pop de
-	pop af
-	ld b, a
-
-	; put return address back on stack
-	push de
+	; loop mode into b
+	ld b, d
 
 	push iy
 	push ix
