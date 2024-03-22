@@ -2,243 +2,59 @@
 ; banjo sound driver
 ; Joe Kennedy 2023
 
-; a: song number to queue
-_banjo_queue_song: 
+; hl: pointer to music data
+; stack: loop mode
+banjo_play_song: 
 
-    ld (queue_song), a
-
-	; clear loop mode modifier variable
-	ld a, #0xff
-	ld (queue_song_loop), a
-
-    ret 
-
-; a: sfx number to queue
-_banjo_queue_sfx: 
-
-    ld (queue_sfx), a
-
-	; clear loop mode modifier variable
-	ld a, #0xff
-	ld (queue_sfx_loop), a
-
-    ret 
-
-; a: loop mode for queued sfx
-_banjo_queue_song_loop_mode: 
-
-	ld (queue_song_loop), a
-
-	ret 
-
-; a: loop mode for queued sfx
-_banjo_queue_sfx_loop_mode: 
-
-	ld (queue_sfx_loop), a
-
-	ret 
-
-music_set_default_fm_drum_pitches: 
-
-	; tom?
-	ld a, #0x16
-	out (#OPLL_REG_PORT), a
-	ld a, #0x20
-	out (#OPLL_DATA_PORT), a
-	
-	; delay after opll data write
-	push hl
-	pop hl
-	push hl
-	pop hl
-	push hl
-	pop hl
-
-	ld a, #0x26
-	out (#OPLL_REG_PORT), a
-	ld a, #0x05
-	out (#OPLL_DATA_PORT), a
-	
-	; delay after opll data write
-	push hl
-	pop hl
-	push hl
-	pop hl
-	push hl
-	pop hl
-
-	; snare?
-	ld a, #0x17
-	out (#OPLL_REG_PORT), a
-	ld a, #0x50
-	out (#OPLL_DATA_PORT), a
-
-	; delay after opll data write
-	push hl
-	pop hl
-	push hl
-	pop hl
-	push hl
-	pop hl
-
-	ld a, #0x27
-	out (#OPLL_REG_PORT), a
-	ld a, #0x05
-	out (#OPLL_DATA_PORT), a
-	
-	; delay after opll data write
-	push hl
-	pop hl
-	push hl
-	pop hl
-	push hl
-	pop hl
-
-	; kick?
-	ld a, #0x18
-	out (#OPLL_REG_PORT), a
-	ld a, #0xc0
-	out (#OPLL_DATA_PORT), a
-
-	; delay after opll data write
-	push hl
-	pop hl
-	push hl
-	pop hl
-	push hl
-	pop hl
-
-	ld a, #0x28
-	out (#OPLL_REG_PORT), a
-	ld a, #0x01
-	out (#OPLL_DATA_PORT), a
-	
-	; delay after opll data write
-	push hl
-	pop hl
-	push hl
-	pop hl
-	push hl
-	pop hl
-
-	ret 
-
-
-music_handle_sfx_queue: 
-	
-	ld a, (queue_sfx)
-	
-	; get address of queued sfx in table
-	; (multiply a by 4 and add to hl)
-	ld hl, (sfx_table_ptr)
-	add a, a
-	add a, a
-	add a, l
-	ld l, a
-	adc a, h
-	sub a, l
-	ld h, a
-
-	; check priority of current sfx vs new priority
-	; don't play if if the priority is lower
-	ld a, (sfx_priority)
-	ld b, a
-	ld a, (hl)
-	cp a, b
-	jr c, mhsfq_done
-		
-		; update priority variable
-		ld a, b
-		ld (sfx_priority), a
-		
-		; get bank and change slot 2 bank to this bank
-		inc hl
-		ld a, (hl)
-		ld (SLOT_2_BANK_CHANGE), a
-
-		; keep it in c
-		ld c, a
-		
-		; get address of sfx into hl
-		inc hl
-		ld a, (hl)
-		inc hl
-		ld h, (hl)
-		ld l, a
-
-		; check if it's a valid song from the header
-		ld a, (hl)
-		cp a, #BANJO_MAGIC_BYTE
-		jr nz, mhsfq_done
-			
-			ld a, (queue_sfx_loop)
-			ld b, a
-			ld ix, #_sfx_channel
-			ld iy, #_sfx_state
-			call music_play
-
-			; sfx is now playing
-			ld a, #1
-			ld (sfx_playing), a
-			
-	mhsfq_done: 
-	
-	ld a, #0xff
-	ld (queue_sfx), a
-
-	ret 
-
-music_handle_song_queue: 
-
-	; check whether a song has been queued
-	ld a, (queue_song)
-
-	; add offset to song table
-	ld hl, (song_table_ptr)
-	add a, a
-	add a, a
-	add a, l
-	ld l, a
-	adc a, h
-	sub a, l
-	ld h, a
-
-	; get bank and change slot 2 bank to this bank
-	inc hl
-	ld a, (hl)
-	ld (SLOT_2_BANK_CHANGE), a
-
-	; keep it in c
-	ld c, a
-	
-	; get address of song into hl
-	inc hl
-	ld a, (hl)
-	inc hl
-	ld h, (hl)
-	ld l, a
-
-	; check if it's a valid song from the header
+	; try to ensure we're playing valid data
 	ld a, (hl)
 	cp a, #BANJO_MAGIC_BYTE
-	jr nz, mhsoq_done
+	ret nz
 
-		ld a, (queue_song_loop)
-		ld b, a
-		ld ix, #_song_channels
-		ld iy, #_song_state
-		call music_play
-		
-		; song is now playing
-		ld a, #1
-		ld (song_playing), a
+	; mark song as playing
+	ld a, #1
+	ld (song_playing), a
 
-	mhsoq_done: 
-	; clear song queue
-	ld a, #0xff
-	ld (queue_song), a
-	
-	ret 
+	ld ix, #_song_channels
+	ld iy, #_song_state
+
+	; get return address into de
+	; get loop mode into b
+	pop de
+	pop af
+	ld b, a
+
+	; put return address back on stack
+	push de
+
+	jr music_play
+
+; hl: pointer to music data
+; stack: loop mode
+banjo_play_sfx: 
+
+	; try to ensure we're playing valid data
+	ld a, (hl)
+	cp a, #BANJO_MAGIC_BYTE
+	ret nz
+
+	; mark sfx as playing
+	ld a, #1
+	ld (sfx_playing), a
+
+	ld ix, #_sfx_channel
+	ld iy, #_sfx_state
+
+	; get return address into de
+	; get loop mode into b
+	pop de
+	pop af
+	ld b, a
+
+	; put return address back on stack
+	push de
+
+	jr music_play
 
 ; b: loop mode
 ; c: bank
@@ -249,9 +65,11 @@ music_play:
 	
 	push bc
 
+	.ifndef QUEUES_OFF
 	; change bank
 	ld a, c
 	ld (SLOT_2_BANK_CHANGE), a
+	.endif 
 
 	; copy over song header
 	; at the end of the song header is the 32-byte channel types array
@@ -611,7 +429,7 @@ music_play:
 		ld (sfx_playing), a
 
 		ld a, music_state.sfx_channel(iy)
-		call music_mute_song_channel
+		call _banjo_mute_song_channel
 
 	music_play_done: 
 	
@@ -665,40 +483,3 @@ banjo_song_resume:
 	
 	bsr_no_valid_song: 
 	ret 
-
-fm_drum_triggers: 
-	; kick
-	.db 0x10
-	; snare
-	.db 0x08
-	; tom
-	.db 0x04
-	; cymbal
-	.db 0x02
-	; hi-hat
-	.db 0x01
-
-fm_drum_pitch_registers: 
-	; kick
-	.db 0x16
-	; snare
-	.db 0x17
-	; tom
-	.db 0x18
-	; cymbal
-	.db 0x18
-	; hi-hat
-	.db 0x17
-
-; masks used to preserve volumes for other drums which share the byte
-fm_drum_volume_masks: 
-	; kick
-	.db 0xf0
-	; snare
-	.db 0xf0
-	; tom
-	.db 0x0f
-	; cymbal
-	.db 0xf0
-	; hi-hat
-	.db 0x0f

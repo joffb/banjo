@@ -49,7 +49,7 @@ banjo_sfx_stop:
             ld a, (iy + music_state.sfx_channel)
 
             ; unmute the channel in the song
-            call music_unmute_song_channel
+            call banjo_unmute_song_channel
 
     banjo_sfx_stop_done:
 

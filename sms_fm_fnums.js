@@ -38,11 +38,14 @@ for (var oct = 0; oct < 8; oct++)
 let outfile = fs.openSync("fnums_fm.inc", "w+");
 
 fs.writeSync(outfile, "fm_tone_lookup:\n");
+fs.writeSync(outfile, ".ifdef INCLUDE_OPLL\n");
 
 for (var i = 0; i < notes.length; i++)
 {
 	fs.writeSync(outfile, "; " + notes[i].note_name + "\n");
 	fs.writeSync(outfile, ".dw " + notes[i].fnum + "\n");
 }
+
+fs.writeSync(outfile, ".endif\n");
 
 fs.closeSync(outfile);	   

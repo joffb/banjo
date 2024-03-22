@@ -16,47 +16,47 @@
 	.dw SONG_LABEL
 .endm
 
-.ifdef BANJO_MODE
-
-	; FM: 9 channels
-	.if BANJO_MODE = MODE_FM
-
-		.define CHANNEL_COUNT 9
-
-	; SN: 4 channels
-	.elif BANJO_MODE = MODE_SN
-
-		.define CHANNEL_COUNT 4
-
-	; Combined SN and FM: 13 channels
-	.elif BANJO_MODE = MODE_SN_FM
-
-		.define CHANNEL_COUNT 13
-
-	; FM drums: 11 channels
-	.elif BANJO_MODE = MODE_FM_DRUMS
-
-		.define CHANNEL_COUNT 11
-
-	; 2x SN: 8 channels
-	.elif BANJO_MODE = MODE_DUAL_SN
-
-		.define CHANNEL_COUNT 8
-
-	; Combined SN and FM drums: 15 channels
-	.elif BANJO_MODE = MODE_SN_FM_DRUMS
-
-		.define CHANNEL_COUNT 15
-
-	.endif
-
-.endif
-
 ; number of channels to allocate as space for songs
 .ifndef BANJO_MODE
-	.define CHANNEL_COUNT 4
 	.define BANJO_MODE MODE_SN
 .endif
+
+; FM: 9 channels
+.if BANJO_MODE == MODE_FM
+
+	.define CHANNEL_COUNT 9
+	.define INCLUDE_OPLL 1
+
+; SN: 4 channels
+.elif BANJO_MODE == MODE_SN
+
+	.define CHANNEL_COUNT 4
+
+; Combined SN and FM: 13 channels
+.elif BANJO_MODE == MODE_SN_FM
+
+	.define CHANNEL_COUNT 13
+	.define INCLUDE_OPLL 1
+
+; FM drums: 11 channels
+.elif BANJO_MODE == MODE_FM_DRUMS
+
+	.define CHANNEL_COUNT 11
+	.define INCLUDE_OPLL 1
+
+; 2x SN: 8 channels
+.elif BANJO_MODE == MODE_DUAL_SN
+
+	.define CHANNEL_COUNT 8
+
+; Combined SN and FM drums: 15 channels
+.elif BANJO_MODE == MODE_SN_FM_DRUMS
+
+	.define CHANNEL_COUNT 15
+	.define INCLUDE_OPLL 1
+
+.endif
+
 
 .RAMSECTION "Music Vars" slot 3
 
@@ -99,19 +99,28 @@
 
 .include "music_init.inc"
 .include "music_play.inc"
+.include "music_queue.inc"
 .include "music_stop.inc"
 .include "music_update.inc"
 .include "update_pitch_registers.inc"
 .include "instrument_change.inc"
 .include "process_channels_tic.inc"
 .include "process_new_line.inc"
-.include "note_on_off.inc"
-.include "mute_unmute.inc"
 .include "arpeggio.inc"
+.include "mute_unmute.inc"
 .include "pitch_slide.inc"
 .include "vibrato.inc"
-.include "volume_change.inc"
 .include "volume_macro.inc"
-.include "fnums_sn.inc"
-.include "fnums_fm.inc"
 
+.include "opll/fnums_fm.inc"
+.include "opll/drum_tables.inc"
+.include "opll/note_on_off.inc"
+.include "opll/pitch_slide.inc"
+.include "opll/vibrato.inc"
+.include "opll/volume_change.inc"
+
+.include "sn/fnums_sn.inc"
+.include "sn/note_on_off.inc"
+.include "sn/pitch_slide.inc"
+.include "sn/vibrato.inc"
+.include "sn/volume_change.inc"

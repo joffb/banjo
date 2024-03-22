@@ -1,4 +1,5 @@
-fm_tone_lookup: 
+fm_tone_lookup:
+.ifdef INCLUDE_OPLL
 ; C0
 .dw 172
 ; C#0
@@ -191,3 +192,4 @@ fm_tone_lookup:
 .dw 3891
 ; B7
 .dw 3909
+.endif

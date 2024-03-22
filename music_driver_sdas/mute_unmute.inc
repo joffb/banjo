@@ -3,7 +3,7 @@
 ; Joe Kennedy 2023
 
 ; a: channel to mute
-music_mute_song_channel: 
+_banjo_mute_song_channel: 
 	
     ; use a to get an offset into song_channel_ptrs into hl
 	add a, a
@@ -68,7 +68,7 @@ music_mute_channel:
 	ret 
 
 ; a: channel to mute
-music_unmute_song_channel: 
+_banjo_unmute_song_channel: 
 	
     ; use a to get an offset into song_channel_ptrs into hl
 	add a, a
@@ -107,9 +107,11 @@ music_unmute_song_channel:
         ; get song state in iy
         ld iy, #_song_state
 
+        .ifndef QUEUES_OFF
         ; change to song bank
         ld a, music_state.bank(iy)
         ld (SLOT_2_BANK_CHANGE), a
+        .endif 
 
         ; get the current instrument number for this channel
         ld a, channel.instrument_num(ix)

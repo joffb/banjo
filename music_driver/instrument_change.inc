@@ -77,6 +77,8 @@ music_instrument_change:
 	cp a, CHAN_OPLL
 	jr nz, music_instrument_change_done
 		
+		.ifdef INCLUDE_OPLL
+
 		; it is an fm instrument, store the patch number shifted left by 4
 		inc hl
 		ld a, (hl)
@@ -115,6 +117,8 @@ music_instrument_change:
 				ld a, 0x08
 				cp a, c
 				jr nz, music_instrument_change_fm_patch
+
+		.endif
 		
 	music_instrument_change_done:
 

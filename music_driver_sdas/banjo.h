@@ -152,7 +152,9 @@ void banjo_check_hardware(void);
 // initialise banjo for the given mode
 void banjo_init(unsigned char mode);
 
-// update song and sfx
+// Queues ON:
+
+// handle song/sfx queues and update playing song/sfx
 // this will change the bank for slot 2 (i.e. 0x8000 to 0xbfff (writes to mapper at 0xffff))
 void banjo_update(void);
 
@@ -169,13 +171,33 @@ void banjo_queue_sfx_loop_mode(unsigned char loop);
 void banjo_set_song_table(song_t const *song_table_ptr);
 void banjo_set_sfx_table(song_t const *sfx_table_ptr);
 
-// stop the currently playing song
-void banjo_song_stop(void);
+// Queues OFF:
 
-// stop the currently playing sfx
+// start playing song/sfx
+// change to the song/sfx's bank before calling this
+void banjo_play_song(song_t const *song_ptr, unsigned char loop_mode);
+void banjo_play_sfx(song_t const *song_ptr, unsigned char loop_mode);
+
+// update song/sfx if one is playing
+// change to the song/sfx's bank before calling this
+void banjo_update_song(void);
+void banjo_update_sfx(void);
+
+// Queues both ON and OFF:
+
+// stop the currently playing song/sfx
+void banjo_song_stop(void);
 void banjo_sfx_stop(void);
 
 // resume playback of a stopped song
 void banjo_song_resume(void);
+
+// mute the given song channel
+void banjo_mute_song_channel(unsigned char chan);
+
+// unmute the given song channel
+// when handling your own banking and using opll fm with custom instruments
+// change to the song's bank before calling this to properly restore the custom instrument patch
+void banjo_unmute_song_channel(unsigned char chan);
 
 #endif

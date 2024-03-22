@@ -2,6 +2,8 @@
 ; banjo sound driver
 ; Joe Kennedy 2023
 
+.ifndef QUEUES_OFF
+
 banjo_update:
 
     push ix
@@ -29,7 +31,9 @@ banjo_update:
         ; new song has been queued
         call music_handle_song_queue
 
-    banjo_update_check_sfx:
+	banjo_update_check_sfx:
+
+	; check if an sfx is queued
     ld a, (queue_sfx)
     cp a, 0xff
     jr nz, banjo_update_new_sfx
@@ -58,14 +62,67 @@ banjo_update:
 
     ret
 
-; music update function to be called every frame
+.else
+
+banjo_update:
+	ret
+
+.endif
+
+; update the song if one is playing
+banjo_update_song:
+
+	; check if a song is playing
+	ld a, (song_playing)
+	or a, a
+	jr z, banjo_update_song_done
+
+		push ix
+		push iy
+
+		; if it is, run the updates
+		ld ix, song_channels
+		ld iy, song_state
+		call music_update
+
+		pop iy
+		pop ix
+
+	banjo_update_song_done:
+	ret
+
+; update the sfx if one is playing
+banjo_update_sfx:
+
+	; check if a sfx is playing
+	ld a, (sfx_playing)
+	or a, a
+	jr z, banjo_update_sfx_done
+
+		push ix
+		push iy
+
+		; if it is, run the updates
+		ld ix, sfx_channel
+		ld iy, sfx_state
+		call music_update
+
+		pop iy
+		pop ix
+
+	banjo_update_sfx_done:
+	ret
+
+; update function to be called every frame
 ; ix: channels
 ; iy: music state
 music_update:
 
+	.ifndef QUEUES_OFF
 	; switch bank to the one the song uses
 	ld a, (iy + music_state.bank)
 	ld (SLOT_2_BANK_CHANGE), a
+	.endif
 
 	; clear process new line flag
 	ld (iy + music_state.process_new_line), 0
@@ -165,7 +222,7 @@ music_update:
 
 							; unmute song channel
 							ld a, (iy + music_state.sfx_channel)
-							call music_unmute_song_channel
+							call banjo_unmute_song_channel
 						
 							ret
 						
