@@ -139,6 +139,18 @@ music_handle_song_queue:
 	cp a, BANJO_MAGIC_BYTE
 	jr nz, mhsoq_done
 
+		; get channnel count
+		; abort if this song uses > CHANNEL_COUNT
+		inc hl
+		inc hl
+		ld a, CHANNEL_COUNT
+		cp a, (hl)
+		ret c
+
+		; move pointer back
+		dec hl
+		dec hl
+
 		ld a, (queue_song_loop)
 		ld b, a
 		ld ix, song_channels

@@ -21,6 +21,18 @@ banjo_play_song:
 	cp a, BANJO_MAGIC_BYTE
 	ret nz
 
+	; get channnel count
+	; abort if it's > CHANNEL_COUNT
+	inc hl
+	inc hl
+	ld a, CHANNEL_COUNT
+	cp a, (hl)
+	ret c
+
+	; move pointer back
+	dec hl
+	dec hl
+
 	; mark song as playing
 	ld a, 1
 	ld (song_playing), a
@@ -53,7 +65,7 @@ banjo_play_sfx:
 	ex (sp), hl
 	; music pointer in hl, loop mode in d
 	ex de, hl
-	
+
 	; try to ensure we're playing valid data
 	ld a, (hl)
 	cp a, BANJO_MAGIC_BYTE
