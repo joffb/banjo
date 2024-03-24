@@ -445,7 +445,7 @@ music_play:
 		; set up default rhythm instrument values
 		ld a, (iy + music_state.has_fm_drums)
 		or a, a
-		call z, music_set_default_fm_drum_pitches
+		call nz, music_set_default_fm_drum_pitches
 
 		; mute all fm channels
 		call music_mute_all_fm

@@ -155,7 +155,7 @@ music_fm_drum_change:
     ld h, (hl)
 
     ; move hl along to fm patch data
-    add a, 5
+    add a, 4
     ld l, a
     adc a, h
     sub a, l
