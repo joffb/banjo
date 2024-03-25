@@ -1,16 +1,16 @@
 assets2banks assets
 
-python ../../furnace2json.py ../cmajor.fur cmajor.json
-python ../../json2sms.py cmajor cmajor.json cmajor.c
+python ../../furnace2json.py -o ./cmajor.json ../cmajor.fur
+python ../../json2sms.py -o cmajor.asm -i cmajor ./cmajor.json 
 
-python ../../furnace2json.py ../cmajor_sn.fur cmajor_sn.json
-python ../../json2sms.py cmajor_sn cmajor_sn.json cmajor_sn.c
+python ../../furnace2json.py -o ./cmajor_sn.json ../cmajor_sn.fur
+python ../../json2sms.py -o cmajor_sn.asm -i cmajor_sn ./cmajor_sn.json 
 
-python ../../furnace2json.py ../sfx_test.fur sfx_test.json
-python ../../json2sms.py sfx 2 sfx_test sfx_test.json sfx_test.c
+python ../../furnace2json.py -o ./sfx_test.json ../sfx_test.fur
+python ../../json2sms.py -o sfx_test.asm -s 2 -i sfx_test ./sfx_test.json 
 
-python ../../furnace2json.py ../sfx_test_sn.fur sfx_test_sn.json
-python ../../json2sms.py sfx 2 sfx_test_sn sfx_test_sn.json sfx_test_sn.c
+python ../../furnace2json.py -o ./sfx_test_sn.json ../sfx_test_sn.fur
+python ../../json2sms.py -o sfx_test_sn.asm -s 2 -i sfx_test_sn ./sfx_test_sn.json 
 
 sdcc -c --peep-file peep-rules.txt -I../../music_driver_sdas -mz80 main.c
 sdcc -c --peep-file peep-rules.txt -I../../music_driver_sdas -mz80 --codeseg BANK1 bank1.c

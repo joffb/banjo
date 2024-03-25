@@ -8,8 +8,13 @@
 + Sound Effect playback
     + only 1 SFX can be played back at a time
     + only 1 channel can be included in the SFX
-    + SFX can be given a priority, so one SFX can override another if it's more important, or is ignored if it's not
-+ Simple system for playing back songs and SFX, so you only need to call `banjo_queue_song(song_number);` or do `ld a, song_number / ld (queue_song), a` and the next call to `banjo_update` will handle it.
+    + using the queue system, SFX can be given a priority, so one SFX can override another if it's more important, or is ignored if it's not
++ Queue system for playing back songs and SFX, so you only need to call `banjo_queue_song(song_number);` or do `ld a, song_number / ld (queue_song), a` and the next call to `banjo_update` will handle it.
+	+ this automatically changes bank 2 (0x8000 to 0xbfff) by writing to 0xffff
++ When you want to handle banking and playback in a custom way, or integrate with other libraries, there are functions which can be used to play and update songs without the queue system
+	+ `banjo_play_song` will start a song playing, `banjo_update_song` can be called once a frame to update it
+	+ `banjo_play_sfx` will start a sfx playing, `banjo_update_sfx` can be called once a frame to update it
+	+ `banjo_mute_song_channel` and `banjo_unmute_song_channel` can be used to mute song channels when playing back sfx with a different library
 + Supports Song/SFX sizes up to 16kb (the song needs to be entirely in one bank)
 
 ### Furnace features and effects currently supported:
@@ -26,34 +31,35 @@
 
 ### furnace2json
 This is a script to turn a furnace .fur file into a json representation
-`python furnace2json.py input.fur output.json`
+
+`python furnace2json.py -o output.json input.fur`
 
 ### json2sms
 This is a script to turn the json output of furnace2json into a .c or .asm file
 
 For songs, you use it like:
 
-```python json2sms.py song_name input.json output.asm```
+```python json2sms.py -o output.asm -i song_name input.json ```
 
-```python json2sms.py song_name input.json output.c```
+```python json2sms.py -o output.c -i song_name input.json ```
 
 "song_name" will then be used as the name of the variable in .c or label for the song in .asm
 
-For sfx you use it like:
+For sfx you use it with "-s" like:
 
-```python json2sms.py sfx 2 sfx_name input.json output.asm```
+```python json2sms.py -o output.asm -i sfx_name -s 2 input.json ```
 
-```python json2sms.py sfx 2 sfx_name input.json output.c```
+```python json2sms.py -o output.asm -i sfx_name -s 2 input.json```
 
-"sfx" as the first parameter indicates that it should run in sfx mode
-
-SFX only run on one channel, specified by the second parameter. So here "2" is the channel number which the sfx is in (zero indexed, so the first channel in the .fur is 0). Other channels will not be included in the export!
+SFX only run on one channel, specified by the -s parameter. So here "-s 2" the channel number which the sfx is in (zero indexed, so the first channel in the .fur is 0). Other channels will not be included in the export!
 
 To make channel numbers line up properly with Song playback, your SFX .fur should also use the same chip and channel configuration as the Song .fur - i.e. if the Song uses both SN and FM, the SFX should also use both SN and FM so the channel numbers are the same in both cases.
 
 ### Libraries
 
 For SDCC/SDAS, the .rel libraries are located in music_driver_sdas/lib
+Libraries with "_qo" in the filename don't include the queues for smaller footprint.
+Libraries which only use the SN76489 won't include code for the OPLL.
 
 The major difference between the library files is that they reserve different amounts of space in RAM for song channels, to accommodate songs for different types of hardware.
 You should choose the library which provides enough space to handle all of the channels in your songs, for all supported configurations.
@@ -154,12 +160,18 @@ Which would mean change the channel's instrument to 3, start an arpeggio that go
 ## Functions
 
 ```c
+// sets banjo_fm_unit_present to 1 if an fm unit is installed, 0 otherwise
+// sets banjo_game_gear_mode to 1 if it's detected that wer're running on a game gear in game gear mode, 0 otherwise
+void banjo_check_hardware(void);
+
 // initialise banjo for the given mode
 void banjo_init(unsigned char mode);
 
-// update song and sfx
+// Queues ON:
+
+// handle song/sfx queues and update playing song/sfx
 // this will change the bank for slot 2 (i.e. 0x8000 to 0xbfff (writes to mapper at 0xffff))
-void banjo_update();
+void banjo_update(void);
 
 // queue song/sfx to be played back starting on next banjo_update
 void banjo_queue_song(unsigned char song);
@@ -171,22 +183,55 @@ void banjo_queue_song_loop_mode(unsigned char loop);
 void banjo_queue_sfx_loop_mode(unsigned char loop);
 
 // set up pointers to the song and sfx tables
-void banjo_set_song_table(song_t const *song_table_ptr);
-void banjo_set_sfx_table(song_t const *sfx_table_ptr);
+void banjo_set_song_table(const song_t *song_table_ptr);
+void banjo_set_sfx_table(const song_t *sfx_table_ptr);
 
-// stop the currently playing sfx
-void banjo_sfx_stop();
+// Queues OFF:
 
-// sets banjo_fm_unit_present to 1 if an fm unit is installed, 0 otherwise
-// sets banjo_game_gear_mode to 1 if it's detected that wer're running on a game gear in game gear mode, 0 otherwise
-void banjo_check_hardware();
+// start playing song/sfx
+// change to the song/sfx's bank before calling this
+void banjo_play_song(const song_data_t *song_ptr, unsigned char loop_mode);
+void banjo_play_sfx(const song_data_t *song_ptr, unsigned char loop_mode);
+
+// update song/sfx if one is playing
+// change to the song/sfx's bank before calling this
+void banjo_update_song(void);
+void banjo_update_sfx(void);
+
+// Queues both ON and OFF:
+
+// stop the currently playing song/sfx
+void banjo_song_stop(void);
+void banjo_sfx_stop(void);
+
+// resume playback of a stopped song
+void banjo_song_resume(void);
+
+// mute the given song channel
+void banjo_mute_song_channel(unsigned char chan);
+
+// unmute the given song channel
+// when handling your own banking and using opll fm with custom instruments
+// change to the song's bank before calling this to properly restore the custom instrument patch
+void banjo_unmute_song_channel(unsigned char chan);
+
+// variables
 
 // stores the mode after it's set in banjo_init
 extern unsigned char banjo_mode;
 
-// flags whether the fm unit is installed
+// flags whether the FM unit is installed
 extern unsigned char banjo_fm_unit_present;
 
-// flags whether we're running on a game gear
+// flags whether we're running on a Game Gear
 extern unsigned char banjo_game_gear_mode;
+
+// flags whether we're running on Sega System E
+extern unsigned char banjo_system_e;
+
+extern song_data_t song_state;
+extern channel_t song_channels[];
+
+extern song_data_t sfx_state;
+extern channel_t sfx_channel;
 ```
