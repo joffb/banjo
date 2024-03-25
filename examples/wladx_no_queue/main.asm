@@ -142,6 +142,7 @@ init:
 	ld hl, cmajor_sn
 	ld a, 1
 	push af
+	inc sp
 	call banjo_play_song
 
 	; enable vdp screen 1 and enable vblank interrupt
@@ -211,6 +212,7 @@ init:
 			ld hl, sfx_test_sn
 			ld a, 0
 			push af
+			inc sp
 			call banjo_play_sfx
 
 		dont_play_sfx:
