@@ -170,11 +170,8 @@ banjo_check_hardware:
     ; check for Sega System E by seeing if there's 16kb of RAM 
     ; rather than 8kb with 0xe000 being a mirror of 0xc000
 
-    ; get byte at 0xc000 and save it
-    ld de, 0xe000
-    ld hl, 0xc000
-    ld a, (hl)
-    push af
+    ld de, banjo_system_e + 8192
+    ld hl, banjo_system_e
 
     ; number of values to write for test
     ld b, 8
@@ -184,10 +181,10 @@ banjo_check_hardware:
 
     bch_check_system_e:
 
-        ; write b to 0xc000
+        ; write b to (banjo_system_e) variable
         ld (hl), b
 
-        ; read 0xe000 and compare it
+        ; read (banjo_system_e variable  + 8192) and compare it
         ld a, (de)
         cp a, (hl)
         jr z, bch_not_mirrored
@@ -197,10 +194,6 @@ banjo_check_hardware:
 
         bch_not_mirrored:
         djnz bch_check_system_e
-
-    ; restore byte at 0xc000
-    pop af
-    ld (hl), a
 
     ; c == 0 if all 0xe000 reads matched the 0xc000 writes
     ld a, c
