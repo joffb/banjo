@@ -189,13 +189,13 @@ _banjo_check_hardware:
         cp a, (hl)
         jr z, bch_not_mirrored
 
-            ; 0xc000 write != 0xe000 read
+            ; (banjo_system_e) write != (banjo_system_e variable  + 8192) read
             inc c
 
         bch_not_mirrored: 
         djnz bch_check_system_e
 
-    ; c == 0 if all 0xe000 reads matched the 0xc000 writes
+    ; c == 0 if all (banjo_system_e variable  + 8192) reads matched the (banjo_system_e) writes
     ld a, c
     or a, a
     jr z, bch_check_system_e_done
