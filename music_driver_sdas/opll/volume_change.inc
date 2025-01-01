@@ -2,64 +2,85 @@
 ; banjo sound driver
 ; Joe Kennedy 2024
 
-; include full opll code
-.ifdef INCLUDE_OPLL
+music_volume_change_opll: 
 
-music_volume_change_fm: 
+    ; choose volume register
+    ld a, channel.subchannel(ix)
+    add a, #0x30
+    out (#OPLL_REG_PORT), a
+    
+    ; get channel volume
+    ld a, channel.volume(ix)
 
-    ; restore original hl
-	ex de, hl
+    ; check whether a volume macro is active and add the macro's value if it is
+    bit CHAN_FLAG_BIT_VOLUME_MACRO, channel.flags(ix)
+    jr z, mvcopll_no_macro
 
-    ; update local volume variable
-    inc hl
-    ld a, (hl)
-    and a, #0xf
-    ld channel.volume(ix), a
+        and a, #0xf
+        add a, channel.volume_macro_vol(ix)
+        cp a, #0x10
+        jr c, mvcopll_no_macro
 
-    ; preserve volume in c
+            ; max out volume value at 0xf
+            ld a, #0x0f
+
+    mvcopll_no_macro: 
+
+    ; is the master volume less than 0x80?
+    bit 7, music_state.master_volume(iy)
+    jr nz, mvcopll_no_master_volume
+
+        ; preserve current volume
+        ld c, a
+        
+        ; make master volume a 4 bit number
+        ld a, music_state.master_volume(iy)
+        rrca 
+        rrca 
+        rrca 
+        and a, #0xf
+
+        ; subtract from 15
+        neg 
+        add a, #0xf
+
+        ; add to current volume total
+        add a, c
+        cp a, #0x10
+        jr c, mvcopll_no_master_volume
+
+            ; max out volume value at 0xf
+            ld a, #0x0f
+
+    mvcopll_no_master_volume: 
+
+    ; preserve volume
     ld c, a
 
-    ; don't update chip volume if
-    ; channel is muted, volume macro is active or note-on is false
-    ld a, channel.flags(ix)
-    xor a, #CHAN_FLAG_NOTE_ON
-    and a, #CHAN_FLAG_MUTED+CHAN_FLAG_NOTE_ON+CHAN_FLAG_VOLUME_MACRO
-    jr nz, mvc_fm_dont_update_chip
+    ; ex macro active?
+    bit CHAN_FLAG_BIT_EX_MACRO, channel.flags(ix)
+    jr z, mvcopll_no_ex_macro
 
-        ; select volume/patch register
-        ld a, channel.subchannel(ix)
-        add a, #0x30
-        out (#OPLL_REG_PORT), a
+    ; is it a patch macro?
+    ld a, channel.ex_macro_type(ix)
+    cp a, #MACRO_TYPE_WAVE
+    jr nz, mvcopll_no_ex_macro
 
-        ; get volume back into a
-        ; combine with patch number and write to chip
-        ld a, c
-        or a, channel.fm_patch_shifted(ix)
+        ; get current patch which is the upper nibble of the volume reg
+        ; and combine with new volume level
+        ld a, channel.ex_macro_val(ix)
+        or a, c
+        jr mvcopll_write
+
+    mvcopll_no_ex_macro: 
+
+        ; get current patch which is the upper nibble of the volume reg
+        ; and combine with new volume level
+        or a, channel.patch(ix)
+
+    mvcopll_write: 
+    
+        ; write new value
         out (#OPLL_DATA_PORT), a
 
-    mvc_fm_dont_update_chip: 
-	inc hl
-	jp music_process_new_line_subloop
-
-music_volume_change_fm_drums: 
-
-    ; restore original hl
-	ex de, hl
-
-    ; update local volume variable
-    inc hl
-    ld a, (hl)
-    ld channel.volume(ix), a
-
-	inc hl
-	jp music_process_new_line_subloop
-
-; don't include full opll code
-.else 
-
-music_volume_change_fm: 
-music_volume_change_fm_drums: 
-    inc hl
-	jp music_process_new_line_subloop
-
-.endif 
+        jp music_volume_change_opll_done

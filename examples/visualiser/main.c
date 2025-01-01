@@ -1,10 +1,15 @@
 #include "SMSlib.h"
 
 #include "banjo.h"
+#include "banjo_sfx.h"
+#include "banjo_queue.h"
+
 #include "song_table.h"
 
 #include "bank2.h"
 #include "key_x_tile.h"
+
+BANJO_SONG_CHANNELS(CHAN_COUNT_OPLL_DRUMS)
 
 unsigned char tic;
 const unsigned char channel_lit_tiles[16] = {0, 8, 16, 24, 32, 40, 48, 0, 8, 16, 24, 32, 40, 48, 0, 8};
@@ -70,7 +75,7 @@ void main(void)
 {
 	channel_t *channel;
 
-	unsigned char i, key_lit_tile;
+	unsigned char i, keyboard_y, key_lit_tile;
 
 	SMS_VRAMmemsetW(0, 0x0000, 16384);
 	SMS_setSpriteMode(1);
@@ -96,17 +101,20 @@ void main(void)
 	// used to check whether the FM unit is present, and whether we're on a Game Gear in Game Gear mode
 	banjo_check_hardware();
 
+	banjo_queue_init();
+	banjo_sfx_init();
+
 	// check whether the FM unit is present
 	// use either the FM or SN song/sfx tables defined in song_tables.h depending on the result
-	if (banjo_fm_unit_present)
+	if (banjo_has_chips & BANJO_HAS_OPLL)
 	{
-		banjo_init(MODE_FM);
+		banjo_init(CHAN_COUNT_OPLL_DRUMS, BANJO_HAS_OPLL);
 		banjo_set_song_table(song_table_fm);
 		banjo_set_sfx_table(sfx_table_fm);
 	}
 	else
 	{
-		banjo_init(MODE_SN);
+		banjo_init(CHAN_COUNT_SN, BANJO_HAS_SN);
 		banjo_set_song_table(song_table_sn);
 		banjo_set_sfx_table(sfx_table_sn);
 	}
@@ -136,8 +144,24 @@ void main(void)
 				{
 					key_lit_tile = channel_lit_tiles[i];
 
+					if (channel->port == 0x7f)
+					{
+						keyboard_y = 40;
+					}
+					else
+					{
+						if (channel->subchannel < 6)
+						{
+							keyboard_y = 40 + 32;
+						}
+						else
+						{
+							keyboard_y = 40 + 64;
+						}
+					}
+
 					// draw key sprite for this note-on
-					SMS_addSprite_f(40 + (channel->type * 32), key_x_tile[channel->midi_note] + key_lit_tile);
+					SMS_addSprite_f(keyboard_y, key_x_tile[channel->midi_note] + key_lit_tile);
 				}
 			}
 		}

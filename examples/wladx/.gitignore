@@ -1,0 +1,16 @@
+*.lst
+*.rel
+*.sym
+*.asm
+*.json
+*.ihx
+*.lk
+*.noi
+*.map
+*.o
+cmajor.asm
+cmajor_sn.asm
+sfx_test.asm
+sfx_test_sn.asm
+SMSlib.h
+SMSlib.lib

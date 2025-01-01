@@ -2,8 +2,45 @@
 ; banjo sound driver
 ; Joe Kennedy 2024
 
-; include full opll code
-.ifdef INCLUDE_OPLL
+; opll slide type jump table
+music_update_pitch_slide_opll_jump_table: 
+
+	jr music_update_pitch_slide_done_opll
+	jr music_update_fm_pitch_slide_upward
+	jr music_update_fm_pitch_slide_downward
+	jr music_update_fm_portamento
+
+; update the pitch slides or portamento for a channel
+; ix: channel
+; iy: state
+music_update_pitch_slide_opll: 
+
+	; flag that we're updating the pitch
+	set CHAN_EVENT_BIT_PITCH_CHANGED, channel.events(ix)
+
+	; get current freq into de
+	ld e, channel.freq(ix)
+	ld d, channel.freq+1(ix)
+
+	; offset into jump table by slide type * 2
+	ld a, channel.slide_type(ix)
+	add a, a
+	add a, #<music_update_pitch_slide_opll_jump_table
+	ld l, a
+	adc a, #>music_update_pitch_slide_opll_jump_table
+	sub a, l
+	ld h, a
+
+	; jump to function for this slide type
+	jp (hl)
+
+music_update_pitch_slide_done_opll: 
+
+	; update freq with new value
+	ld channel.freq(ix), e
+	ld channel.freq+1(ix), d
+
+	ret 
 
 ; OPLL Pitch slides
 ; slide type == 1, upward slide
@@ -31,7 +68,7 @@ music_update_fm_pitch_slide_upward:
 	; a now contains the fnum / 2
 	; check if a > (325 / 2)
 	cp a, #162
-	jp c, music_update_pitch_slide_done
+	jp c, music_update_pitch_slide_done_opll
 
 		; a already contains half of the fnum so we can load that into e
 		ld e, a
@@ -44,11 +81,11 @@ music_update_fm_pitch_slide_upward:
 
 		; has block overflowed?
 		and a, #0xf0
-		jp z, music_update_pitch_slide_done
+		jp z, music_update_pitch_slide_done_opll
 
 			; cap pitch
 			ld de, #3990
-			jp music_update_pitch_slide_done
+			jp music_update_pitch_slide_done_opll
 
 
 ; slide type == 2, downward slide
@@ -75,7 +112,7 @@ music_update_fm_pitch_slide_downward:
 	; a now contains the fnum / 2
 	; check if a < (120 / 2)
 	cp a, #60
-	jp nc, music_update_pitch_slide_done
+	jp nc, music_update_pitch_slide_done_opll
 
 		; double the fnum
 		sla e
@@ -88,11 +125,11 @@ music_update_fm_pitch_slide_downward:
 		ld d, a
 
 		; has block underflowed?
-		jp nc, music_update_pitch_slide_done
+		jp nc, music_update_pitch_slide_done_opll
 
 			; if it has, cap pitch
 			ld de, #110
-			jp music_update_pitch_slide_done
+			jp music_update_pitch_slide_done_opll
 
 ; handle OPLL portamento
 ;   note that as the ranges of fnums we're using for the notes C to B span from
@@ -218,14 +255,4 @@ music_update_fm_portamento:
 
 	mufm_porta_done: 
 
-	    jp music_update_pitch_slide_done
-
-; don't include full opll code
-.else 
-
-music_update_fm_pitch_slide_upward: 
-music_update_fm_pitch_slide_downward: 
-music_update_fm_portamento: 
-    jp music_update_pitch_slide_done
-
-.endif 
+	    jp music_update_pitch_slide_done_opll

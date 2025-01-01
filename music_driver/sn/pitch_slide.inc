@@ -2,7 +2,45 @@
 ; banjo sound driver
 ; Joe Kennedy 2024
 
-; SN Pitch Slides
+; sn slide type jump table
+music_update_pitch_slide_sn_jump_table:
+
+	jr music_update_pitch_slide_done_sn
+	jr music_update_sn_pitch_slide_upward
+	jr music_update_sn_pitch_slide_downward 
+	jr music_update_sn_portamento
+
+; update the pitch slides or portamento for a channel
+; ix: channel
+; iy: state
+music_update_pitch_slide_sn:
+
+	; flag that we're updating the pitch
+	set CHAN_EVENT_BIT_PITCH_CHANGED, (ix + channel.events)
+
+	; get current freq into de
+	ld e, (ix + channel.freq)
+	ld d, (ix + channel.freq + 1)
+
+	; offset into jump table by slide type * 2
+	ld a, (ix + channel.slide_type)
+	add a, a
+	add a, <music_update_pitch_slide_sn_jump_table
+	ld l, a
+	adc a, >music_update_pitch_slide_sn_jump_table
+	sub a, l
+	ld h, a
+
+	; jump to function for this slide type
+	jp (hl)
+
+music_update_pitch_slide_done_sn:
+
+	; update freq with new value
+	ld (ix + channel.freq), e
+	ld (ix + channel.freq + 1), d
+
+	ret
 
 ; slide type == 1, upward slide
 music_update_sn_pitch_slide_upward:
@@ -21,7 +59,7 @@ music_update_sn_pitch_slide_upward:
 	; done
 	mu_sn_psu_done:
 	ex de, hl
-	jp music_update_pitch_slide_done
+	jp music_update_pitch_slide_done_sn
 
 ; slide type == 2, downward slide
 music_update_sn_pitch_slide_downward:
@@ -42,7 +80,7 @@ music_update_sn_pitch_slide_downward:
 	; done
 	mu_sn_psd_done:
 	ex de, hl
-	jp music_update_pitch_slide_done
+	jp music_update_pitch_slide_done_sn
 
 ; handle SN chip portamento
 ; ix: current channel
@@ -117,4 +155,4 @@ music_update_sn_portamento:
 
 	musn_porta_done:
 
-		jp music_update_pitch_slide_done
+		jp music_update_pitch_slide_done_sn

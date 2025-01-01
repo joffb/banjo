@@ -1,0 +1,199 @@
+
+; banjo sound driver
+; Joe Kennedy 2023
+
+; a: channel to mute
+banjo_mute_song_channel:
+
+    ; preserve channel number
+    ld l, a
+
+    ; check if the song is playing 
+    ; do nothing if it isn't
+    ld a, (song_playing)
+    or a, a
+    ret z
+
+    push ix
+    push iy
+
+    ld iy, song_state
+
+    bmsc_sfx_jump:
+
+    ; restore channel number
+    ld a, l
+
+    ; a = channel_number * 2
+	add a, a
+    push af
+
+    ; use a * 2 to get an offset into song_channel_ptrs into hl
+    add a, <song_channel_ptrs
+    ld l, a
+    adc a, >song_channel_ptrs
+    sub a, l
+    ld h, a
+
+    ; get pointer to channel in hl
+    ld a, (hl)
+    inc hl
+    ld h, (hl)
+    ld l, a
+
+    ; set muted flag
+    set CHAN_FLAG_BIT_MUTED, (hl)
+
+    ; get channel into ix
+    push hl
+    pop ix
+
+    ; get address of mute call table
+    ld l, (iy + music_state.channel_mute_calls)
+    ld h, (iy + music_state.channel_mute_calls + 1)
+
+    ; look up mute channel function in table
+    ; a = channel_number * 2
+    pop af
+    add a, l
+    ld l, a
+    adc a, h
+    sub a, l
+    ld h, a
+
+    ; get address of function into hl
+    ld a, (hl)
+    inc hl
+    ld h, (hl)
+    ld l, a
+
+    ; put return address on stack
+    ld de, banjo_mute_song_channel_done
+    push de
+
+    ; call function
+    jp (hl)
+
+    banjo_mute_song_channel_done:
+
+    pop iy
+    pop ix
+
+    ret
+
+; separate call which preserves iy = sfx_state
+; a: channel to mute
+banjo_mute_song_channel_from_sfx:
+
+    ; preserve channel number
+    ld l, a
+
+    ; check if the song is playing 
+    ; do nothing if it isn't
+    ld a, (song_playing)
+    or a, a
+    ret z
+
+    push ix
+    push iy
+
+    jr bmsc_sfx_jump
+
+; a: channel to mute
+banjo_unmute_song_channel:
+
+    ; use a to get an offset into song_channel_ptrs into hl
+	add a, a
+    add a, <song_channel_ptrs
+    ld l, a
+    adc a, >song_channel_ptrs
+    sub a, l
+    ld h, a
+
+    ; get actual pointer into channel in hl
+    ld a, (hl)
+    inc hl
+    ld h, (hl)
+    ld l, a
+
+    ; clear muted flag
+    res CHAN_FLAG_BIT_MUTED, (hl)
+    
+	ret
+
+banjo_mute_song:
+
+    ; make sure a song is playing
+    ld a, (song_playing)
+    or a, a
+    ret z
+
+        push hl
+        push iy
+
+        ld iy, song_state
+
+        ; set channel mute flags
+        ld hl, song_channels
+        ld de, _sizeof_channel
+        ld b, (iy + music_state.channel_count)
+
+        banjo_mute_song_loop:
+
+            ; set channel muted flag
+            set CHAN_FLAG_BIT_MUTED, (hl)
+            
+            ; move to next channel
+            add hl, de
+
+            djnz banjo_mute_song_loop
+
+        ; get song mute call in hl
+        ld l, (iy + music_state.song_mute)
+        ld h, (iy + music_state.song_mute + 1)
+
+        ; set up return address
+        ld de, banjo_mute_song_continue
+        push de
+
+        ; jump to song mute call
+        jp (hl)
+
+        banjo_mute_song_continue:
+
+        pop iy
+        pop hl
+
+        ret
+
+banjo_unmute_song:
+
+    ; make sure a song is playing
+    ld a, (song_playing)
+    or a, a
+    ret z
+
+        push hl
+        push iy
+
+        ld iy, song_state
+
+        ; clear channel mute flags
+        ld hl, song_channels
+        ld de, _sizeof_channel
+        ld b, (iy + music_state.channel_count)
+
+        banjo_unmute_song_loop:
+
+            ; set channel muted flag
+            res CHAN_FLAG_BIT_MUTED, (hl)
+            
+            ; move to next channel
+            add hl, de
+
+            djnz banjo_unmute_song_loop
+
+        pop iy
+        pop hl
+
+        ret

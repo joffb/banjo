@@ -1,2 +1,0 @@
-CHANNEL_COUNT .equ 11
-INCLUDE_OPLL .equ 1

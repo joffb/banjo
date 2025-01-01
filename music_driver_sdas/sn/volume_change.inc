@@ -3,31 +3,68 @@
 ; Joe Kennedy 2024
 
 music_volume_change_sn: 
+    
+    ; get channel volume
+    ld a, channel.volume(ix)
 
-    ; restore original hl
-	ex de, hl
+    ; check whether a volume macro is active and add the macro's value if it is
+    bit CHAN_FLAG_BIT_VOLUME_MACRO, channel.flags(ix)
+    jr z, mvcsn_no_macro
 
-	; update local volume variable
-    inc hl
-	ld a, (hl)
-    ld channel.volume(ix), a
+        ; isolate lower volume nibble and add macro volume
+        add a, channel.volume_macro_vol(ix)
+        cp a, #0x10
+        jr c, mvcsn_no_macro
 
-    ; preserve volume in c
-    ld c, a
+            ; max out volume value at 0xf
+            ld a, #0x0f
+    
+    mvcsn_no_macro: 
 
-    ; don't update chip volume if
-    ; channel is muted, volume macro is active or note-on is false
-    ld a, channel.flags(ix)
-    xor a, #CHAN_FLAG_NOTE_ON
-    and a, #CHAN_FLAG_MUTED+CHAN_FLAG_NOTE_ON+CHAN_FLAG_VOLUME_MACRO
-    jr nz, mvc_sn_dont_update_chip
+    ; is the master volume less than 0x80?
+    bit 7, music_state.master_volume(iy)
+    jr nz, mvcsn_no_master_volume
 
-        ; get volume back into a
-        ; and write it to the chip
-        ld a, c
-        ld c, channel.port(ix)
-        out (c), a
+        ; preserve current volume
+        ld c, a
+        
+        ; make master volume a 4 bit number
+        ld a, music_state.master_volume(iy)
+        rrca 
+        rrca 
+        rrca 
+        and a, #0xf
 
-    mvc_sn_dont_update_chip: 
-	inc hl
-	jp music_process_new_line_subloop
+        ; subtract from 15
+        neg 
+        add a, #0xf
+
+        ; add to current volume total
+        add a, c
+        cp a, #0x10
+        jr c, mvcsn_no_master_volume
+
+            ; max out volume value at 0xf
+            ld a, #0x0f
+
+    mvcsn_no_master_volume: 
+
+    ; get channel (pre-shifted into correct position)
+    or a, channel.subchannel(ix)
+
+    ; set latch and volume bit
+    or a, #0x90
+
+    ; load the port into c
+    ld c, channel.port(ix)
+    
+    ; update chip
+    out (c), a
+
+    ; ALF TEST
+    ; additional write delay
+    .ifdef BANJO_ALF
+        call _banjo_sn_alf_wait
+    .endif 
+
+    jp music_volume_change_sn_done

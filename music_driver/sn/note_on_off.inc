@@ -3,99 +3,97 @@
 ; Joe Kennedy 2023
 
 ; b  : current channel number
-; hl : pointer to current instruction in pattern
-; ix : channel pointer
-; iy : pointer to music state
-music_sn_note_on:
+; de : instruction pointer - needs to be exhanged with hl by the time we return
+; ix : channel
+; iy : music state
+mpnl_note_on_sn:
 
-	; restore original hl
-	ex de, hl
+	; standard note-on stuff
+	call music_note_on
 
-	; update note-on status 
-	set CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
-
-    ; update volume level on chip
-	ld a, (ix + channel.volume)
-	ld c, (ix + channel.port)
-	out (c), a
-
-	; update midi number field
-	inc hl
-	ld a, (hl)
+	; get and store midi number
+	inc de
+	ld a, (de)
 	ld (ix + channel.midi_note), a
+	inc de
 
-	; multiply note number by 2 to get offset into lookup table
-	ld de, sn_tone_lookup
+	; multiply by 2 and use as offset into lookup table
 	add a, a
-	add a, e
-	ld e, a
-	adc a, d
-	sub a, e
-	ld d, a
+	add a, <sn_tone_lookup
+	ld l, a
+	adc a, >sn_tone_lookup
+	sub a, l
+	ld h, a
+
+	; get fnum value into hl
+	ld a, (hl)
+	inc hl
+	ld h, (hl)
+	ld l, a
 
 	; decide where to put fnum depending on portamento mode
 	ld a, (ix + channel.slide_type)
 	cp a, SLIDE_TYPE_PORTA
-	jr z, msnno_portamento
+	jr z, mnon_sn_portamento
 
-	msnno_no_portamento:
-
-		; reset current vibrato level
-		ld (ix + channel.vibrato_current), VIBRATO_CENTRE
+	mnon_sn_no_portamento:
 
 		; portamento off, put fnum in freq
-		ld a, (de)
-		ld (ix + channel.freq), a
+		ld (ix + channel.freq), l
+		ld (ix + channel.freq + 1), h
 
-		inc de
-		ld a, (de)
-		ld (ix + channel.freq + 1), a
+		jr mnon_sn_done
 
-		jr msnno_done
-
-	msnno_portamento:
+	mnon_sn_portamento:
 
 		; portamento on, put fnum in target_freq
-		ld a, (de)
-		ld (ix + channel.target_freq), a
-
-		inc de
-		ld a, (de)
-		ld (ix + channel.target_freq + 1), a
-
-		dec de
+		ld (ix + channel.target_freq), l
+		ld (ix + channel.target_freq + 1), h
 
 		; check high byte of freq
 		; if it's 0xff that implies no notes have played so far
 		; so we write to freq too
 		ld a, (ix + channel.freq + 1)
 		cp a, 0xff
-		jr z, msnno_no_portamento
+		jr z, mnon_sn_no_portamento
 			
-	msnno_done:
-	inc hl
-	jp music_process_new_line_subloop
+	mnon_sn_done:
+	
+	; restore original hl
+	ex de, hl
 
-; b  : current channel number
-; hl : pointer to current instruction in pattern
-; ix : pointer to current channel
-; iy : pointer to music state
-music_sn_note_off:
+	jp mpnl_command_done
+
+; de: instruction pointer - needs to be exhanged with hl by the time we return
+; ix : channel
+; iy : music state
+mpnl_note_off_sn:
+
+	; standard note-off stuff
+	call music_note_off
 
 	; restore original hl
 	ex de, hl
 
-	; clear note on flag
-	res CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
+    ; check if the channel is muted
+	bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
+	jr nz, mnoff_sn_dont_write_chip
 
-	; get channel (already shifted to the correct position)
-	ld a, (ix + channel.subchannel)
+		; get channel (already shifted to the correct position)
+		ld a, (ix + channel.subchannel)
 
-	; set latch = 1, type = volume, volume = 0
-	or a, 0x9f
-	ld c, (ix + channel.port)
-	out (c), a
+		; set latch = 1, type = volume, volume = 0
+		or a, 0x9f
+		ld c, (ix + channel.port)
+		out (c), a
+
+        ; ALF TEST
+        ; additional write delay
+		.ifdef BANJO_ALF
+			call banjo_sn_alf_wait
+		.endif
+
+	mnoff_sn_dont_write_chip:
 	
-	inc hl 
-	jp music_process_new_line_subloop
-
+	inc hl
+	jp mpnl_command_done

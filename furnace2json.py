@@ -902,14 +902,7 @@ def main(argv=None):
                                 )[0]
                             )
 
-                        # add macro to list
-                        if (macro['code'] == 0):
-
-                            instrument['volume_macro'] = macro
-
-                        else:
-
-                            instrument['macros'].append(macro)
+                        instrument['macros'].append(macro)
 
 
                         # advance pointer
