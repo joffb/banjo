@@ -32,9 +32,6 @@ void main(void)
         // change to the song's bank and play the song
         SWITCH_ROM2(BANK(cmajor));
         banjo_play_song(&cmajor);
-
-        // update song's bank property with the correct bank number
-        song_state.bank = BANK(cmajor);
     }
     else
     {
@@ -46,9 +43,6 @@ void main(void)
         // change to the song's bank and play the song
         SWITCH_ROM2(BANK(cmajor_sn));
         banjo_play_song(&cmajor_sn);
-
-        // update song's bank property with the correct bank number
-        song_state.bank = BANK(cmajor_sn);
     }
 
     enable_interrupts();

@@ -928,23 +928,34 @@ def main(argv=None):
 
     bank_number = str(options.bank) if (options.bank) else "0"
 
+    # sdas/sdcc mode
     if (options.sdas):
 
+        # prefix song name with an underscore so it's accessible in C
         song_prefix = "_" + song_prefix
 
+        # prefix asm calls song name with an underscore
         channel_init_calls = map(lambda call: "_" + call, channel_init_calls)
         channel_update_calls = map(lambda call: "_" + call, channel_update_calls)
         channel_mute_calls = map(lambda call: "_" + call, channel_mute_calls)
         song_mute_calls = map(lambda call: "_" + call, song_mute_calls)
 
+        # set the module for this file so it flags up the file name in any errors
         outfile.write(".module " + song_prefix + "\n")
+
+        # export the song label so it's accessible in C
         outfile.write(".globl " + song_prefix + "\n")
 
+        # area specified
         if (options.area):
-            outfile.write(".area _" + options.area + "\n")
 
+            # postfix the area name with the bank number if available
+            outfile.write(".area _" + options.area + (str(options.bank) if options.bank else "") + "\n")
+
+        # bank specified
         if (options.bank):
             
+            # used for gbdk autobanking
             outfile.write("___bank" + song_prefix + " .equ " + str(options.bank) + "\n")
             outfile.write(".globl ___bank" + song_prefix + "\n")
             bank_number = "___bank" + song_prefix
@@ -1173,7 +1184,7 @@ def main(argv=None):
             writelabel("patterns_" + str(i) + "_" + str(pattern_index))
             outfile.write(".db " + ", ".join(map(str, patterns[i][pattern_index])) + "\n")
 
-    outfile.write("\n\n.rept 10000\n.db 0xba\n.endm\n")
+    #outfile.write("\n\n.rept 10000\n.db 0xba\n.endm\n")
 
     # close file
     outfile.close()

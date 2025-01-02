@@ -58,24 +58,27 @@ This is a script to turn a furnace .fur file into a json representation
 ### json2sms
 
 This is a script to turn the json output of furnace2json into an .asm file.
-You can use the --sdas option to enable SDCC/SDAS compatible output.
-The -b option can be used to set the bank number, and -a can be used to set the area name
+The -i parameter can be used to determine the name of the song's variable in C or its label in Asm.
 
-For songs, you could use it like:
+For song in a WLA-DX project, you could use it like:
 
-```python json2sms.py -o output.asm -i song_name input.json ```
+```python json2sms.py -i song_name -o output.asm input.json ```
 
-or for a banked SDCC/SDAS output something like
+For a banked SDCC/SDAS output you could use it like:
 
-```python json2sms.py --sdas -b 3 -a LIT_3 -o output.asm -i song_name input.json ```
+```python json2sms.py -i song_name --sdas -a LIT_ -b 3 -o output.asm input.json ```
 
-"song_name" will then be used as the name of the variable in C or label for the song in .asm
+You can use the --sdas option to enable SDCC/SDAS compatible output for use in C projects (e.g. with devkitSMS or GBDK) and will prefix `song_name` with an underscore like `_song_name` so that it can be properly referenced from C.
+
+The -b option can be used to set the bank number, and -a can be used to set the area name. When both an area name and bank number are provided as in the example, it will concatenate the two and output an AREA assembler directive like:
+
+```.AREA LIT_3```
 
 For sfx you use it with "-s" like:
 
-```python json2sms.py -o output.asm -i sfx_name -s 2 input.json ```
+```python json2sms.py -i sfx_name -s 2 -o output.asm input.json ```
 
-SFX only run on one channel, specified by the -s parameter. So here "-s 2" the channel number which the sfx is in (zero indexed, so the first channel in the .fur is 0). Other channels will not be included in the export!
+SFX only play back on one channel, specified by the -s parameter. So here "-s 2" the channel number which the sfx is in (zero indexed, so the first channel in the .fur is 0). Other channels will not be included in the export!
 
 To make channel numbers line up properly with Song playback, your SFX .fur should also use the same chip and channel configuration as the Song .fur - i.e. if the Song uses both SN and FM, the SFX should also use both SN and FM so the channel numbers are the same in both cases.
 
