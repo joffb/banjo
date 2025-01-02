@@ -22,9 +22,6 @@ music_update_pitch_registers_ay:
     ld a, e
     out (#AY_DATA_WRITE), a
     
-    ; store for later
-    ld channel.freq(ix), a
-    
     ; get coarse pitch register
     ld a, c
     inc a
@@ -33,8 +30,5 @@ music_update_pitch_registers_ay:
     ; write coarse pitch
     ld a, d
     out (#AY_DATA_WRITE), a
-
-    ; store for later
-    ld channel.freq+1(ix), a
 
     jp music_update_pitch_registers_ay_done

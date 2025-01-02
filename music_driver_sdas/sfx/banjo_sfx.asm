@@ -24,6 +24,7 @@
 	.globl _sfx_state, _sfx_channel
 	.globl sfx_playing, sfx_priority 
 	.globl _banjo_sfx_init, _banjo_play_sfx, _banjo_update_sfx, _banjo_sfx_stop
+	.globl _banjo_set_sfx_loop_mode, _banjo_set_sfx_master_volume
 
     .include "sfx.inc"
     

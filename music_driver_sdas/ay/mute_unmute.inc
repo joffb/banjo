@@ -6,9 +6,6 @@
 ; iy: music_state
 _banjo_mute_channel_ay: 
 
-    ; set muted bit
-    set CHAN_FLAG_BIT_MUTED, channel.flags(ix)
-
     ; get AY_REG_WRITE in c
     ld c, channel.port(ix)
 

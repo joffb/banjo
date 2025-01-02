@@ -6,6 +6,8 @@
 ; iy: music state
 music_volume_change_ay: 
 
+    ; for AY the quietest volume is 0 and the loudest is 15
+
     ; get channel volume into a and d
     ; also contains envelope flag in the upper nibble
     ld a, channel.volume(ix)
@@ -26,12 +28,42 @@ music_volume_change_ay:
         mvc_ay_no_carry: 
         ld c, a
 
-        ; combine new volume with envelope flag
-        ld a, d
-        and a, #0xf0
-        or a, c
-
     mvc_ay_no_macro: 
+
+    ; is the master volume less than 0x80?
+    bit 7, music_state.master_volume(iy)
+    jr nz, mvcay_no_master_volume
+
+        ; preserve current volume
+        ld c, a
+        
+        ; make master volume a 4 bit number
+        ld a, music_state.master_volume(iy)
+        rrca 
+        rrca 
+        rrca 
+        and a, #0xf
+
+        ; invert
+        neg 
+        add a, #0xf
+        ld e, a
+
+        ; sub from current volume total
+        ld a, c
+        sub a, e
+        jr nc, mvcay_no_master_volume
+
+            ; max out volume value at 0x0
+            ld a, #0x00
+
+    mvcay_no_master_volume: 
+
+    ; combine new volume with envelope flag
+    ld c, a
+    ld a, d
+    and a, #0xf0
+    or a, c
 
     ; preserve new volume in d
     ld d, a

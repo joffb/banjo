@@ -1,5 +1,5 @@
 XL3
-H 2 areas 35 global symbols
+H 2 areas 36 global symbols
 M BANJO_MAIN
 S _song_channels Ref000000
 S _SMS_Port3EBIOSvalue Ref000000
@@ -8,6 +8,7 @@ S _song_channel_ptrs Ref000000
 A _CODE size 7C9 flags 0 addr 0
 S mpnl_slide_off Def000123
 S music_update Def0005FD
+S _banjo_set_song_loop_mode Def000521
 S _banjo_set_song_master_volume Def00029A
 S mpnl_order_jump Def00018D
 S mpnl_vibrato Def000157
