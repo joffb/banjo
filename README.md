@@ -56,13 +56,20 @@ This is a script to turn a furnace .fur file into a json representation
 `python furnace2json.py -o output.json input.fur`
 
 ### json2sms
-This is a script to turn the json output of furnace2json into a .c or .asm file
 
-For songs, you use it like:
+This is a script to turn the json output of furnace2json into an .asm file.
+You can use the --sdas option to enable SDCC/SDAS compatible output.
+The -b option can be used to set the bank number, and -a can be used to set the area name
+
+For songs, you could use it like:
 
 ```python json2sms.py -o output.asm -i song_name input.json ```
 
-"song_name" will then be used as the name of the variable in .c or label for the song in .asm
+or for a banked SDCC/SDAS output something like
+
+```python json2sms.py --sdas -b 3 -a LIT_3 -o output.asm -i song_name input.json ```
+
+"song_name" will then be used as the name of the variable in C or label for the song in .asm
 
 For sfx you use it with "-s" like:
 

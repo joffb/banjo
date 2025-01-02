@@ -926,6 +926,8 @@ def main(argv=None):
 
         outfile.write(song_prefix + "_" + label + ":" + "\n")
 
+    bank_number = str(options.bank) if (options.bank) else "0"
+
     if (options.sdas):
 
         song_prefix = "_" + song_prefix
@@ -942,9 +944,10 @@ def main(argv=None):
             outfile.write(".area _" + options.area + "\n")
 
         if (options.bank):
-
+            
             outfile.write("___bank" + song_prefix + " .equ " + str(options.bank) + "\n")
             outfile.write(".globl ___bank" + song_prefix + "\n")
+            bank_number = "___bank" + song_prefix
 
         outfile.write("\n")
 
@@ -955,7 +958,7 @@ def main(argv=None):
     writelabel("magic_byte")
     outfile.write(".db " + str(MAGIC_BYTE) + "\n")
     writelabel("bank")
-    outfile.write(".db {:d}\n".format(int(options.bank) if (options.bank) else 0))
+    outfile.write(".db " + bank_number + "\n")
     writelabel("channel_count")
     outfile.write(".db " + str(1 if sfx else song['channel_count']) + "\n")
     writelabel("flags")
