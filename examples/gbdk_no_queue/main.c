@@ -4,10 +4,13 @@
 // used with autobanking to get the bank numbers for song data
 BANKREF_EXTERN(cmajor)
 BANKREF_EXTERN(cmajor_sn)
+BANKREF_EXTERN(cmajor_sn_test)
+
 
 // references to song data
 extern song_data_t cmajor;
 extern song_data_t cmajor_sn;
+extern song_data_t cmajor_sn_test;
 
 // allocate arrays in ram with space for the maximum number of channels
 // we'll be using in our songs

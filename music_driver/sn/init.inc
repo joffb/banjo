@@ -6,6 +6,17 @@
 ; iy: music state
 banjo_init_sn:
 
+    ; check if this is a Game Gear and reset panning if it is
+    ld a, (banjo_system_flags)
+    bit SYS_FLAG_BIT_GG, a
+    jr z, bisn_not_gg
+
+        ; reset panning
+        ld a, 0xff
+        out (GAME_GEAR_PAN_PORT), a
+
+    bisn_not_gg:
+
     ; port number
     ld c, SN76489_PORT
 
