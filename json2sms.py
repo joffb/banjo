@@ -523,11 +523,16 @@ def main(argv=None):
         # separate pattern arrays per channel
         patterns[i] = {}
 
-        current_inst = -1
-        current_vol = -1
-
         # go through each pattern in the channel
         for j in range (0, len(song['patterns'][i])):
+
+            # keep track of the current instrument
+            # so we don't have multiple INSTRUMENT_CHANGEs per note
+            # when the instrument is exactly the same
+            # reset at a pattern level as patterns may appear out of order
+            # or be jumped to
+            current_inst = -1
+            current_vol = -1
 
             pattern = song['patterns'][i][j]
 
