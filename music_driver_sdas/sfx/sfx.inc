@@ -6,8 +6,8 @@ _banjo_sfx_init:
 
     ; no sfx should be playing initially
     ld a, #0
-    ld (sfx_playing), a
-    ld (sfx_priority), a
+    ld (_sfx_playing), a
+    ld (_sfx_priority), a
     
     ; clear first byte which has the magic byte
     ld (_sfx_state), a
@@ -24,7 +24,7 @@ _banjo_play_sfx:
 
         ; mark sfx as playing
         ld a, #1
-        ld (sfx_playing), a
+        ld (_sfx_playing), a
         
         push ix
         push iy
@@ -47,7 +47,7 @@ _banjo_play_sfx:
 _banjo_sfx_stop: 
 
     ; do nothing if an sfx isn't playing
-    ld a, (sfx_playing)
+    ld a, (_sfx_playing)
     or a, a
     jr z, _banjo_sfx_stop_no_sfx
 
@@ -95,8 +95,8 @@ _banjo_sfx_stop:
     _banjo_sfx_stop_no_sfx: 
 
     ld a, #0
-    ld (sfx_playing), a
-    ld (sfx_priority), a
+    ld (_sfx_playing), a
+    ld (_sfx_priority), a
     
     ret 
 
@@ -105,7 +105,7 @@ _banjo_update_sfx:
 
     ; check if a sfx is playing
     ; return if it's not
-    ld a, (sfx_playing)
+    ld a, (_sfx_playing)
     or a, a
     ret z
 

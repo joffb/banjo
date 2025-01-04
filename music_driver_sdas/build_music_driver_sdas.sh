@@ -16,3 +16,11 @@ sdasz80 -g -o ../lib/msx/banjo_opll_drums.rel system_msx.inc opll_drums/banjo_op
 sdasz80 -g -o ../lib/banjo_sfx.rel sfx/banjo_sfx.asm
 
 sdasz80 -g -o ../lib/banjo_queue.rel queue/banjo_queue.asm
+
+# convert the line endings to CRLF so they can be used
+# on both Windows and Linux
+unix2dos ../lib/*
+unix2dos ../lib/devkitsms/*
+unix2dos ../lib/gbdk_sms/*
+unix2dos ../lib/msx/*
+

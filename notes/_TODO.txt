@@ -1,7 +1,5 @@
 TODO LIST:
-    sdas conversion
-    c headers
-    rewrite documentation - separate docs for c and asm
+    rewrite documentation - separate docs for c and asm ?
     msx scc(+) ?
     opl/opl2/opl3?
-    convert remaining js scripts to python
+    convert remaining js scripts to python ?

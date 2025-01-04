@@ -159,7 +159,7 @@ async function process_lines(lines)
 	// add an underscore in front of these symbols so they match the C declared ones
 	let underscore_prefix = [
 		"song_channels", "song_channel_ptrs", "song_state", "song_table", 
-		"sfx_table", "sfx_channel", "sfx_state",
+		"sfx_table", "sfx_channel", "sfx_state", "sfx_playing", "sfx_priority"
 	];
 
 	var outfile = fs.createWriteStream(process.argv[3], {flags: "w+"});

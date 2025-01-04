@@ -15,10 +15,10 @@ S _banjo_play_sfx Def00000C
 S _banjo_update_sfx Def000069
 S _banjo_sfx_stop Def00002F
 A _DATA size 4B flags 0 addr 0
-S sfx_playing Def000000
+S _sfx_playing Def000000
+S _sfx_priority Def000001
 S _sfx_channel Def000025
 S _sfx_state Def000002
-S sfx_priority Def000001
 T 00 00 00
 R 00 00 01 00
 T 01 00 00
