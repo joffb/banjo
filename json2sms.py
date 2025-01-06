@@ -940,10 +940,10 @@ def main(argv=None):
         song_prefix = "_" + song_prefix
 
         # prefix asm calls song name with an underscore
-        channel_init_calls = map(lambda call: "_" + call, channel_init_calls)
-        channel_update_calls = map(lambda call: "_" + call, channel_update_calls)
-        channel_mute_calls = map(lambda call: "_" + call, channel_mute_calls)
-        song_mute_calls = map(lambda call: "_" + call, song_mute_calls)
+        channel_init_calls = list(map(lambda call: "_" + call, channel_init_calls))
+        channel_update_calls = list(map(lambda call: "_" + call, channel_update_calls))
+        channel_mute_calls = list(map(lambda call: "_" + call, channel_mute_calls))
+        song_mute_calls = list(map(lambda call: "_" + call, song_mute_calls))
 
         # set the module for this file so it flags up the file name in any errors
         outfile.write(".module " + song_prefix + "\n")
@@ -1017,31 +1017,54 @@ def main(argv=None):
     outfile.write(".db 0\n")
     writelabel("panning")
     outfile.write(".db 0xff\n")
+
+    # when there's multiple channel init calls a function will be created
+    # if there's only one we just point to that
     writelabel("channel_init")
-    outfile.write(".dw " + song_prefix + "_channel_init_call\n")
+    if len(channel_init_calls) > 1:
+        outfile.write(".dw " + song_prefix + "_channel_init_call" + "\n")
+    else:
+        outfile.write(".dw " + channel_init_calls[0] + "\n")    
+        
+    # when there's multiple channel update calls a function will be created
+    # if there's only one we just point to that
     writelabel("channel_update")
-    outfile.write(".dw " + song_prefix + "_channel_update_call\n")
+    if len(channel_update_calls) > 1:
+        outfile.write(".dw " + song_prefix + "_channel_update_call\n")
+    else:
+        outfile.write(".dw " + channel_update_calls[0] + "\n")    
+
+    # array of calls to the mute function for each channel
     writelabel("channel_mute")
     outfile.write(".dw " + song_prefix + "_channel_mute_calls_data\n")
+
+    # when there's multiple song mute calls a function will be created
+    # if there's only one we just point to that
     writelabel("song_mute")
-    outfile.write(".dw " + song_prefix + "_song_mute_call\n")
+    if len(song_mute_calls) > 1:
+        outfile.write(".dw " + song_prefix + "_song_mute_call\n")
+    else:
+        outfile.write(".dw " + song_mute_calls[0] + "\n")    
+
     writelabel("song_stop")
     outfile.write(".dw " + ("_" if options.sdas else "") + ("banjo_sfx_stop" if sfx else "banjo_song_stop") + "\n")
     outfile.write("\n" + "\n")
 
     # channel init calls
-    writelabel("channel_init_call")
-    for call in channel_init_calls:
-        outfile.write("\tcall " + call + "\n")
-    outfile.write("\tret\n")
-    outfile.write("\n")
+    if len(channel_init_calls) > 1:
+        writelabel("channel_init_call")
+        for call in channel_init_calls:
+            outfile.write("\tcall " + call + "\n")
+        outfile.write("\tret\n")
+        outfile.write("\n")
 
     # channel update calls
-    writelabel("channel_update_call")
-    for call in channel_update_calls:
-        outfile.write("\tcall " + call + "\n")
-    outfile.write("\tret\n")
-    outfile.write("\n")
+    if len(channel_update_calls) > 1:
+        writelabel("channel_update_call")
+        for call in channel_update_calls:
+            outfile.write("\tcall " + call + "\n")
+        outfile.write("\tret\n")
+        outfile.write("\n")
 
     # channel mute calls
     writelabel("channel_mute_calls_data")
@@ -1049,11 +1072,12 @@ def main(argv=None):
     outfile.write("\n")
 
     # song mute calls
-    writelabel("song_mute_call")
-    for call in song_mute_calls:
-        outfile.write("\tcall " + call + "\n")
-    outfile.write("\tret\n")
-    outfile.write("\n")
+    if len(song_mute_calls) > 1:
+        writelabel("song_mute_call")
+        for call in song_mute_calls:
+            outfile.write("\tcall " + call + "\n")
+        outfile.write("\tret\n")
+        outfile.write("\n")
 
     # macros
     writelabel("macros")

@@ -41,7 +41,7 @@ void main(void)
         // initialise banjo specifying
         // * the number of channels we'll need
         // * that we're using an opll chip
-        banjo_init(CHAN_COUNT_OPLL_DRUMS, BANJO_HAS_OPLL);
+        banjo_init(CHAN_COUNT_OPLL, BANJO_HAS_OPLL);
 
         // set up a pointer to the OPLL sfx
         // and make a note of its bank
