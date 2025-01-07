@@ -3,11 +3,11 @@ H 2 areas 10 global symbols
 M BANJO_SFX
 S music_update Ref000000
 S song_playing Ref000000
-S _banjo_mute_song_channel_from_sfx Ref000000
 S .__.ABS. Def000000
+S bmsc_sfx_jump Ref000000
 S _banjo_unmute_song_channel Ref000000
 S music_play Ref000000
-A _CODE size 98 flags 0 addr 0
+A _CODE size A5 flags 0 addr 0
 S _banjo_set_sfx_loop_mode Def000082
 S _banjo_set_sfx_master_volume Def00008E
 S _banjo_sfx_init Def000000
@@ -37,8 +37,8 @@ T 0C 00 00 7E FE BA C0 3E 01 32 00 00 DD E5 FD E5
 R 00 00 00 00 00 0A 01 00
 T 19 00 00 DD 21 25 00 FD 21 02 00 CD 00 00 FD 7E
 R 00 00 00 00 00 05 01 00 00 09 01 00 02 0C 05 00
-T 26 00 00 07 CD 00 00 FD E1 DD E1 C9
-R 00 00 00 00 02 05 02 00
+T 26 00 00 07 CD 98 00 FD E1 DD E1 C9
+R 00 00 00 00 00 05 00 00
 T 2F 00 00
 R 00 00 00 00
 T 2F 00 00 3A 00 00 B7 28 2B FD E5 DD E5 DD 21
@@ -77,3 +77,7 @@ T 8E 00 00
 R 00 00 00 00
 T 8E 00 00 21 05 00 CB D6 21 06 00 77 C9
 R 00 00 00 00 00 04 01 00 00 09 01 00
+T 98 00 00
+R 00 00 00 00
+T 98 00 00 6F 3A 00 00 B7 C8 DD E5 FD E5 C3 00 00
+R 00 00 00 00 02 05 01 00 02 0E 03 00

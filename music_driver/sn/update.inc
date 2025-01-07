@@ -10,20 +10,9 @@ banjo_update_channels_sn:
     push bc
 
     call music_update_channel_sn
-    ld de, _sizeof_channel
-    add ix,de
-
     call music_update_channel_sn
-    ld de, _sizeof_channel
-    add ix,de
-
     call music_update_channel_sn
-    ld de, _sizeof_channel
-    add ix,de
-
     call music_update_channel_sn
-    ld de, _sizeof_channel
-    add ix,de
 
     pop bc
 
@@ -73,7 +62,7 @@ music_update_channel_sn:
     ld a, CHAN_FLAG_MUTED | CHAN_FLAG_NOTE_ON
     and a, b
     cp a, CHAN_FLAG_NOTE_ON
-    ret nz
+    jr nz, mucsn_done
 
         ; process volume macro
         bit CHAN_FLAG_BIT_VOLUME_MACRO, b
@@ -130,8 +119,13 @@ music_update_channel_sn:
         ; clear events
         ld (ix + channel.events), 0
 
-        ; move on to next channel
-        ret
+        mucsn_done:
+            
+            ; move on to next channel
+            ld de, _sizeof_channel
+            add ix,de
+
+            ret
 
 .ifdef BANJO_ALF
 

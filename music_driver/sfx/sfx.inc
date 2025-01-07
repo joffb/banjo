@@ -158,3 +158,23 @@ banjo_set_sfx_master_volume:
     ld (hl), a
 
     ret
+
+
+; separate call which preserves iy = sfx_state
+; jumpt into banjo_mute_song_channel
+; a: channel to mute
+banjo_mute_song_channel_from_sfx:
+
+    ; preserve channel number
+    ld l, a
+
+    ; check if the song is playing 
+    ; do nothing if it isn't
+    ld a, (song_playing)
+    or a, a
+    ret z
+
+    push ix
+    push iy
+
+    jp bmsc_sfx_jump

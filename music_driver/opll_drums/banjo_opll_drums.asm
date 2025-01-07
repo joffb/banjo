@@ -19,6 +19,7 @@
 .SECTION "BANJO_OPLL_DRUMS" free
 
     .include "commands.inc"
+    .include "command_jump_table.inc"
     .include "drum_tables.inc"
     .include "init.inc"
     .include "mute_unmute.inc"

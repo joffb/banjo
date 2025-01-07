@@ -70,33 +70,36 @@ banjo_init_sn:
     ret
 
 
-; ix: channel
-; iy: music state
-banjo_init_sn_2:
+.ifdef BANJO_MULTIPLE_SN
 
-    ; port number
-    ld c, SN76489_2_PORT
+    ; ix: channel
+    ; iy: music state
+    banjo_init_sn_2:
 
-    jr banjo_init_sn_preloop
+        ; port number
+        ld c, SN76489_2_PORT
 
-; ix: channel
-; iy: music state
-banjo_init_sn_3:
+        jr banjo_init_sn_preloop
 
-    ; port number
-    ld c, SN76489_3_PORT
+    ; ix: channel
+    ; iy: music state
+    banjo_init_sn_3:
 
-    jr banjo_init_sn_preloop
+        ; port number
+        ld c, SN76489_3_PORT
 
-; ix: channel
-; iy: music state
-banjo_init_sn_4:
+        jr banjo_init_sn_preloop
 
-    ; port number
-    ld c, SN76489_4_PORT
+    ; ix: channel
+    ; iy: music state
+    banjo_init_sn_4:
 
-    jr banjo_init_sn_preloop
+        ; port number
+        ld c, SN76489_4_PORT
 
+        jr banjo_init_sn_preloop
+
+.endif
 
 ; ix: channel
 ; iy: music state

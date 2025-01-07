@@ -10,9 +10,10 @@
 
 .SECTION "BANJO_AY" free
 
+	.include "fnums_ay.inc"
+	.include "command_jump_table.inc"
 	.include "commands.inc"
 	.include "commands_envelopes.inc"
-	.include "fnums_ay.inc"
 	.include "init.inc"
 	.include "mute_unmute.inc"
 	.include "note_on_off.inc"

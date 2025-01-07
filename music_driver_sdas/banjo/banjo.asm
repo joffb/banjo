@@ -34,7 +34,7 @@
     .globl _banjo_play_song
     .globl _banjo_update_song
     .globl _banjo_mute_song_channel, _banjo_unmute_song_channel
-    .globl _banjo_mute_song_channel_from_sfx
+    .globl bmsc_sfx_jump
     .globl _banjo_check_hardware
     .globl _banjo_set_song_loop_mode
 

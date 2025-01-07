@@ -77,7 +77,7 @@ music_handle_sfx_queue:
 
     ; check priority of current sfx vs new priority
     ; don't play if if the priority is lower
-    ld a, (sfx_priority)
+    ld a, (_sfx_priority)
     ld b, a
     ld a, (hl)
     cp a, b
@@ -85,7 +85,7 @@ music_handle_sfx_queue:
         
         ; update priority variable
         ld a, b
-        ld (sfx_priority), a
+        ld (_sfx_priority), a
         
         ; get bank and change slot 2 bank to this bank
         inc hl
@@ -125,7 +125,7 @@ music_handle_sfx_queue:
 
             ; sfx is now playing
             ld a, #1
-            ld (sfx_playing), a
+            ld (_sfx_playing), a
             
     mhsfq_done: 
     
@@ -252,7 +252,7 @@ _banjo_update:
     jr nz, _banjo_update_new_sfx
 
         ; sfx isn't queued, check if a sfx is playing
-        ld a, (sfx_playing)
+        ld a, (_sfx_playing)
         or a, a
         jr z, _banjo_update_done
 

@@ -50,26 +50,30 @@ _banjo_mute_all_sn:
 
 		ret 
 
-; mute all SN channels
-; writes to both the top SN port for the SMS
-; and the port for the second SN in the System E
-_banjo_mute_all_sn_2: 
+.ifdef BANJO_MULTIPLE_SN
 
-	ld c, #SN76489_2_PORT
-	jr _banjo_mute_all_sn_common
+	; mute all SN channels
+	; writes to both the top SN port for the SMS
+	; and the port for the second SN in the System E
+	_banjo_mute_all_sn_2: 
 
-; mute all SN channels
-; writes to both the top SN port for the SMS
-; and the port for the second SN in the System E
-_banjo_mute_all_sn_3: 
+		ld c, #SN76489_2_PORT
+		jr _banjo_mute_all_sn_common
 
-	ld c, #SN76489_3_PORT
-	jr _banjo_mute_all_sn_common
+	; mute all SN channels
+	; writes to both the top SN port for the SMS
+	; and the port for the second SN in the System E
+	_banjo_mute_all_sn_3: 
 
-; mute all SN channels
-; writes to both the top SN port for the SMS
-; and the port for the second SN in the System E
-_banjo_mute_all_sn_4: 
+		ld c, #SN76489_3_PORT
+		jr _banjo_mute_all_sn_common
 
-	ld c, #SN76489_4_PORT
-	jr _banjo_mute_all_sn_common
+	; mute all SN channels
+	; writes to both the top SN port for the SMS
+	; and the port for the second SN in the System E
+	_banjo_mute_all_sn_4: 
+
+		ld c, #SN76489_4_PORT
+		jr _banjo_mute_all_sn_common
+
+.endif 

@@ -22,6 +22,7 @@
 	.define SN76489_4_PORT 0x7c
 
 	.define BANJO_ALF 1
+	.define BANJO_MULTIPLE_SN 1
 .endif
 
 .SECTION "BANJO_SN" free

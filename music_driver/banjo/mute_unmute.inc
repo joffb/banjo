@@ -19,6 +19,7 @@ banjo_mute_song_channel:
 
     ld iy, song_state
 
+    ; jumped to from banjo_mute_song_channel_from_sfx in sfx module
     bmsc_sfx_jump:
 
     ; restore channel number
@@ -80,24 +81,6 @@ banjo_mute_song_channel:
     pop ix
 
     ret
-
-; separate call which preserves iy = sfx_state
-; a: channel to mute
-banjo_mute_song_channel_from_sfx:
-
-    ; preserve channel number
-    ld l, a
-
-    ; check if the song is playing 
-    ; do nothing if it isn't
-    ld a, (song_playing)
-    or a, a
-    ret z
-
-    push ix
-    push iy
-
-    jr bmsc_sfx_jump
 
 ; a: channel to mute
 banjo_unmute_song_channel:

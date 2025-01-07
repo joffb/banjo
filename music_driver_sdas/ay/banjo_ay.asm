@@ -19,6 +19,7 @@ AY_DATA_READ .equ 0xa2
 
 	.include "commands.inc"
     .include "commands_envelopes.inc"
+	.include "command_jump_table.inc"
     .include "fnums_ay.inc"
     .include "init.inc"
 	.include "mute_unmute.inc"

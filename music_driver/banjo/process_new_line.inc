@@ -56,10 +56,8 @@ music_process_new_line:
 			; we want to use hl's ability to jump
 			ex de, hl
 
-			; address in table is command num * 3
-			ld c, a
+			; address in table is command num * 2
 			add a, a
-			add a, c
 
 			; use it to offset into the jump table
 			; the address of which was in de and is now in hl
@@ -68,6 +66,12 @@ music_process_new_line:
 			adc a, h
 			sub a, l
 			ld h, a
+
+			; get address from table into hl
+			ld a, (hl)
+			inc hl
+			ld h, (hl)
+			ld l, a
 
 			; jump to jump table address
 			; note we still need to restore hl from de after the jump!

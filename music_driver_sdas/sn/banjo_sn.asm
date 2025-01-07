@@ -12,10 +12,14 @@ SN76489_3_PORT .equ 0x7f
 SN76489_4_PORT .equ 0x7f
 
 
-.globl _banjo_init_sn, _banjo_init_sn_2, _banjo_init_sn_3, _banjo_init_sn_4
+.globl _banjo_init_sn
 .globl _banjo_init_sfx_channel_sn, _banjo_mute_all_sn
 .globl _banjo_mute_channel_sn
 .globl _banjo_update_channels_sn, _banjo_update_channel_sn
+
+.ifdef BANJO_MULTIPLE_SN
+	.globl_banjo_init_sn_2, _banjo_init_sn_3, _banjo_init_sn_4
+.endif
 
 .ifdef BANJO_GBDK
 	.area _CODE_1 (REL,CON)
