@@ -71,12 +71,12 @@ MACRO_TYPE_PITCH    = 4
 MACRO_TYPE_EX1      = 5
 
 macro_type_lookup = {
-    0: "MACRO_TYPE_VOLUME",
-    1: "MACRO_TYPE_ARP",
-    2: "MACRO_TYPE_DUTY",
-    3: "MACRO_TYPE_WAVE",
-    4: "MACRO_TYPE_PITCH",
-    5: "MACRO_TYPE_EX1",
+    MACRO_TYPE_VOLUME: 0x02,
+    MACRO_TYPE_ARP: 0x40,
+    MACRO_TYPE_DUTY: 0x20,
+    MACRO_TYPE_WAVE: 0x10,
+    MACRO_TYPE_PITCH: 0x01,
+    MACRO_TYPE_EX1: 0
 }
 
 # whether the drum channel needs its volume to be pre-shifted
