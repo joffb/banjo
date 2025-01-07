@@ -22,9 +22,8 @@ music_update_pitch_registers_sn:
 
             ; we're in a pitched noise channel
             ; update noise mode
-            ld a, d
             ld c, channel.port(ix)
-            out (c), a
+            out (c), d
 
             ; ALF TEST
             ; additional write delay

@@ -1,7 +1,7 @@
 python3 ../../furnace2json.py -o ./cmajor.json ../cmajor.fur
 python3 ../../json2sms.py -o cmajor.asm -i cmajor ./cmajor.json 
 
-python3 ../../furnace2json.py -o ./cmajor_sn.json ../gg_battle.fur
+python3 ../../furnace2json.py -o ./cmajor_sn.json ../cmajor_sn.fur
 python3 ../../json2sms.py -o cmajor_sn.asm -i cmajor_sn ./cmajor_sn.json 
 
 python3 ../../furnace2json.py -o ./sfx_test.json ../sfx_test.fur
