@@ -631,6 +631,10 @@ def main(argv=None):
                                 pattern_bin.append(VIBRATO_OFF)
 
                             else:
+                                # need to invert pitch offset for certain chips
+                                if (channel_type['type'] == CHAN_SN76489 or channel_type['type'] == CHAN_AY_3_8910):
+                                    vibrato_speed = -vibrato_speed
+                                    
                                 pattern_bin.append(VIBRATO)
                                 pattern_bin.append(vibrato_speed)
                                 pattern_bin.append(vibrato_amount << 4)

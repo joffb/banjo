@@ -19,8 +19,10 @@ music_note_on:
 	ret nz
 
 		; reset macro positions
-		ld channel.volume_macro_pos(ix), #0
-		ld channel.ex_macro_pos(ix), #0
+		xor a
+		ld channel.volume_macro_pos(ix), a
+		ld channel.ex_macro_pos(ix), a
+		ld channel.vibrato_counter(ix), a
 
 		ret 
 
