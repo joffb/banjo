@@ -304,7 +304,7 @@ init:
 
 			vc_done:
 			ld (volume_control), a
-			call banjo_set_song_master_volume
+			;call banjo_set_song_master_volume
 		+:
 
 		; run update every frame!

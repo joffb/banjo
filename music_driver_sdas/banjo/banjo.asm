@@ -38,12 +38,12 @@
     .globl _banjo_check_hardware
     .globl _banjo_set_song_loop_mode
 
+    .ifndef BANJO_MINIMAL
     .globl _banjo_set_song_master_volume
     .globl _banjo_song_fade_out
     .globl _banjo_song_fade_in 
-
-    .globl music_calc_fnum
-    .globl music_update_arpeggio, music_update_volume_macro, music_update_ex_macro
+    .globl music_update_vibrato, music_update_arpeggio, music_update_volume_macro, music_update_ex_macro
+    .endif
 
     .globl mpnl_command_done
     .globl mpnl_volume_change, mpnl_instrument_change
@@ -57,7 +57,7 @@
     .globl mpnl_skip_1_byte_command, mpnl_skip_2_byte_command, mpnl_skip_3_byte_command
 
     .globl music_note_on, music_note_off
-    .globl music_update_vibrato
+    .globl music_calc_fnum
     .globl music_instrument_change
     
     .globl music_update
@@ -76,12 +76,10 @@
         .include "init_msx.inc"
 	.endif
 
-    .include "arpeggio.inc"
+
     .include "commands.inc"
-    .include "ex_macro.inc"
     .include "init.inc"
     .include "instrument_change.inc"
-    .include "master_volume.inc"
     .include "mute_unmute.inc"
     .include "note_on_off.inc"
     .include "pattern_change.inc"
@@ -90,5 +88,11 @@
     .include "stop.inc"
     .include "update_pitch_registers.inc"
     .include "update.inc"
+
+    .ifndef BANJO_MINIMAL
+    .include "arpeggio.inc"
+    .include "ex_macro.inc"
+    .include "master_volume.inc"
     .include "vibrato.inc"
     .include "volume_macro.inc"
+    .endif

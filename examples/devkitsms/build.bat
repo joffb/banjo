@@ -21,12 +21,11 @@ sdcc -c -I..\..\music_driver_sdas -mz80 --codeseg BANK1 bank1.c
 sdcc -o dktest.ihx -mz80 --no-std-crt0 --data-loc 0xC000 ^
     -Wl-b_BANK1=0x18000 -Wl-b_BANK2=0x28000 -Wl-b_BANK3=0x38000 ^
     crt0_sms.rel SMSlib.lib ^
-    ..\..\music_driver_sdas\lib\sms\banjo.rel ^
-    ..\..\music_driver_sdas\lib\sms\banjo.rel ^
-    ..\..\music_driver_sdas\lib\sms\banjo_sn.rel ^
-    ..\..\music_driver_sdas\lib\sms\banjo_opll.rel ^
-    ..\..\music_driver_sdas\lib\sms\banjo_opll_drums.rel ^
-    ..\..\music_driver_sdas\lib\banjo_sfx.rel ^
-    ..\..\music_driver_sdas\lib\sms\banjo_queue.rel ^
+    ..\..\lib\devkitsms\banjo.rel ^
+    ..\..\lib\devkitsms\banjo_sn.rel ^
+    ..\..\lib\devkitsms\banjo_opll.rel ^
+    ..\..\lib\devkitsms\banjo_opll_drums.rel ^
+    ..\..\lib\banjo_sfx.rel ^
+    ..\..\lib\banjo_queue.rel ^
     main.rel bank1.rel sfx_test.rel sfx_test_sn.rel cmajor.rel cmajor_sn.rel
 makesms dktest.ihx dktest.sms

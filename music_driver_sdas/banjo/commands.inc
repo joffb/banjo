@@ -44,6 +44,7 @@ mpnl_volume_change:
 	inc hl
 	jp mpnl_command_done
 
+.ifndef BANJO_MINIMAL
 
 mpnl_pitch_slide_up: 
 
@@ -306,6 +307,16 @@ mpnl_note_delay:
 
 	ret 
 
+.endif 
+
+.ifdef BANJO_MINIMAL
+mpnl_arpeggio_off: 
+mpnl_slide_off: 
+mpnl_vibrato_off: 
+mpnl_legato_on: 
+mpnl_legato_off: 
+mpnl_order_next: 
+.endif 
 
 ; skip commands of various sizes
 ; used for channel types which don't support a command
@@ -319,6 +330,17 @@ mpnl_skip_1_byte_command:
 	jp mpnl_command_done
 
 
+.ifdef BANJO_MINIMAL
+mpnl_pitch_slide_up: 
+mpnl_pitch_slide_down: 
+mpnl_portamento: 
+mpnl_arpeggio: 
+mpnl_order_jump: 
+mpnl_set_speed_1: 
+mpnl_set_speed_2: 
+mpnl_note_delay: 
+.endif 
+
 mpnl_skip_2_byte_command: 
 
 	; restore original hl
@@ -329,6 +351,10 @@ mpnl_skip_2_byte_command:
 
 	jp mpnl_command_done
 
+
+.ifdef BANJO_MINIMAL
+mpnl_vibrato: 
+.endif 
 
 mpnl_skip_3_byte_command: 
 

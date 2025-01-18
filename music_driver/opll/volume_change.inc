@@ -12,6 +12,8 @@ music_volume_change_opll:
     ; get channel volume
     ld a, (ix + channel.volume)
 
+.ifndef BANJO_MINIMAL
+
     ; check whether a volume macro is active and add the macro's value if it is
     bit CHAN_FLAG_BIT_VOLUME_MACRO, (ix + channel.flags)
     jr z, mvcopll_no_macro
@@ -74,12 +76,14 @@ music_volume_change_opll:
 
     mvcopll_no_ex_macro:
 
+.endif
+
         ; get current patch which is the upper nibble of the volume reg
         ; and combine with new volume level
         or a, (ix + channel.patch)
 
     mvcopll_write:
-    
+
         ; write new value
         out (OPLL_DATA_PORT), a
 

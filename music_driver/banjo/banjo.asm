@@ -42,17 +42,20 @@
 	.include "play.inc"
 	.include "stop.inc"
 	.include "update.inc"
-	.include "arpeggio.inc"
 	.include "instrument_change.inc"
 	.include "note_on_off.inc"
 	.include "pattern_change.inc"
 	.include "process_new_line.inc"
 	.include "commands.inc"
-	.include "master_volume.inc"
 	.include "mute_unmute.inc"
 	.include "update_pitch_registers.inc"
+
+	.ifndef BANJO_MINIMAL
+	.include "arpeggio.inc"
+	.include "master_volume.inc"
 	.include "vibrato.inc"
 	.include "volume_macro.inc"
 	.include "ex_macro.inc"
+	.endif
 
 .ENDS

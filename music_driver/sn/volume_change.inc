@@ -7,6 +7,8 @@ music_volume_change_sn:
     ; get channel volume
     ld a, (ix + channel.volume)
 
+    .ifndef BANJO_MINIMAL
+
     ; check whether a volume macro is active and add the macro's value if it is
     bit CHAN_FLAG_BIT_VOLUME_MACRO, (ix + channel.flags)
     jr z, mvcsn_no_macro
@@ -48,6 +50,8 @@ music_volume_change_sn:
             ld a, 0x0f
 
     mvcsn_no_master_volume:
+    
+    .endif
 
     ; get channel (pre-shifted into correct position)
     or a, (ix + channel.subchannel)

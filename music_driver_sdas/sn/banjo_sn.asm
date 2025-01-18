@@ -33,7 +33,10 @@ SN76489_4_PORT .equ 0x7f
     .include "init.inc"
 	.include "mute_unmute.inc"
 	.include "note_on_off.inc"
-	.include "pitch_slide.inc"
 	.include "update.inc"
 	.include "update_pitch_registers.inc"
 	.include "volume_change.inc"
+
+	.ifndef BANJO_MINIMAL
+	.include "pitch_slide.inc"
+	.endif

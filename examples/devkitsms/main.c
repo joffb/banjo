@@ -60,8 +60,6 @@ void main(void)
 
 		banjo_update();
 
-		banjo_set_song_master_volume(tic);
-
 		tic++;
 	}
 }

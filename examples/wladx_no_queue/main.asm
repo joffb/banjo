@@ -30,6 +30,8 @@ jp init
 
 .RAMSECTION "Main Vars" bank 0 slot 3
 
+	bios: db
+
 	tic: db
 	input_last: db
 	input_pressed: db
@@ -236,7 +238,7 @@ init:
 		jr nz, dont_fade_out
 
 			ld a, 1
-			call banjo_song_fade_out
+			;call banjo_song_fade_out
 
 		dont_fade_out:
 
@@ -246,7 +248,7 @@ init:
 		jr nz, dont_fade_in
 
 			ld a, 1
-			call banjo_song_fade_in
+			;call banjo_song_fade_in
 
 		dont_fade_in:
 

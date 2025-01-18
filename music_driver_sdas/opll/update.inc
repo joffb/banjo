@@ -31,6 +31,9 @@ _banjo_update_channel_opll:
     
     ret 
 
+
+.ifndef BANJO_MINIMAL
+
 ; ix: channel
 ; iy: music state
 music_update_channel_opll: 
@@ -130,3 +133,59 @@ music_update_channel_opll:
 
             ret 
 
+.endif 
+
+
+.ifdef BANJO_MINIMAL
+
+; ix: channel
+; iy: music state
+music_update_channel_opll: 
+
+    ; process new line if necessary
+	bit STATE_FLAG_BIT_PROCESS_NEW_LINE, music_state.flags(iy)
+    jr z, muc_opll_no_process_new_line
+
+        ld de, #music_command_jump_table_opll
+        call music_process_new_line
+
+    muc_opll_no_process_new_line: 
+
+    ; get flags in b for later
+    ld b, channel.flags(ix)
+
+    ; check that the note is on and the channel isn't muted
+    ld a, #CHAN_FLAG_MUTED|CHAN_FLAG_NOTE_ON
+    and a, b
+    cp a, #CHAN_FLAG_NOTE_ON
+    jr nz, muco_done
+
+        ; keep flags in a
+        ld a, b
+
+        ; b now has events
+        ld b, channel.events(ix)
+
+        ; check if we need to update the pitch of this channel
+        ld a, #CHAN_EVENT_PITCH_CHANGED|CHAN_EVENT_ARP_CHANGED|CHAN_EVENT_DUTY_CHANGED
+        and a, b
+        jp nz, music_update_pitch_registers_opll
+        music_update_pitch_registers_opll_done: 
+
+        ; update volume if there's been a volume change event
+        bit CHAN_EVENT_BIT_VOLUME_CHANGE, b
+        jp nz, music_volume_change_opll
+        music_volume_change_opll_done: 
+
+        ; clear events
+        ld channel.events(ix), #0
+
+        muco_done: 
+
+            ; move on to next channel
+            ld de, #_sizeof_channel
+            add ix, de
+
+            ret 
+
+.endif 

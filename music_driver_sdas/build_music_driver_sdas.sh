@@ -3,6 +3,11 @@ sdasz80 -g -o ../lib/devkitsms/banjo_sn.rel system_sms_devkitsms.inc sn/banjo_sn
 sdasz80 -g -o ../lib/devkitsms/banjo_opll.rel system_sms_devkitsms.inc opll/banjo_opll.asm
 sdasz80 -g -o ../lib/devkitsms/banjo_opll_drums.rel system_sms_devkitsms.inc opll_drums/banjo_opll_drums.asm
 
+sdasz80 -o ../lib_experimental/devkitsms_MINIMAL/banjo.rel system_sms_devkitsms_MINIMAL.inc banjo/banjo.asm
+sdasz80 -g -o ../lib_experimental/devkitsms_MINIMAL/banjo_sn.rel system_sms_devkitsms_MINIMAL.inc sn/banjo_sn.asm
+sdasz80 -g -o ../lib_experimental/devkitsms_MINIMAL/banjo_opll.rel system_sms_devkitsms_MINIMAL.inc opll/banjo_opll.asm
+sdasz80 -g -o ../lib_experimental/devkitsms_MINIMAL/banjo_opll_drums.rel system_sms_devkitsms_MINIMAL.inc opll_drums/banjo_opll_drums.asm
+
 sdasz80 -o ../lib/gbdk_sms/banjo.rel system_sms_gbdk.inc banjo/banjo.asm
 sdasz80 -g -o ../lib/gbdk_sms/banjo_sn.rel system_sms_gbdk.inc sn/banjo_sn.asm
 sdasz80 -g -o ../lib/gbdk_sms/banjo_opll.rel system_sms_gbdk.inc opll/banjo_opll.asm
@@ -23,4 +28,6 @@ unix2dos ../lib/*
 unix2dos ../lib/devkitsms/*
 unix2dos ../lib/gbdk_sms/*
 unix2dos ../lib/msx/*
+
+unix2dos ../lib_experimental/devkitsms_MINIMAL/*
 

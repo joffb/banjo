@@ -135,10 +135,14 @@ music_update:
 			
 	music_update_tics_done:
 
+		.ifndef BANJO_MINIMAL
+
 		; check if there's a fade occurring
 		ld a, (iy + music_state.master_volume_fade)
 		or a, a
 		call nz, banjo_update_fade
+
+		.endif
 
 		; address for call to `ret` to
 		ld hl, music_update_call_done
