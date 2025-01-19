@@ -8,9 +8,8 @@ mpnl_opll_instrument_change:
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
 	jp nz, mpnl_skip_2_byte_command
 
-	; get new instrument
-	inc de
-	ld a, (de)
+	; preserve hl
+	ex de, hl
 
 	; don't do anything if the instrument number is the same
 	cp a, channel.instrument_num(ix)
@@ -49,11 +48,7 @@ mpnl_opll_instrument_change:
 				ld a, (hl)
 				out (#OPLL_DATA_PORT), a
 				
-				; delay after opll data write
-				push hl
-				pop hl
-				push hl
-				pop hl
+				call _banjo_opll_write_delay
 				
 				; next register and next patch data
 				inc hl
@@ -66,10 +61,9 @@ mpnl_opll_instrument_change:
 
 	mpnl_opll_instrument_change_done: 
 
-	; restore original hl
+	; restore hl
 	ex de, hl
 
-	inc hl
 	jp mpnl_command_done
 
 

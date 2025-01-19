@@ -187,7 +187,7 @@ music_jump_channels_order_and_pattern:
 	ld music_state.order_jump(iy), a
 
 	; reset line and tic to 0
-	ld a, #0
+	xor a, a
 	ld music_state.line(iy), a
 	ld music_state.tic(iy), a
 	ld music_state.subtic(iy), a

@@ -41,26 +41,14 @@ music_set_default_opll_drum_pitches:
 	ld a, #0x20
 	out (#OPLL_DATA_PORT), a
 	
-	; delay after opll data write
-	push hl
-	pop hl
-	push hl
-	pop hl
-	push hl
-	pop hl
+	call _banjo_opll_write_delay
 
 	ld a, #0x26
 	out (#OPLL_REG_PORT), a
 	ld a, #0x05
 	out (#OPLL_DATA_PORT), a
 	
-	; delay after opll data write
-	push hl
-	pop hl
-	push hl
-	pop hl
-	push hl
-	pop hl
+	call _banjo_opll_write_delay
 
 	; snare?
 	ld a, #0x17
@@ -68,26 +56,14 @@ music_set_default_opll_drum_pitches:
 	ld a, #0x50
 	out (#OPLL_DATA_PORT), a
 
-	; delay after opll data write
-	push hl
-	pop hl
-	push hl
-	pop hl
-	push hl
-	pop hl
+	call _banjo_opll_write_delay
 
 	ld a, #0x27
 	out (#OPLL_REG_PORT), a
 	ld a, #0x05
 	out (#OPLL_DATA_PORT), a
 	
-	; delay after opll data write
-	push hl
-	pop hl
-	push hl
-	pop hl
-	push hl
-	pop hl
+	call _banjo_opll_write_delay
 
 	; kick?
 	ld a, #0x18
@@ -95,25 +71,12 @@ music_set_default_opll_drum_pitches:
 	ld a, #0xc0
 	out (#OPLL_DATA_PORT), a
 
-	; delay after opll data write
-	push hl
-	pop hl
-	push hl
-	pop hl
-	push hl
-	pop hl
-
+	call _banjo_opll_write_delay
 	ld a, #0x28
 	out (#OPLL_REG_PORT), a
 	ld a, #0x01
 	out (#OPLL_DATA_PORT), a
 	
-	; delay after opll data write
-	push hl
-	pop hl
-	push hl
-	pop hl
-	push hl
-	pop hl
+	call _banjo_opll_write_delay
 
 	ret 

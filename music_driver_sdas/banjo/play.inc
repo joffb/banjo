@@ -197,20 +197,22 @@ _banjo_song_rewind:
 		ld iy, #_song_state
 		call music_reset_channels_order_and_pattern
 
-		ld a, #0
+		ld de, #_song_state
+
+		xor a, a
 		ld music_state.tic(iy), a
 		ld music_state.subtic(iy), a
 		ld music_state.line(iy), a
 		ld music_state.order(iy), a
 
 		ld b, music_state.channel_count(iy)
+		ld de, #_sizeof_channel
+
 		bsrw_channel_loop: 
 
-			ld a, #0
-			ld channel.flags(ix), #0
-			ld channel.line_wait(ix), #0
+			ld channel.flags(ix), a
+			ld channel.line_wait(ix), a
 
-			ld de, #_sizeof_channel
 			add ix, de
 			djnz bsrw_channel_loop
 

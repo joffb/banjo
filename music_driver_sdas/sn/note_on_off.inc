@@ -9,58 +9,8 @@
 mpnl_note_on_sn: 
 
 	; standard note-on stuff
+	ld de, #sn_tone_lookup
 	call music_note_on
-
-	; get and store midi number
-	inc de
-	ld a, (de)
-	ld channel.midi_note(ix), a
-	inc de
-
-	; multiply by 2 and use as offset into lookup table
-	add a, a
-	add a, #<sn_tone_lookup
-	ld l, a
-	adc a, #>sn_tone_lookup
-	sub a, l
-	ld h, a
-
-	; get fnum value into hl
-	ld a, (hl)
-	inc hl
-	ld h, (hl)
-	ld l, a
-
-	; decide where to put fnum depending on portamento mode
-	ld a, channel.slide_type(ix)
-	cp a, #SLIDE_TYPE_PORTA
-	jr z, mnon_sn_portamento
-
-	mnon_sn_no_portamento: 
-
-		; portamento off, put fnum in freq
-		ld channel.freq(ix), l
-		ld channel.freq+1(ix), h
-
-		jr mnon_sn_done
-
-	mnon_sn_portamento: 
-
-		; portamento on, put fnum in target_freq
-		ld channel.target_freq(ix), l
-		ld channel.target_freq+1(ix), h
-
-		; check high byte of freq
-		; if it's 0xff that implies no notes have played so far
-		; so we write to freq too
-		ld a, channel.freq+1(ix)
-		cp a, #0xff
-		jr z, mnon_sn_no_portamento
-			
-	mnon_sn_done: 
-	
-	; restore original hl
-	ex de, hl
 
 	jp mpnl_command_done
 
@@ -71,9 +21,6 @@ mpnl_note_off_sn:
 
 	; standard note-off stuff
 	call music_note_off
-
-	; restore original hl
-	ex de, hl
 
     ; check if the channel is muted
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
@@ -95,5 +42,4 @@ mpnl_note_off_sn:
 
 	mnoff_sn_dont_write_chip: 
 	
-	inc hl
-	jp mpnl_command_done
+	jp mpnl_command_done_one_byte_command

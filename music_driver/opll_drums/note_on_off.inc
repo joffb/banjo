@@ -14,6 +14,9 @@ mpnl_note_on_opll_drums:
     ; mark volume as requiring update
     set CHAN_EVENT_BIT_VOLUME_CHANGE, (ix + channel.events)
 
+    ; preserve instruction pointer
+	ex de, hl
+
 	; select rhythm trigger register
 	ld a, 0xe
 	out (OPLL_REG_PORT), a
@@ -26,13 +29,7 @@ mpnl_note_on_opll_drums:
 	and a, (hl)
 	out (OPLL_DATA_PORT), a
 
-	; need to delay after opll data write
-	push hl
-	pop hl
-	push hl
-	pop hl
-	push hl
-	pop hl
+	call banjo_opll_write_delay
 
 	; send note-on
 	or a, c
@@ -43,9 +40,6 @@ mpnl_note_on_opll_drums:
 
 	; restore original hl
 	ex de, hl
-
-    ; move to midi number
-    inc hl
 
     ; check if we should be in rhythm or fixed mode
     ld a, (opll_drum_fixed_pitch_mode)
@@ -73,13 +67,7 @@ mpnl_note_on_opll_drums:
         ld a, (de)
         out (OPLL_DATA_PORT), a
         
-		; delay after opll data write
-		push hl
-		pop hl
-		push hl
-		pop hl
-		push hl
-		pop hl
+		call banjo_opll_write_delay
 
         ; set register for 9th bit of f number and octave
         ld a, (opll_drum_pitch_register)
@@ -93,7 +81,6 @@ mpnl_note_on_opll_drums:
 
     mfmdno_fixed_pitch:
 
-	inc hl
 	jp mpnl_command_done
 
 ; b  : current channel number
@@ -105,6 +92,9 @@ mpnl_note_off_opll_drums:
 	; clear note on flag
 	res CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
 
+	; preserve instruction pointer
+	ex de, hl
+	
 	; select rhythm control register
 	ld a, 0x0e
 	out (OPLL_REG_PORT), a
@@ -122,5 +112,4 @@ mpnl_note_off_opll_drums:
 	; restore original hl
 	ex de, hl
 	
-	inc hl
-	jp mpnl_command_done
+	jp mpnl_command_done_one_byte_command

@@ -73,12 +73,26 @@ music_process_new_line:
 			ld h, (hl)
 			ld l, a
 
+			; restore pattern pointer to hl
+			; jump address is in de
+			ex de, hl
+
+			; move pattern pointer on and read
+			; the next byte into a in preparation
+			inc hl
+			ld a, (hl)
+
 			; jump to jump table address
-			; note we still need to restore hl from de after the jump!
-			jp (hl)
+			push de
+			ret
 
 		mpnl_command_done:
 
+			inc hl
+
+		mpnl_command_done_one_byte_command:
+
 			; restore jump table address and continue looping
 			pop de
+			
 			jr mpnl_loop

@@ -23,12 +23,22 @@ _banjo_update_channels_opll:
 
     ret 
 
+
 ; ix: channel
 ; iy: music state
 _banjo_update_channel_opll: 
 
     call music_update_channel_opll
     
+    ret 
+
+
+; delay after writing to opll chip
+_banjo_opll_write_delay: 
+    push hl
+    pop hl
+    push hl
+    pop hl
     ret 
 
 

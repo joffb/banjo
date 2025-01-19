@@ -10,14 +10,8 @@ music_ay_channel_mix_masks:
     .db 0xdb
 
 
+; a: new volume level
 mpnl_ay_volume_change:
-
-    ; restore original hl
-    ex de, hl
-
-    ; store new channel volume
-    inc hl
-    ld a, (hl)
 
     ; preserve envelope bit if it's present
     bit 4, (ix + channel.volume)
@@ -31,17 +25,14 @@ mpnl_ay_volume_change:
     ; set bit to indicate a channel volume change event
     set CHAN_EVENT_BIT_VOLUME_CHANGE, (ix + channel.events)
 
-    inc hl
     jp mpnl_command_done
 
-    mpnl_ay_channel_mix:
+
+mpnl_ay_channel_mix:
 
     ; check if the channel is muted
     bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
     jp nz, mpnl_skip_2_byte_command
-
-    ; restore original hl
-    ex de, hl
 
     ld a, (ix + channel.subchannel)
     ld de, music_ay_channel_mix_masks
@@ -66,13 +57,11 @@ mpnl_ay_volume_change:
     and a, c
 
     ; combine with new values
-    inc hl
     or a, (hl)
 
     ; output
     out (AY_DATA_WRITE), a
 
-    inc hl
     jp mpnl_command_done
 
 
@@ -82,17 +71,12 @@ mpnl_ay_noise_pitch:
     bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
     jp nz, mpnl_skip_2_byte_command
 
-    ; restore original hl
-    ex de, hl
-
     ; select noise reg
     ld a, 6
     out (AY_REG_WRITE), a
 
     ; get noise amount and write it
-    inc hl
     ld a, (hl)
     out (AY_DATA_WRITE), a
 
-    inc hl
     jp mpnl_command_done

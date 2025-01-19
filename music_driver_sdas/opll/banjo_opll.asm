@@ -32,6 +32,7 @@
     .globl _banjo_mute_channel_opll
     .globl _banjo_init_opll
     .globl _banjo_init_sfx_channel_opll
+    .globl _banjo_opll_write_delay
 
     ; used in opll_drum
     .globl music_update_channel_opll

@@ -37,14 +37,8 @@ banjo_mute_all_opll_drums:
         ld a, 0xf
         out (OPLL_DATA_PORT), a
         
-        ; delay after opll data write
-        push hl
-        pop hl
-        push hl
-        pop hl
-        push hl
-        pop hl
-
+        call banjo_opll_write_delay
+        
         ; move to next channel's volume register
         inc d
 

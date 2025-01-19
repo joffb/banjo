@@ -21,13 +21,7 @@ music_update_pitch_registers_opll:
     ld a, e
     out (#OPLL_DATA_PORT), a
     
-    ; delay after opll data write
-    push hl
-    pop hl
-    push hl
-    pop hl
-    push hl
-    pop hl
+    call _banjo_opll_write_delay
     
     ; get octave + key on register to write to for this channel
     ; by adding to base_reg from earlier
@@ -43,13 +37,6 @@ music_update_pitch_registers_opll:
     or a, #0x10
     out (#OPLL_DATA_PORT), a
     
-    nop 
-    nop 
-    nop 
-    nop 
-    nop 
-    nop 
-    nop 
-    nop 
+    call _banjo_opll_write_delay
 
     jp music_update_pitch_registers_opll_done

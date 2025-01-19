@@ -4,37 +4,31 @@
 
 ; commands will be jumped to from music_process_new_line
 
+; a: noise mode
+; hl: pattern pointer
 mpnl_sn_noise_mode:
 
 	; check if the channel is muted
 	bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
 	jp nz, mpnl_skip_2_byte_command
-
-	; restore original hl
-	ex de, hl
 	
 	ld c, (ix + channel.port)
 
 	; update noise mode 
-	inc hl
-	ld a, (hl)
 	out (c), a
 	
 	; store for later
 	ld (iy + music_state.noise_mode), a
 	
-	inc hl
 	jp mpnl_command_done
 
-
+	
+; a: pan value
+; hl: pattern pointer
 mpnl_game_gear_pan:
 
-	; restore original hl
-	ex de, hl
-
-	; get pan value
-	inc hl
-	ld c, (hl)
+	; get pan value in c
+	ld c, a
 
 	; get pan mask
 	inc hl
@@ -62,5 +56,4 @@ mpnl_game_gear_pan:
 
 	mpnl_game_gear_pan_muted:
 
-	inc hl
 	jp mpnl_command_done

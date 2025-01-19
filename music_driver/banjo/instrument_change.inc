@@ -7,13 +7,17 @@
 ; a: new instrument number
 music_instrument_change:
 
+	; preserve bc and de
+	push bc
+	push de
+
 	; store the new instrument number in the channel
 	ld (ix + channel.instrument_num), a
 	
 	; get pointer to instrument address table in hl
 	ld l, (iy + music_state.instrument_ptrs)
 	ld h, (iy + music_state.instrument_ptrs + 1)
-	
+
 	; offset to get instrument pointer by adding instrument_num * 2 to hl
     add a, a 
 	add a, l
@@ -25,98 +29,99 @@ music_instrument_change:
     ; get pointer to instrument into hl
 	ld a, (hl)
 	inc hl
-	ld h, (hl)	
+	ld h, (hl)
 	ld l, a
-	
-	; use c as a flags variable
-	ld a, (ix + channel.flags)
+
+	; get channel struct ptr ix into de
+	push ix
+	pop de
+
+	; get channel.flags (should be first byte of channel struct)
+	; then unset the macro flags and store in b 
+	ld a, (de)
 	and a, ~(CHAN_FLAG_VOLUME_MACRO | CHAN_FLAG_EX_MACRO)
-	ld c, a
+	ld b, a
+
+	; max value of c so ldi instructions don't affect b
+	ld c, 0xff
+
+	; move along to volume macro 
+	ld a, channel.volume_macro_len
+	add a, e
+	ld e, a
+	adc a, d
+	sub a, e
+	ld d, a
+
+	; a = 0
+	xor a, a
 
 	; volume macro
 	; copy over macro info
 
-	ld a, (hl)
-	ld (ix + channel.volume_macro_len), a
-
-	; check if volume_macro_len > 0
-	or a, a
+	; volume macro length == 0?
+	cp a, (hl)
 	jr z, mic_no_volume_macro
 
-		inc hl
-		ld a, (hl)
-		ld (ix + channel.volume_macro_loop), a
-
-		inc hl
-		ld a, (hl)
-		ld (ix + channel.volume_macro_ptr), a
-
-		inc hl
-		ld a, (hl)
-		ld (ix + channel.volume_macro_ptr + 1), a
-
-		; set initial macro position
-		ld (ix + channel.volume_macro_pos), 0
-
 		; set volume macro flag
-		set CHAN_FLAG_BIT_VOLUME_MACRO, c
-
-		jr mic_volume_macro_done
-
+		set CHAN_FLAG_BIT_VOLUME_MACRO, b
+	
 	mic_no_volume_macro:
 
-		inc hl
-		inc hl
-		inc hl
+		; len
+		ldi
 
-	mic_volume_macro_done:
+		; vol
+		inc de
+
+		; pos = 0
+		ld (de), a
+		inc de
+
+		; loop
+		ldi
+
+		; ptr
+		ldi
+		ldi
 
 	; ex macro
 	; copy over macro info
 
 	; always copy over ex_macro_type
-	inc hl
-	ld a, (hl)
-	ld (ix + channel.ex_macro_type), a
-
-	inc hl
-	ld a, (hl)
-	ld (ix + channel.ex_macro_len), a
+	ldi
 
 	; check if macro_len > 0
-	or a, a
+	cp a, (hl)
 	jr z, mic_no_ex_macro
 
-		inc hl
-		ld a, (hl)
-		ld (ix + channel.ex_macro_loop), a
-
-		inc hl
-		ld a, (hl)
-		ld (ix + channel.ex_macro_ptr), a
-
-		inc hl
-		ld a, (hl)
-		ld (ix + channel.ex_macro_ptr + 1), a
-
-		; set initial macro position
-		ld (ix + channel.ex_macro_pos), 0
-
-		; set ex macro flag
-		set CHAN_FLAG_BIT_EX_MACRO, c
-		
-		jr mic_ex_macro_done
+		; set volume macro flag
+		set CHAN_FLAG_BIT_EX_MACRO, b
 
 	mic_no_ex_macro:
 
-		inc hl
-		inc hl
-		inc hl
+		;len
+		ldi
 
-	mic_ex_macro_done:
+		; vol
+		inc de
+
+		; pos = 0
+		ld (de), a
+		inc de
+
+		; loop
+		ldi
+		
+		; ptr
+		ldi
+		ldi
 
 	; update flags
-	ld (ix + channel.flags), c
+	ld (ix + channel.flags), b
 
-	inc hl
+	; restore de and bc
+	pop de
+	pop bc
+	
 	ret

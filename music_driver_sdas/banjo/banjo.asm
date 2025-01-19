@@ -45,7 +45,7 @@
     .globl music_update_vibrato, music_update_arpeggio, music_update_volume_macro, music_update_ex_macro
     .endif
 
-    .globl mpnl_command_done
+    .globl mpnl_command_done, mpnl_command_done_one_byte_command
     .globl mpnl_volume_change, mpnl_instrument_change
     .globl mpnl_arpeggio, mpnl_arpeggio_off
     .globl mpnl_pitch_slide_up, mpnl_pitch_slide_down, mpnl_portamento, mpnl_slide_off

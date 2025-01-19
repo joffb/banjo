@@ -12,11 +12,10 @@ mpnl_opll_drum:
 	bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
 	jp nz, mpnl_skip_2_byte_command
 
-    ; at this point de is still the instruction/command pointer
+    ; preserve instruction pointer
+	ex de, hl
 
     ; get instrument number in a
-    inc de
-    ld a, (de)
     ld (ix + channel.instrument_num), a
 
     ; double instrument number to get offset into instrument pointers
@@ -71,13 +70,7 @@ mpnl_opll_drum:
 
 		inc hl
 
-		; delay after opll data write
-		push hl
-		pop hl
-		push hl
-		pop hl
-		push hl
-		pop hl
+		call banjo_opll_write_delay
 
 		ld a, 0x26
 		out (OPLL_REG_PORT), a
@@ -86,13 +79,7 @@ mpnl_opll_drum:
 
 		inc hl
 
-		; delay after opll data write
-		push hl
-		pop hl
-		push hl
-		pop hl
-		push hl
-		pop hl
+		call banjo_opll_write_delay
 
 		; snare?
 		ld a, 0x17
@@ -102,13 +89,7 @@ mpnl_opll_drum:
 
 		inc hl
 
-		; delay after opll data write
-		push hl
-		pop hl
-		push hl
-		pop hl
-		push hl
-		pop hl
+		call banjo_opll_write_delay
 
 		ld a, 0x27
 		out (OPLL_REG_PORT), a
@@ -117,13 +98,7 @@ mpnl_opll_drum:
 
 		inc hl
 		
-		; delay after opll data write
-		push hl
-		pop hl
-		push hl
-		pop hl
-		push hl
-		pop hl
+		call banjo_opll_write_delay
 		
 		; tom?
 		ld a, 0x18
@@ -133,20 +108,16 @@ mpnl_opll_drum:
 
 		inc hl
 		
-		; delay after opll data write
-		push hl
-		pop hl
-		push hl
-		pop hl
-		push hl
-		pop hl 
+		call banjo_opll_write_delay
 
 		ld a, 0x28
 		out (OPLL_REG_PORT), a
 		ld a, (hl)
 		out (OPLL_DATA_PORT), a
 
-    music_fm_drum_change_done:
+	music_fm_drum_change_done:
+
+	; restore instruction pointer
 	ex de, hl
-	inc hl
+
 	jp mpnl_command_done

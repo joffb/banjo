@@ -50,6 +50,7 @@ banjo_mute_all_sn:
 
 		ret
 
+
 .ifdef BANJO_MULTIPLE_SN
 
 	; mute all SN channels
