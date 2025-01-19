@@ -846,7 +846,7 @@ def main(argv=None):
                                 if volume > 15:
                                     volume = 15
 
-                                pattern_bin.append((15 - volume) << pre_shift_fm_drum_value[channel_subchannel])
+                                pattern_bin.append((15 - volume))
 
                             elif (channel_type['type'] == CHAN_AY_3_8910):
                                 

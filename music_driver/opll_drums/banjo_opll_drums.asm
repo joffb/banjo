@@ -10,7 +10,7 @@
 
     opll_drum_pitch_register: db
 	opll_drum_trigger: db
-	opll_drum_volume_mask: db    
+	opll_drum_volume_mask: db
 
 	opll_drum_volumes: ds 3
 
