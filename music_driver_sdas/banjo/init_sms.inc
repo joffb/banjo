@@ -35,7 +35,6 @@ _banjo_init_system_call:
     ld a, #0x00
 
     bisc_write: 
-    ld a, #0x3
     out (#SMS_AUDIO_CONTROL_PORT), a
 
     ret 

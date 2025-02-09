@@ -56,6 +56,19 @@ _banjo_init_opll_drums:
 
         djnz music_init_opll_drums_loop_2
 
+    ; initialise drum volumes
+    ld a, #0
+    ld b, #3
+    ld hl, #opll_drum_volumes
+
+    music_init_opll_drums_loop_3: 
+
+        ld (hl), a
+        inc hl
+
+        djnz music_init_opll_drums_loop_3
+
+
 	; select rhythm trigger register
 	ld a, #0xe
 	out (#OPLL_REG_PORT), a

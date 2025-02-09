@@ -40,7 +40,7 @@ music_volume_change_opll_drums:
 
     ; get current volume for the drum pair
     ; from the opll_drum_volumes table
-    ld a, (opll_drum_trigger)
+    ld a, (opll_drum_pitch_register)
     sub a, #0x16
     
     add a, #<opll_drum_volumes
