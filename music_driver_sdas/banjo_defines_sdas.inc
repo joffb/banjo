@@ -122,6 +122,9 @@ BANJO_HAS_BIT_OPLL			.equ		0x1
 BANJO_HAS_BIT_AY			.equ		0x2
 BANJO_HAS_BIT_DUAL_SN			.equ		0x3
 
+BANJO_LOOP_OFF			.equ		0x0
+BANJO_LOOP_ON			.equ		0x1
+
 SYS_FLAG_GG			.equ		0x1
 SYS_FLAG_MARK_III			.equ		0x2
 SYS_FLAG_SYSTEM_E			.equ		0x4
@@ -157,23 +160,22 @@ channel.vibrato_counter .equ 14
 channel.vibrato_counter_add .equ 15
 channel.arpeggio_pos .equ 16
 channel.arpeggio .equ 17
-channel.order_table_ptr .equ 18		; pointer to the current order
-channel.pattern_ptr .equ 20		; pointer to the current pattern
-channel.line_wait .equ 22		; wait for this many lines
-channel.tic_wait .equ 23		; wait for this many tics
-channel.volume_macro_len .equ 24
-channel.volume_macro_vol .equ 25
-channel.volume_macro_pos .equ 26
-channel.volume_macro_loop .equ 27
-channel.volume_macro_ptr .equ 28
-channel.ex_macro_type .equ 30
-channel.ex_macro_len .equ 31
-channel.ex_macro_val .equ 32
-channel.ex_macro_pos .equ 33
-channel.ex_macro_loop .equ 34
-channel.ex_macro_ptr .equ 35
-channel.patch .equ 37
-_sizeof_channel .equ 38
+channel.pattern_ptr .equ 18		; pointer to the current pattern
+channel.line_wait .equ 20		; wait for this many lines
+channel.tic_wait .equ 21		; wait for this many tics
+channel.volume_macro_len .equ 22
+channel.volume_macro_vol .equ 23
+channel.volume_macro_pos .equ 24
+channel.volume_macro_loop .equ 25
+channel.volume_macro_ptr .equ 26
+channel.ex_macro_type .equ 28
+channel.ex_macro_len .equ 29
+channel.ex_macro_val .equ 30
+channel.ex_macro_pos .equ 31
+channel.ex_macro_loop .equ 32
+channel.ex_macro_ptr .equ 33
+channel.patch .equ 35
+_sizeof_channel .equ 36
 
 music_state.magic_byte .equ 0		; should be 0xba for a valid song
 music_state.bank .equ 1
@@ -191,17 +193,16 @@ music_state.pattern_length .equ 12
 music_state.orders_length .equ 13
 music_state.instrument_ptrs .equ 14
 music_state.order_ptrs .equ 16
-music_state.subtic .equ 18
-music_state.tic .equ 19
-music_state.line .equ 20
-music_state.order .equ 21
-music_state.order_jump .equ 22
-music_state.noise_mode .equ 23
-music_state.panning .equ 24
-music_state.channel_init_call .equ 25
-music_state.channel_update_call .equ 27
-music_state.channel_mute_calls .equ 29
-music_state.song_mute .equ 31
-music_state.song_stop .equ 33
-_sizeof_music_state .equ 35
+music_state.tic .equ 18
+music_state.line .equ 19
+music_state.order .equ 20
+music_state.order_jump .equ 21
+music_state.noise_mode .equ 22
+music_state.panning .equ 23
+music_state.channel_init_call .equ 24
+music_state.channel_update_call .equ 26
+music_state.channel_mute_calls .equ 28
+music_state.song_mute .equ 30
+music_state.song_stop .equ 32
+_sizeof_music_state .equ 34
 

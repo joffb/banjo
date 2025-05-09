@@ -187,14 +187,6 @@ _banjo_song_rewind:
 		xor a, a
 		call music_jump_channels_order_and_pattern
 
-		ld de, #_song_state
-
-		xor a, a
-		ld music_state.tic(iy), a
-		ld music_state.subtic(iy), a
-		ld music_state.line(iy), a
-		ld music_state.order(iy), a
-
 		ld b, music_state.channel_count(iy)
 		ld de, #_sizeof_channel
 

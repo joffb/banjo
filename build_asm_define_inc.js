@@ -213,7 +213,7 @@ var structs = [
             { name: "arpeggio_pos", size: "db"},
             { name: "arpeggio", size: "db" },
 
-            { name: "order_table_ptr", size: "dw", comment: "pointer to the current order"},
+            //{ name: "order_table_ptr", size: "dw", comment: "pointer to the current order"},
             { name: "pattern_ptr", size: "dw", comment: "pointer to the current pattern" },
             { name: "line_wait", size: "db", comment: "wait for this many lines"},
             { name: "tic_wait", size: "db", comment: "wait for this many tics" },
@@ -262,7 +262,7 @@ var structs = [
             { name: "instrument_ptrs", size: "dw", },
             { name: "order_ptrs", size: "dw", },
 
-            { name: "subtic", size: "db", },
+            //{ name: "subtic", size: "db", },
             { name: "tic", size: "db", },
             { name: "line", size: "db", },
             { name: "order", size: "db", },

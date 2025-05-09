@@ -112,7 +112,6 @@ typedef struct song_data_s {
     const instrument_t * const * instrument_pointers;
     const unsigned char * const * const * order_pointers;
 
-    unsigned char subtic;
     unsigned char tic;
     unsigned char line;
     unsigned char order;
@@ -154,7 +153,6 @@ typedef struct channel_s {
     unsigned char arpeggio_pos;
     unsigned char arpeggio;
 
-    unsigned char * order_table_ptr;
     unsigned char * pattern_ptr;
     unsigned char line_wait;
     unsigned char tic_wait;

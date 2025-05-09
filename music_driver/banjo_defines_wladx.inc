@@ -124,6 +124,9 @@
 .define BANJO_HAS_BIT_AY		0x2
 .define BANJO_HAS_BIT_DUAL_SN		0x3
 
+.define BANJO_LOOP_OFF		0x0
+.define BANJO_LOOP_ON		0x1
+
 .define SYS_FLAG_GG		0x1
 .define SYS_FLAG_MARK_III		0x2
 .define SYS_FLAG_SYSTEM_E		0x4
@@ -161,7 +164,6 @@
 	vibrato_counter_add: db
 	arpeggio_pos: db
 	arpeggio: db
-	order_table_ptr: dw		; pointer to the current order
 	pattern_ptr: dw		; pointer to the current pattern
 	line_wait: db		; wait for this many lines
 	tic_wait: db		; wait for this many tics
@@ -196,7 +198,6 @@
 	orders_length: db
 	instrument_ptrs: dw
 	order_ptrs: dw
-	subtic: db
 	tic: db
 	line: db
 	order: db
@@ -222,6 +223,11 @@
     .db 0
     .db :SONG_LABEL
     .dw SONG_LABEL
+.endm
+
+.macro SONG_CHANNELS(N)
+    song_channels: INSTANCEOF channel N
+    song_channel_ptrs: ds N * 2
 .endm
 
 .endif
