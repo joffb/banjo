@@ -30,108 +30,86 @@ banjo_update_song:
 ; iy: music state
 music_update:
 
-	; point hl at music_state.subtic
-	push iy
-	pop hl
-	ld de, music_state.subtic
-	add hl, de
-
-	; inc subtic
-	inc (hl)
-	ld a, (hl)
+	; move to next tic
+	dec (iy + music_state.tic)
 	
-	; check if subtic == time_base
-	cp a, (iy + music_state.time_base)
-	jp nz, music_update_tics_done
-	
-		; wrap subtic around to 0
-		ld (hl), 0
+	; check if we need to move to the next line
+	jr nz, music_update_tics_done
 
-		; point hl at music_state.tic
-		inc hl
+		; signal that we need to process the next line
+		set STATE_FLAG_BIT_PROCESS_NEW_LINE, (iy + music_state.flags)
+
+		; check if we need to jump to a new order
+		ld a, (iy + music_state.order_jump)
+		cp a, 0xff
+		jr z, music_update_no_jump
 		
-		; move to next tic
-		inc (hl)
-		
-		; check if even or odd row
-		bit 0, (iy + music_state.line)
-		jr nz, mu_odd_row
-		
-			; even row
-			ld a, (iy + music_state.speed_1)
-			jr mu_speed_set
-		
-		mu_odd_row:
+			call music_jump_channels_order_and_pattern
+			jr music_update_tics_done
+
+		music_update_no_jump:
+
+		; move to next line
+		dec (iy + music_state.line)
+
+		; line count is 0 means a new pattern
+		jr z, music_update_pattern_done
+
+			; on to next line in pattern
+			ld a, (iy + music_state.line)
+			and a, 0x1
+			jr nz, music_update_new_line_odd_speed
+
+				ld a, (iy + music_state.speed_1)
+				jr music_update_new_line_speed_done
+
+			music_update_new_line_odd_speed:
+
+				ld a, (iy + music_state.speed_2)
+
+			music_update_new_line_speed_done:
+
+			; update tic count with speed
+			ld (iy + music_state.tic), a
+
+			; done for now
+			jr music_update_tics_done
+
+		music_update_pattern_done:
+
+			ld a, (iy + music_state.order)
+			inc a
 			
-			; odd row
-			ld a, (iy + music_state.speed_2)
+
+			; check if we've reached the last order
+			cp a, (iy + music_state.orders_length)
+			jr z, mu_last_order
 			
-		mu_speed_set:
-		
-		; check if we need to move to the next line
-		cp a, (hl)
-		jr nz, music_update_tics_done
-	
-			; reset tic count
-			ld (hl), 0
+				; not the last order
+				; move on to next pattern
+				call music_jump_channels_order_and_pattern
+				jr music_update_tics_done
+			
+			; we've reached the last order
+			mu_last_order:
 
-			; point hl at music_state.line
-			inc hl
-	
-			; move to next line
-			inc (hl)
-	
-			; signal that we need to process the next line
-			set STATE_FLAG_BIT_PROCESS_NEW_LINE, (iy + music_state.flags)
-	
-			; check if we need to jump to a new order
-			ld a, (iy + music_state.order_jump)
-			cp a, 0xff
-			call nz, music_jump_channels_order_and_pattern
+				; check if this music is looping or not
+				bit STATE_FLAG_BIT_LOOP, (iy + music_state.flags)
+				jr z, mu_no_loop
 
-			; check if we need to move to the next pattern
-			ld a, (iy + music_state.pattern_length)
-			cp a, (hl)
-			jr nz, music_update_tics_done
-				
-				; reset line count
-				ld (hl), 0
-				
-				; point hl at music_state.order
-				inc hl
-
-				; move to next pattern in order
-				inc (hl)
-
-				; check if we've reached the last order
-				ld a, (iy + music_state.orders_length)
-				cp a, (hl)
-				jr z, mu_last_order
-				
-					; not the last order
-					; move on to next pattern
-					call music_update_channels_order_and_pattern
+					; the music does loop - so go back to first patterns
+					xor a, a
+					call music_jump_channels_order_and_pattern
 					jr music_update_tics_done
 				
-				; we've reached the last order
-				mu_last_order:
+				mu_no_loop:
 
-					; check if this music is looping or not
-					bit STATE_FLAG_BIT_LOOP, (iy + music_state.flags)
-					jr z, mu_no_loop
+					; get pointer to song stop call
+					ld l, (iy + music_state.song_stop)
+					ld h, (iy + music_state.song_stop + 1)
 
-						; the music does loop - so go back to first patterns
-						call music_reset_channels_order_and_pattern
-						jr music_update_tics_done
-					
-					mu_no_loop:
-
-						; get pointer to song stop call
-						ld l, (iy + music_state.song_stop)
-						ld h, (iy + music_state.song_stop + 1)
-
-						; run call
-						jp (hl)
+					; run call
+					jp (hl)
 			
 	music_update_tics_done:
 

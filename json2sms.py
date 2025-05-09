@@ -665,19 +665,19 @@ def main(argv=None):
                         elif (line['effects'][eff] == 0x09):
                             
                             pattern_bin.append(SET_SPEED_1)
-                            pattern_bin.append(line['effects'][eff + 1])
+                            pattern_bin.append(line['effects'][eff + 1] * (song['time_base'] + 1))
 
                         # set speed 2
                         elif (line['effects'][eff] == 0x0f):
                             
                             pattern_bin.append(SET_SPEED_2)
-                            pattern_bin.append(line['effects'][eff + 1])
+                            pattern_bin.append(line['effects'][eff + 1] * (song['time_base'] + 1))
 
                         # note delay
                         elif (line['effects'][eff] == 0xed):
 
                             pattern_bin.append(NOTE_DELAY)
-                            pattern_bin.append(line['effects'][eff + 1])
+                            pattern_bin.append(line['effects'][eff + 1] * (song['time_base'] + 1))
 
                         # sn modes
                         if channel_type['type'] == CHAN_SN76489:
@@ -996,9 +996,9 @@ def main(argv=None):
     writelabel("time_base")
     outfile.write(".db " + str(song['time_base'] + 1) + "\n")
     writelabel("speed_1")
-    outfile.write(".db " + str(song['speed_1']) + "\n")
+    outfile.write(".db " + str(song['speed_1'] * (song['time_base'] + 1)) + "\n")
     writelabel("speed_2")
-    outfile.write(".db " + str(song['speed_2']) + "\n")
+    outfile.write(".db " + str(song['speed_2'] * (song['time_base'] + 1)) + "\n")
     writelabel("pattern_length")
     outfile.write(".db " + str(song['pattern_length']) + "\n")
     writelabel("orders_length")
@@ -1006,13 +1006,13 @@ def main(argv=None):
     writelabel("instrument_ptrs")
     outfile.write(".dw " + song_prefix + "_instrument_pointers" + "\n")
     writelabel("order_ptrs")
-    outfile.write(".dw " + song_prefix + "_order_pointers" + "\n")
+    outfile.write(".dw " + song_prefix + "_orders" + "\n")
     writelabel("subtic")
     outfile.write(".db 0\n")
     writelabel("tic")
-    outfile.write(".db 0\n")
+    outfile.write(".db " + str(song['speed_1'] * (song['time_base'] + 1)) + "\n")
     writelabel("line")
-    outfile.write(".db 0\n")
+    outfile.write(".db " + str(song['pattern_length']) + "\n")
     writelabel("order")
     outfile.write(".db 0\n")
     writelabel("order_jump")

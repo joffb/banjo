@@ -128,22 +128,6 @@ music_play:
 		; initialise freq to 0xffff
 		ld (ix + channel.freq), a
 		ld (ix + channel.freq + 1), a
-
-		; init pointer to order table for this channel
-		; get pointer to order data in de
-		ld e, (hl)
-		ld (ix + channel.order_table_ptr), e
-		inc hl
-		ld d, (hl)
-		ld (ix + channel.order_table_ptr + 1), d
-		inc hl
-		
-		; init address of first pattern in channel
-		ld a, (de)
-		ld (ix + channel.pattern_ptr), a
-		inc de
-		ld a, (de)
-		ld (ix + channel.pattern_ptr + 1), a
 		
 		; move to next channel
 		ld de, _sizeof_channel
@@ -153,6 +137,10 @@ music_play:
 	
 	; restore channel data pointer
 	pop ix
+
+	; set up pattern
+	xor a, a
+	call music_jump_channels_order_and_pattern
 
 	;
 	; init channel type data
@@ -195,7 +183,9 @@ banjo_song_rewind:
 
 		ld ix, song_channels
 		ld iy, song_state
-		call music_reset_channels_order_and_pattern
+		
+		xor a, a
+		call music_jump_channels_order_and_pattern
 
 		ld de, song_state
 
