@@ -29,14 +29,43 @@ music_process_new_line:
 		; get command
 		ld a, (hl)
 		
-		; is the end of this line for this channel? (bit 7 set, a >= 0x80)
-		; if not, use jump table
+		; if it's < 32 it's a jump table command
+		cp a, 32
+		jr c, mpnl_use_jump_table
+		
+		; is this a note on? (bit 7 set)
 		bit 7, a
-		jp z, mpnl_use_jump_table
+		jp z, mpnl_not_note_on
+		
+			; preserve commands jump table address (currently in de)
+			push de
+
+			; preserve pattern pointer (currently in hl) in de
+			; get jump table address in hl
+			ex de, hl
+			
+			; get address from table into bc
+			ld c, (hl)
+			inc hl
+			ld b, (hl)
+			
+			; restore pattern pointer to hl
+			; jump address is in de
+			ex de, hl
+
+			; jump to jump table address
+			push bc
+			ret
+			
+		; is the end of this line for this channel? (bit 6 set)
+		; if not, use jump table
+		mpnl_not_note_on:
+		bit 6, a
+		jp z, mpnl_not_eol
 
 			; end of this line reached
 			; get line_wait amount and set it in channel
-			and a, 0x7f
+			and a, 0x3f
 			ld (ix + channel.line_wait), a
 
 			; store the pointer to the next command and return
@@ -44,6 +73,33 @@ music_process_new_line:
 			ld (ix + channel.pattern_ptr), l
 			ld (ix + channel.pattern_ptr + 1), h
 
+			ret
+			
+		; must be a volume change (bit 5 set)
+		mpnl_not_eol:
+		
+			; preserve commands jump table address (currently in de)
+			push de
+
+			; preserve pattern pointer (currently in hl) in de
+			; get jump table address in hl
+			ex de, hl
+			
+			; move jump table address to volume change command
+			ld bc, 6
+			add hl, bc
+			
+			; get address from table into bc
+			ld c, (hl)
+			inc hl
+			ld b, (hl)
+			
+			; restore pattern pointer to hl
+			; jump address is in de
+			ex de, hl
+
+			; jump to jump table address
+			push bc
 			ret
 
 		; if not, process the command
@@ -57,21 +113,17 @@ music_process_new_line:
 			ex de, hl
 
 			; address in table is command num * 2
-			add a, a
-
 			; use it to offset into the jump table
 			; the address of which was in de and is now in hl
-			add a, l
-			ld l, a
-			adc a, h
-			sub a, l
-			ld h, a
+			add a, a
+			ld c, a
+			ld b, 0
+			add hl, bc
 
-			; get address from table into hl
-			ld a, (hl)
+			; get address from table into bc
+			ld c, (hl)
 			inc hl
-			ld h, (hl)
-			ld l, a
+			ld b, (hl)
 
 			; restore pattern pointer to hl
 			; jump address is in de
@@ -83,7 +135,7 @@ music_process_new_line:
 			ld a, (hl)
 
 			; jump to jump table address
-			push de
+			push bc
 			ret
 
 		mpnl_command_done:

@@ -11,9 +11,6 @@ mpnl_ay_env_on:
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
 	jp nz, mpnl_skip_1_byte_command
 
-	; restore original hl
-	ex de, hl
-
     ; set volume/envelope reg for this channel
     ld a, channel.subchannel(ix)
     add a, #8
@@ -29,8 +26,7 @@ mpnl_ay_env_on:
     ; update stored volume on channel with envelope bit set
     set 4, channel.volume(ix)
 
-	inc hl
-	jp mpnl_command_done
+	jp mpnl_command_done_one_byte_command
 
 
 ; switch envelopes off and update envelope bit in channel volume
@@ -39,9 +35,6 @@ mpnl_ay_env_off:
 	; check if the channel is muted
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
 	jp nz, mpnl_skip_1_byte_command
-
-	; restore original hl
-	ex de, hl
 
     ; set volume/envelope reg for this channel
     ld a, channel.subchannel(ix)
@@ -58,8 +51,7 @@ mpnl_ay_env_off:
     ; update stored volume on channel with envelope bit cleared
     res 4, channel.volume(ix)
 
-	inc hl
-	jp mpnl_command_done
+	jp mpnl_command_done_one_byte_command
 
 
 ; change shape of envelope
@@ -69,19 +61,14 @@ mpnl_ay_env_shape:
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
 	jp nz, mpnl_skip_2_byte_command
 
-	; restore original hl
-	ex de, hl
-
     ; set envelope shape register
     ld a, #13
     out (#AY_REG_WRITE), a
 
     ; get new shape and write it
-    inc hl
     ld a, (hl)
     out (#AY_DATA_WRITE), a
-
-	inc hl
+    
 	jp mpnl_command_done
 
 
@@ -91,20 +78,15 @@ mpnl_ay_env_period_hi:
 	; check if the channel is muted
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
 	jp nz, mpnl_skip_2_byte_command
-	
-	; restore original hl
-	ex de, hl
 
     ; set envelope period high byte
     ld a, #12
     out (#AY_REG_WRITE), a
 
     ; get new high byte and write it
-    inc hl
     ld a, (hl)
     out (#AY_DATA_WRITE), a
 
-	inc hl
 	jp mpnl_command_done
 
 
@@ -115,19 +97,14 @@ mpnl_ay_env_period_lo:
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
 	jp nz, mpnl_skip_2_byte_command
 
-	; restore original hl
-	ex de, hl
-
     ; set envelope period low byte
     ld a, #11
     out (#AY_REG_WRITE), a
 
     ; get new low byte and write it
-    inc hl
     ld a, (hl)
     out (#AY_DATA_WRITE), a
 
-	inc hl
 	jp mpnl_command_done
 
 
@@ -137,16 +114,12 @@ mpnl_ay_env_period_word:
 	; check if the channel is muted
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
 	jp nz, mpnl_skip_3_byte_command
-	
-	; restore original hl
-	ex de, hl
 
     ; set envelope period low byte
     ld a, #11
     out (#AY_REG_WRITE), a
 
     ; get new low byte and write it
-    inc hl
     ld a, (hl)
     out (#AY_DATA_WRITE), a
 
@@ -159,7 +132,6 @@ mpnl_ay_env_period_word:
     ld a, (hl)
     out (#AY_DATA_WRITE), a
 
-	inc hl
 	jp mpnl_command_done
 
 

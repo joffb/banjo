@@ -10,6 +10,7 @@
 music_note_on: 
 
 	; get and store midi number
+	and a, #0x7f
 	ld channel.midi_note(ix), a
 
 	; preserve hl

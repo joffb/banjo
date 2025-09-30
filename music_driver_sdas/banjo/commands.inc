@@ -31,6 +31,8 @@ mpnl_instrument_change:
 ; hl: pattern pointer
 mpnl_volume_change: 
 
+	and a, #0xf
+
 	; store new channel volume
 	ld channel.volume(ix), a
 

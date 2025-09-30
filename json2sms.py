@@ -11,10 +11,10 @@ from optparse import OptionParser
 
 MAGIC_BYTE          = 0xba
 
-NOTE_ON             = 0x00
+#NOTE_ON             = 0x00
 NOTE_OFF            = 0x01
 INSTRUMENT_CHANGE   = 0x02
-VOLUME_CHANGE       = 0x03
+#VOLUME_CHANGE       = 0x03
 FM_DRUM             = 0x04
 SN_NOISE_MODE       = 0x05
 SLIDE_UP            = 0x06
@@ -41,7 +41,10 @@ SET_SPEED_1         = 0x1a
 SET_SPEED_2         = 0x1b
 ORDER_NEXT          = 0x1c
 NOTE_DELAY          = 0x1d
-END_LINE            = 0x80
+
+VOLUME_CHANGE       = 0x20
+END_LINE            = 0x40
+NOTE_ON             = 0x80
 
 INSTRUMENT_SIZE     = 16
 FM_PATCH_SIZE       = 8
@@ -821,7 +824,7 @@ def main(argv=None):
                         # volume has changed
                         if volume != current_vol:
 
-                            pattern_bin.append(VOLUME_CHANGE)
+                            volume_value = 0
 
                             # sn channel, this byte can be sent straight to the output to set the volume
                             if (channel_type['type'] == CHAN_SN76489):
@@ -830,7 +833,7 @@ def main(argv=None):
                                 if volume > 15:
                                     volume = 15
 
-                                pattern_bin.append(15 - volume)
+                                volume_value = (15 - volume)
 
                             elif (channel_type['type'] == CHAN_OPLL):
 
@@ -838,7 +841,7 @@ def main(argv=None):
                                 if volume > 15:
                                     volume = 15
                                     
-                                pattern_bin.append((15 - volume))
+                                volume_value = ((15 - volume))
 
                             elif (channel_type['type'] == CHAN_OPLL_DRUMS):
 
@@ -846,7 +849,7 @@ def main(argv=None):
                                 if volume > 15:
                                     volume = 15
 
-                                pattern_bin.append((15 - volume))
+                                volume_value = ((15 - volume))
 
                             elif (channel_type['type'] == CHAN_AY_3_8910):
                                 
@@ -854,7 +857,10 @@ def main(argv=None):
                                 if volume > 15:
                                     volume = 15
 
-                                pattern_bin.append(volume)
+                                volume_value = (volume)
+                        
+                            # volume change command and value combined
+                            pattern_bin.append(VOLUME_CHANGE | (volume_value & 0x1f))
 
                         current_vol = volume
 
@@ -866,11 +872,9 @@ def main(argv=None):
                     # note on
                     elif (line['note'] >= 0 and line['note'] < 12):
 
-                        pattern_bin.append(NOTE_ON)
-
-                        # note number
-                        pattern_bin.append((note['note'] + (note['octave'] * 12)) & 0x7f)
-
+                        # note command and note number combined
+                        pattern_bin.append(NOTE_ON | ((note['note'] + (note['octave'] * 12)) & 0x7f))
+                        
                         # store in last_note
                         last_note = note
 
@@ -893,37 +897,18 @@ def main(argv=None):
 
 
                     # end line marker
-                    pattern_bin.append(END_LINE)
-
-
-                # when a run of END_LINE ends, replace it if it's long enough
-                def run_end(run_length, pattern_bin_rle):
-
-                    if (run_length > 0):
-                        pattern_bin_rle.append("(" + str(END_LINE) + " | " + str(run_length - 1) + ")")
-
-
-                # run length encoding for END_LINE
-                run_length = 0
-                pattern_bin_rle = []
-
-
-                # look through pattern_bin for runs of END_LINE
-                for k in range(0, len(pattern_bin)):
-
-                    if (pattern_bin[k] == END_LINE):
-
-                        run_length += 1
-
+                    if (len(pattern_bin) > 0) and ((pattern_bin[len(pattern_bin) - 1] & (END_LINE | NOTE_ON)) == END_LINE):
+                        
+                        # combine wait value with previous END_LINE if possible
+                        wait = pattern_bin[len(pattern_bin) - 1] & 0x3f
+                        
+                        if (wait + 1) <= 0x3f:
+                            pattern_bin[len(pattern_bin) - 1] = END_LINE | (wait + 1)
+                        else:
+                            pattern_bin.append(END_LINE)
+                            
                     else:
-
-                        run_end(run_length, pattern_bin_rle)
-                        run_length = 0
-                        pattern_bin_rle.append(pattern_bin[k])
-
-                run_end(run_length, pattern_bin_rle)
-
-                pattern_bin = pattern_bin_rle
+                        pattern_bin.append(END_LINE)
 
                 # add to patterns array
                 patterns[i][pattern["index"]] = pattern_bin
