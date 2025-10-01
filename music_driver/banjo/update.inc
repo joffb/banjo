@@ -79,7 +79,6 @@ music_update:
 
 			ld a, (iy + music_state.order)
 			inc a
-			
 
 			; check if we've reached the last order
 			cp a, (iy + music_state.orders_length)

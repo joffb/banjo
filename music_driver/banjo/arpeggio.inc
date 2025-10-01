@@ -34,6 +34,7 @@ music_update_arpeggio:
         ld (ix + channel.arpeggio_pos), 3
 
         ; return 0
-        ld a, 0
+        xor a, a
 
         ret
+        

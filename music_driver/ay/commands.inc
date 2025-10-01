@@ -35,18 +35,14 @@ mpnl_ay_channel_mix:
     jp nz, mpnl_skip_2_byte_command
 
     ld a, (ix + channel.subchannel)
-    ld de, music_ay_channel_mix_masks
+    ld hl, music_ay_channel_mix_masks
 
     ; get address of mix mask into de
-    add a, e
-    ld e, a
-    adc a, d
-    sub a, e
-    ld d, a
-
-    ; get mix mask and store in c
-    ld a, (de)
-    ld c, a
+    add a, l
+    ld l, a
+    adc a, h
+    sub a, l
+    ld h, a
 
     ; get current mix
     ld a, 7
@@ -54,10 +50,12 @@ mpnl_ay_channel_mix:
     in a, (AY_DATA_READ)
 
     ; mask out values
-    and a, c
+    and a, (hl)
 
     ; combine with new values
+	ex de, hl
     or a, (hl)
+	ex de, hl
 
     ; output
     out (AY_DATA_WRITE), a
@@ -76,7 +74,7 @@ mpnl_ay_noise_pitch:
     out (AY_REG_WRITE), a
 
     ; get noise amount and write it
-    ld a, (hl)
+    ld a, (de)
     out (AY_DATA_WRITE), a
 
     jp mpnl_command_done

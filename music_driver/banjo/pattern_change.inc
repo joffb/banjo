@@ -9,14 +9,6 @@
 ; iy: state
 music_jump_channels_order_and_pattern:
 
-	push ix
-
-	; de = orders_length * 2
-	ld l, (iy + music_state.orders_length)
-	ld h, 0
-	add hl, hl
-	ex de, hl
-
 	; update order index
 	ld (iy + music_state.order), a
 
@@ -33,38 +25,46 @@ music_jump_channels_order_and_pattern:
 	; address of this order for the first channel is now pointed at by hl
 	add hl, bc
 
+	; get pointer to order in hl
+	ld a, (hl)
+	inc hl
+	ld h, (hl)
+	ld l, a
+
 	; loop through all channels
 	ld b, (iy + music_state.channel_count)
+	ld c, 0xff
 
-	mjcoap_loop:
+	; point de at first channel's channel.pattern_ptr 
+	push ix
+	pop de
+	
+	ld a, channel.pattern_ptr
+	add a, e
+	ld e, a
+	adc a, d
+	sub a, e
+	ld d, a
 
-		; set line_wait = 0 for channel
-		ld (ix + channel.line_wait), 0
+	mjcoap_loop:		
 
 		; update pattern ptr
-		ld a, (hl)
-		ld (ix + channel.pattern_ptr), a
-		inc hl
-		ld a, (hl)
-		ld (ix + channel.pattern_ptr + 1), a
-		dec hl
+		ldi
+		ldi
 
-		; move to next channel's order
-		add hl, de
-
-		; preserve de
-		push de
+		; set line_wait = 0 for channel
+		xor a, a
+		ld (de), a
 
 		; move along to next channel
-		ld de, _sizeof_channel
-		add ix, de
-
-		; restore de
-		pop de
+		ld a, _sizeof_channel - 2
+		add a, e
+		ld e, a
+		adc a, d
+		sub a, e
+		ld d, a
 
 		djnz mjcoap_loop
-
-	pop ix
 
 	; reset order_jump to 0xff to indicate we don't need to jump
 	ld a, 0xff

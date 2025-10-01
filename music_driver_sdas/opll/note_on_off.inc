@@ -3,14 +3,14 @@
 ; Joe Kennedy 2023
 
 ; a : midi note
-; b  : current channel number
-; hl : instruction pointer
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 ; ix : pointer to current channel
 ; iy : pointer to music state
 mpnl_note_on_opll: 
 
 	; standard note-on stuff
-	ld de, #fm_tone_lookup
+	ld hl, #fm_tone_lookup
 	call music_note_on
 
 	; send note off if there's a note currently playing and we're not playing legato
@@ -36,8 +36,8 @@ mpnl_note_on_opll:
 	jp mpnl_command_done
 
 
-; b  : current channel number
-; hl : pointer to current instruction in pattern
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 ; ix : pointer to current channel
 ; iy : pointer to music state
 mpnl_note_off_opll: 

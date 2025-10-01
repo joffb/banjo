@@ -36,7 +36,7 @@ mpnl_ay_env_off:
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
 	jp nz, mpnl_skip_1_byte_command
 
-    ; set volume/envelope reg for this channel
+    ; volume/envelope reg for this channel
     ld a, channel.subchannel(ix)
     add a, #8
     out (#AY_REG_WRITE), a
@@ -61,12 +61,12 @@ mpnl_ay_env_shape:
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
 	jp nz, mpnl_skip_2_byte_command
 
-    ; set envelope shape register
+    ; reg envelope shape register
     ld a, #13
     out (#AY_REG_WRITE), a
 
     ; get new shape and write it
-    ld a, (hl)
+    ld a, (de)
     out (#AY_DATA_WRITE), a
     
 	jp mpnl_command_done
@@ -79,12 +79,12 @@ mpnl_ay_env_period_hi:
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
 	jp nz, mpnl_skip_2_byte_command
 
-    ; set envelope period high byte
+    ; reg envelope period high byte
     ld a, #12
     out (#AY_REG_WRITE), a
 
     ; get new high byte and write it
-    ld a, (hl)
+    ld a, (de)
     out (#AY_DATA_WRITE), a
 
 	jp mpnl_command_done
@@ -97,12 +97,12 @@ mpnl_ay_env_period_lo:
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
 	jp nz, mpnl_skip_2_byte_command
 
-    ; set envelope period low byte
+    ; reg envelope period low byte
     ld a, #11
     out (#AY_REG_WRITE), a
 
     ; get new low byte and write it
-    ld a, (hl)
+    ld a, (de)
     out (#AY_DATA_WRITE), a
 
 	jp mpnl_command_done
@@ -115,21 +115,21 @@ mpnl_ay_env_period_word:
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
 	jp nz, mpnl_skip_3_byte_command
 
-    ; set envelope period low byte
+    ; reg envelope period low byte
     ld a, #11
     out (#AY_REG_WRITE), a
 
     ; get new low byte and write it
-    ld a, (hl)
+    ld a, (de)
     out (#AY_DATA_WRITE), a
 
-    ; set envelope period high byte
+    ; reg envelope period high byte
     ld a, #12
     out (#AY_REG_WRITE), a
 
     ; get new high byte and write it
-    inc hl
-    ld a, (hl)
+    inc de
+    ld a, (de)
     out (#AY_DATA_WRITE), a
 
 	jp mpnl_command_done

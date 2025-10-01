@@ -5,17 +5,23 @@
 ; commands will be jumped to from music_process_new_line
 
 ; a: noise mode
-; hl: pattern pointer
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_sn_noise_mode:
 
 	; check if the channel is muted
 	bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
 	jp nz, mpnl_skip_2_byte_command
 	
-	ld c, (ix + channel.port)
-
+	; preserve c
+	ld l, c
+	
 	; update noise mode 
+	ld c, (ix + channel.port)
 	out (c), a
+	
+	; restore c
+	ld c, l
 	
 	; store for later
 	ld (iy + music_state.noise_mode), a
@@ -24,23 +30,24 @@ mpnl_sn_noise_mode:
 
 	
 ; a: pan value
-; hl: pattern pointer
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_game_gear_pan:
 
-	; get pan value in c
-	ld c, a
+	; get pan value in l
+	ld l, a
 
 	; get pan mask
-	inc hl
-	ld a, (hl)
+	inc de
+	ld a, (de)
 
 	; mask off current music state pan value
 	and a, (iy + music_state.panning)
 
 	; update with new pan value
-	or a, c
+	or a, l
 	ld (iy + music_state.panning), a
-	ld c, a
+	ld l, a
 
 	; check if we're in game gear mode
 	ld a, (banjo_system_flags)
@@ -51,7 +58,7 @@ mpnl_game_gear_pan:
 		bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
 		jr nz, mpnl_game_gear_pan_muted
 		
-			ld a, c
+			ld a, l
 			out (GAME_GEAR_PAN_PORT), a
 
 	mpnl_game_gear_pan_muted:

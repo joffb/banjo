@@ -3,7 +3,9 @@
 ; Joe Kennedy 2024
 
 ; commands will be jumped to from music_process_new_line
-	
+
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 ; iy: music_state
 ; ix: channel we're updating
 mpnl_opll_drum: 
@@ -12,8 +14,8 @@ mpnl_opll_drum:
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
 	jp nz, mpnl_skip_2_byte_command
 
-    ; preserve instruction pointer
-	ex de, hl
+	; preserve bc
+	push bc
 
     ; get instrument number in a
     ld channel.instrument_num(ix), a
@@ -62,62 +64,50 @@ mpnl_opll_drum:
 		ld h, (hl)
 		ld l, a
 
+		; prepare b & c registers for use with outi
+		ld b, #0
+		ld c, #OPLL_DATA_PORT
+
 		; kick?
 		ld a, #0x16
 		out (#OPLL_REG_PORT), a
-		ld a, (hl)
-		out (#OPLL_DATA_PORT), a
-
-		inc hl
+		outi 
 
 		call _banjo_opll_write_delay
 
 		ld a, #0x26
 		out (#OPLL_REG_PORT), a
-		ld a, (hl)
-		out (#OPLL_DATA_PORT), a
-
-		inc hl
+		outi 
 
 		call _banjo_opll_write_delay
 
 		; snare?
 		ld a, #0x17
 		out (#OPLL_REG_PORT), a
-		ld a, (hl)
-		out (#OPLL_DATA_PORT), a
-
-		inc hl
+		outi 
 
 		call _banjo_opll_write_delay
 
 		ld a, #0x27
 		out (#OPLL_REG_PORT), a
-		ld a, (hl)
-		out (#OPLL_DATA_PORT), a
-
-		inc hl
+		outi 
 		
 		call _banjo_opll_write_delay
 		
 		; tom?
 		ld a, #0x18
 		out (#OPLL_REG_PORT), a
-		ld a, (hl)
-		out (#OPLL_DATA_PORT), a
-
-		inc hl
+		outi 
 		
 		call _banjo_opll_write_delay
 
 		ld a, #0x28
 		out (#OPLL_REG_PORT), a
-		ld a, (hl)
-		out (#OPLL_DATA_PORT), a
+		outi 
 
 	music_fm_drum_change_done: 
 
-	; restore instruction pointer
-	ex de, hl
+	; restore bc
+	pop bc
 
 	jp mpnl_command_done

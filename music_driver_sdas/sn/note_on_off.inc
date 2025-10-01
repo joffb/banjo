@@ -9,7 +9,7 @@
 mpnl_note_on_sn: 
 
 	; standard note-on stuff
-	ld de, #sn_tone_lookup
+	ld hl, #sn_tone_lookup
 	call music_note_on
 
 	jp mpnl_command_done
@@ -29,10 +29,16 @@ mpnl_note_off_sn:
 		; get channel (already shifted to the correct position)
 		ld a, channel.subchannel(ix)
 
+		; preserve c
+		ld l, c
+
 		; set latch = 1, type = volume, volume = 0
 		or a, #0x9f
 		ld c, channel.port(ix)
 		out (c), a
+
+		; restore c
+		ld l, c
 
         ; ALF TEST
         ; additional write delay

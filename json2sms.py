@@ -989,9 +989,9 @@ def main(argv=None):
     writelabel("orders_length")
     outfile.write(".db " + str(song['orders_length']) + "\n")
     writelabel("instrument_ptrs")
-    outfile.write(".dw " + song_prefix + "_instrument_pointers" + "\n")
+    outfile.write(".dw " + song_prefix + "_instrument_data" + "\n")
     writelabel("order_ptrs")
-    outfile.write(".dw " + song_prefix + "_orders" + "\n")
+    outfile.write(".dw " + song_prefix + "_order_pointers" + "\n")
     #writelabel("subtic")
     #outfile.write(".db 0\n")
     writelabel("tic")
@@ -1091,13 +1091,10 @@ def main(argv=None):
     outfile.write("\n" + "\n")
 
     # instruments
-    writelabel("instrument_pointers")
-
-    for i in range (0, len(instruments)):
-
-        outfile.write(".dw " + song_prefix + "_instrument_" + str(i) + "\n")
-
-    outfile.write("\n" + "\n")
+    #writelabel("instrument_pointers")
+    #for i in range (0, len(instruments)):
+    #    outfile.write(".dw " + song_prefix + "_instrument_" + str(i) + "\n")
+    #outfile.write("\n" + "\n")
 
     # instruments
     writelabel("instrument_data")
@@ -1142,46 +1139,31 @@ def main(argv=None):
     # order pointers
     writelabel("order_pointers")
 
-    for i in range (0, song['channel_count']):
+    for i in range (0, song['orders_length']):
 
-        # in sfx mode, only process sfx channel
-        if (sfx and i != sfx_channel):
-
-            continue
-
-
-        outfile.write("\t.dw " + song_prefix + "_orders_channel_" + str(i) + "\n")
+        outfile.write("\t.dw " + song_prefix + "_order_" + str(i) + "\n")
 
 
     # orders
     writelabel("orders")
 
-    for i in range (0, song['channel_count']):
+    for j in range (0, song['orders_length']):
+        
+        writelabel("order_" + str(j))
 
-        # in sfx mode, only process sfx channel
-        if (sfx and i != sfx_channel):
+        outfile.write("\t.dw ")
 
-            continue
+        for i in range (0, song['channel_count']):
 
+            # in sfx mode, only process sfx channel
+            if (sfx and i != sfx_channel):
 
-        writelabel("orders_channel_" + str(i))
-
-        for j in range (0, len(song['orders'][i])):
-
-            if (j % 4 == 0):
-
-                outfile.write("\n\t.dw ")
-
+                continue
 
             outfile.write(song_prefix + "_patterns_" + str(i) + "_" + str(song['orders'][i][j]))
-
-            if ((j % 4 != 3) and (j != len(song['orders'][i]) - 1)):
-
-                outfile.write(", ")
-
+            outfile.write(", ")
 
         outfile.write("\n")
-
 
     outfile.write("\n" + "\n")
 

@@ -14,23 +14,28 @@ music_instrument_change:
 	; store the new instrument number in the channel
 	ld channel.instrument_num(ix), a
 	
-	; get pointer to instrument address table in hl
-	ld l, music_state.instrument_ptrs(iy)
-	ld h, music_state.instrument_ptrs+1(iy)
-
-	; offset to get instrument pointer by adding instrument_num * 2 to hl
-    add a, a
-	add a, l
+	; get instrument pointer by doing instrument_num * 12
 	ld l, a
-	adc a, h
-	sub a, l
-	ld h, a
-
-    ; get pointer to instrument into hl
-	ld a, (hl)
-	inc hl
-	ld h, (hl)
-	ld l, a
+	ld h, #0
+	
+	; * 4
+	add hl, hl
+	add hl, hl
+	
+	; keep * 4 for later
+	ld b, h
+	ld c, l
+	
+	; * 8
+	add hl, hl
+	
+	; * 12
+	add hl, bc
+	
+	; offset into instrument data
+	ld c, music_state.instrument_ptrs(iy)
+	ld b, music_state.instrument_ptrs+1(iy)
+	add hl, bc
 
 	; get channel struct ptr ix into de
 	push ix

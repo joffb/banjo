@@ -13,9 +13,6 @@ music_note_on:
 	and a, 0x7f
 	ld (ix + channel.midi_note), a
 
-	; preserve hl
-	ex de, hl
-
 	; multiply by 2 and use as offset into lookup table
 	add a, a
 	add a, l
@@ -30,9 +27,6 @@ music_note_on:
 	ld h, (hl)
 	ld l, a
 
-	; restore hl, fnum is in de
-	ex de, hl
-
 	; decide where to put fnum depending on portamento mode
 	ld a, (ix + channel.slide_type)
 	cp a, SLIDE_TYPE_PORTA
@@ -41,16 +35,16 @@ music_note_on:
 	mnon_no_portamento:
 
 		; portamento off, put fnum in freq
-		ld (ix + channel.freq), e
-		ld (ix + channel.freq + 1), d
+		ld (ix + channel.freq), l
+		ld (ix + channel.freq + 1), h
 
 		jr mnon_done
 
 	mnon_portamento:
 
 		; portamento on, put fnum in target_freq
-		ld (ix + channel.target_freq), e
-		ld (ix + channel.target_freq + 1), d
+		ld (ix + channel.target_freq), l
+		ld (ix + channel.target_freq + 1), h
 
 		; check high byte of freq
 		; if it's 0xff that implies no notes have played so far

@@ -8,9 +8,6 @@ mpnl_opll_instrument_change:
 	bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
 	jp nz, mpnl_skip_2_byte_command
 
-	; preserve hl
-	ex de, hl
-
 	; don't do anything if the instrument number is the same
 	cp a, (ix + channel.instrument_num)
 	jr z, mpnl_opll_instrument_change_done
@@ -37,6 +34,9 @@ mpnl_opll_instrument_change:
 			ld h, (hl)
 			ld l, a
 
+			; preserve bc
+			push bc
+
 			; start register number
 			ld c, 0x00
 			
@@ -58,11 +58,11 @@ mpnl_opll_instrument_change:
 				ld a, 0x08
 				cp a, c
 				jr nz, music_instrument_change_opll_patch
+				
+			; restore bc
+			pop bc
 
 	mpnl_opll_instrument_change_done:
-
-	; restore hl
-	ex de, hl
 
 	jp mpnl_command_done
 

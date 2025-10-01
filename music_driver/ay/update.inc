@@ -42,7 +42,7 @@ music_update_channel_ay:
         jr nz, muc_ay_no_note_delay
 
             ; if it is, process the delayed line data
-            ld de, music_command_jump_table_ay
+            ld bc, music_command_jump_table_ay
 	        call music_process_new_line
 
     muc_ay_no_note_delay:
@@ -51,7 +51,7 @@ music_update_channel_ay:
 	bit STATE_FLAG_BIT_PROCESS_NEW_LINE, (iy + music_state.flags)
     jr z, muc_sn_no_process_new_line
 
-        ld de, music_command_jump_table_ay
+        ld bc, music_command_jump_table_ay
         call music_process_new_line
 
     muc_sn_no_process_new_line:

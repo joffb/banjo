@@ -2,20 +2,20 @@
 ; banjo sound driver
 ; Joe Kennedy 2023
 
-; b  : current channel number
-; de : pointer to current instruction in pattern
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 ; ix : pointer to current channel
 ; iy : pointer to music state
 mpnl_note_on_opll_drums:
+
+	; preserve bc
+	push bc
 
 	; update note on status 
 	set CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
 
     ; mark volume as requiring update
     set CHAN_EVENT_BIT_VOLUME_CHANGE, (ix + channel.events)
-
-    ; preserve instruction pointer
-	ex de, hl
 
 	; select rhythm trigger register
 	ld a, 0xe
@@ -38,9 +38,6 @@ mpnl_note_on_opll_drums:
 	; store new opll_drum_note_ons status
 	ld (hl), a
 
-	; restore original hl
-	ex de, hl
-
     ; check if we should be in rhythm or fixed mode
     ld a, (opll_drum_fixed_pitch_mode)
     or a, a
@@ -52,19 +49,19 @@ mpnl_note_on_opll_drums:
         out (OPLL_REG_PORT), a
         
         ; update midi number field
-        ld a, (hl)
+        ld a, (de)
         ld (ix + channel.midi_note), a
         
         ; get pitch data
 		add a, a
 		add a, <fm_tone_lookup
-		ld e, a
+		ld l, a
 		adc a, >fm_tone_lookup
-		sub a, e
-		ld d, a
+		sub a, l
+		ld h, a
 
         ; write low 8 bits of f number
-        ld a, (de)
+        ld a, (hl)
         out (OPLL_DATA_PORT), a
         
 		call banjo_opll_write_delay
@@ -75,16 +72,19 @@ mpnl_note_on_opll_drums:
         out (OPLL_REG_PORT), a
         
         ; output 9th bit of f number and octave
-        inc de
-        ld a, (de)
+        inc hl
+        ld a, (hl)
         out (OPLL_DATA_PORT), a
 
     mfmdno_fixed_pitch:
+	
+	; restore bc
+	pop bc
 
 	jp mpnl_command_done
 
-; b  : current channel number
-; hl : pointer to current instruction in pattern
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 ; ix : pointer to current channel
 ; iy : pointer to music state
 mpnl_note_off_opll_drums:
@@ -92,9 +92,6 @@ mpnl_note_off_opll_drums:
 	; clear note on flag
 	res CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
 
-	; preserve instruction pointer
-	ex de, hl
-	
 	; select rhythm control register
 	ld a, 0x0e
 	out (OPLL_REG_PORT), a
@@ -109,7 +106,4 @@ mpnl_note_off_opll_drums:
 	; send note-off
 	out (OPLL_DATA_PORT), a
 
-	; restore original hl
-	ex de, hl
-	
 	jp mpnl_command_done_one_byte_command

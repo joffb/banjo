@@ -3,7 +3,8 @@
 ; Joe Kennedy 2023
 
 ; a: instrument number
-; hl: pattern pointer
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_instrument_change: 
 			
 	; check if the channel is muted and skip command if it is
@@ -14,21 +15,16 @@ mpnl_instrument_change:
 	cp a, channel.instrument_num(ix)
 	jr z, mpnl_instrument_change_done
 		
-		; preserve hl
-		ex de, hl
-
 		; update the instrument
 		call music_instrument_change
 		
-		; restore hl
-		ex de, hl
-
 	mpnl_instrument_change_done: 
 
 	jp mpnl_command_done
 
 ; a: new volume
-; hl: pattern pointer
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_volume_change: 
 
 	and a, #0xf
@@ -45,7 +41,8 @@ mpnl_volume_change:
 .ifndef BANJO_MINIMAL
 
 ; a: slide amount
-; hl: pattern pointer
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_pitch_slide_up: 
 	
 	; set slide_type = 1
@@ -54,7 +51,8 @@ mpnl_pitch_slide_up:
 	jr mpnl_slide_common
 
 ; a: slide amount
-; hl: pattern pointer
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_pitch_slide_down: 
 	
 	; set slide_type = 2
@@ -63,7 +61,8 @@ mpnl_pitch_slide_down:
 	jr mpnl_slide_common
 
 ; a: portamento amount
-; hl: pattern pointer
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_portamento: 
 
 	; set slide_type = 3
@@ -96,7 +95,8 @@ mpnl_slide_off:
 
 
 ; a: arpeggio values
-; hl: pattern pointer
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_arpeggio: 
 
 	; load arpeggio offsets
@@ -110,7 +110,8 @@ mpnl_arpeggio:
 
 	jp mpnl_command_done
 
-
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_arpeggio_off: 
 
 	; clear arpeggio
@@ -127,7 +128,8 @@ mpnl_arpeggio_off:
 
 
 ; a: vibrato amount
-; hl: pattern pointer
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_vibrato: 
 
 	; initialise vibrato counter
@@ -137,8 +139,8 @@ mpnl_vibrato:
 	ld channel.vibrato_counter_add(ix), a
 	
 	; load full vibrato amplitude into vibrato_depth
-	inc hl
-	ld a, (hl)
+	inc de
+	ld a, (de)
 	ld channel.vibrato_depth(ix), a
 
 	; set vibrato flag
@@ -146,7 +148,8 @@ mpnl_vibrato:
 
 	jp mpnl_command_done
 
-
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_vibrato_off: 
 
 	; clear vibrato flag
@@ -157,7 +160,8 @@ mpnl_vibrato_off:
 
 	jp mpnl_command_done_one_byte_command
 
-
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_legato_on: 
 
 	; switch legato flag on
@@ -165,7 +169,8 @@ mpnl_legato_on:
 
 	jp mpnl_command_done_one_byte_command
 
-
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_legato_off: 
 
 	; switch legato flag off
@@ -173,7 +178,8 @@ mpnl_legato_off:
 
 	jp mpnl_command_done_one_byte_command
 
-
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_order_jump: 
 
 	; get order to jump to and store it
@@ -181,7 +187,8 @@ mpnl_order_jump:
 
 	jp mpnl_command_done
 
-
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_order_next: 
 
 	; get order to jump to by incrementing to the current order
@@ -201,7 +208,8 @@ mpnl_order_next:
 
 
 ; a: new speed
-; hl: pattern pointer
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_set_speed_1: 
 
 	; get new speed
@@ -211,7 +219,8 @@ mpnl_set_speed_1:
 
 
 ; a: new speed
-; hl: pattern pointer
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_set_speed_2: 
 
 	; get new speed
@@ -221,7 +230,8 @@ mpnl_set_speed_2:
 
 
 ; a: delay amount
-; hl: pattern pointer
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_note_delay: 
 
 	; get new note delay
@@ -229,12 +239,9 @@ mpnl_note_delay:
 
 	; store the pointer to the next command and return
 	; this will be picked up when tic_wait hits zero
-	inc hl
-	ld channel.pattern_ptr(ix), l
-	ld channel.pattern_ptr+1(ix), h
-
-	; remove jump table address from stack
-	pop de
+	inc de
+	ld channel.pattern_ptr(ix), e
+	ld channel.pattern_ptr+1(ix), d
 
 	ret 
 
@@ -279,7 +286,7 @@ mpnl_vibrato:
 
 mpnl_skip_3_byte_command: 
 
-	inc hl
+	inc de
 
 	jp mpnl_command_done
 
