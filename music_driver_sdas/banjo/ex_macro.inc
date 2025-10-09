@@ -4,42 +4,65 @@
 
 ; ix: channel
 ; iy: music state
-; returns new level in a
 music_update_ex_macro: 
     
     ; check if we've reached the end of the macro
     ld a, channel.ex_macro_pos(ix)
-    cp a, channel.ex_macro_len(ix)
-    jr nz, mpct_ex_macro_continue
+    or a, a
+    ret z
 
-        ; if loop == 0xff there's no loop so we're done
-        ld a, channel.ex_macro_loop(ix)
-        cp a, #0xff
+        ; get pointer to ex macro data in hl
+        ld l, channel.ex_macro_ptr(ix)
+        ld h, channel.ex_macro_ptr+1(ix)
+        
+        ; move position on
+        inc a
+
+        ; hl is pointing at macro length
+        ; compare our new pos with the length
+        cp a, (hl)
+        jr z, muem_at_end
+
+            ; store the new pos
+            ld channel.ex_macro_pos(ix), a
+            
+            muem_continue: 
+
+            ; offset into macro data
+            add a, l
+            ld l, a
+            adc a, h
+            sub a, l
+            ld h, a
+
+            ; store new macro value
+            ld a, (hl)
+            ld channel.ex_macro_val(ix), a
+        
+            ; set event flag for this macro type
+            ; (the event bit and type bit should be the same!)
+            ld a, channel.ex_macro_type(ix)
+            or a, channel.events(ix)
+            ld channel.events(ix), a
+
+            ret 
+
+    muem_at_end: 
+
+        ; pos has reached the end of the macro data
+        ; move hl to macro loop and get the value
+        inc hl
+        ld a, (hl)
+
+        ; store the new pos
+        ld channel.ex_macro_pos(ix), a
+
+        ; if the new pos == 0 then there's no looping
+        or a, a
         ret z
 
-            ; reset position to loop point
-            ld channel.ex_macro_pos(ix), a
+        ;  move the ptr back
+        dec a
 
-    mpct_ex_macro_continue: 
+        jr muem_continue
 
-        ; get current pointer to ex macro into hl
-        add a, channel.ex_macro_ptr(ix)
-        ld l, a
-        adc a, channel.ex_macro_ptr+1(ix)
-        sub a, l
-        ld h, a
-
-        ; store new macro value
-        ld a, (hl)
-        ld channel.ex_macro_val(ix), a
-
-        ; move macro position along and save it
-        inc channel.ex_macro_pos(ix)
-
-        ; set event flag for this macro type
-        ; (the event bit and type bit should be the same!)
-        ld a, channel.ex_macro_type(ix)
-        or a, channel.events(ix)
-        ld channel.events(ix), a
-        
-        ret 

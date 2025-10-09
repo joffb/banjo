@@ -49,6 +49,9 @@ NOTE_ON             = 0x80
 INSTRUMENT_SIZE     = 16
 FM_PATCH_SIZE       = 8
 
+CHAN_FLAG_VOLUME_MACRO = 0x08
+CHAN_FLAG_EX_MACRO = 0x80
+
 CHIP_SN76489        = 0x03      # 0x03: SMS (SN76489) - 4 channels
 CHIP_SN76489_OPLL   = 0x43      # 0x43: SMS (SN76489) + OPLL (YM2413) - 13 channels (compound!)
 CHIP_OPLL           = 0x89      # 0x89: OPLL (YM2413) - 9 channels
@@ -377,6 +380,9 @@ def main(argv=None):
                 for j in range(0, macro["length"]):                     
                     macro['data'][j] = 15 - macro['data'][j]
 
+                macro_loop = (macro["loop"] + 2 if macro["loop"] != 0xff else 0)
+                macro["data"] = [macro["length"] + 2, macro_loop] + macro["data"]
+
                 macro_data_name = "macro_volume_" + str(i)
                 macros[macro_data_name] = macro['data']
                 new_instrument["volume_macro_ptr"] = macro_data_name
@@ -421,10 +427,12 @@ def main(argv=None):
                         noise_freq = 0x3 if (duty & 0x2) else 0x0
                         macro['data'][j] = 0x80 | (0x3 << 5) | noise_mode | noise_freq
 
+                macro_loop = (macro["loop"] + 2 if macro["loop"] != 0xff else 0)
+                macro["data"] = [macro["length"] + 2, macro_loop] + macro["data"]
+
                 macro_data_name = "macro_ex_" + str(i)
                 macros[macro_data_name] = macro['data']
                 new_instrument["ex_macro_ptr"] = macro_data_name
-
 
         # FM preset change (only for OPLL FM instruments)
         if (instrument['type'] == 13 and "fm" in instrument):
@@ -1104,9 +1112,19 @@ def main(argv=None):
         instrument = instruments[i]
 
         writelabel("instrument_" + str(i))
-        outfile.write("\t.db " + str(instrument["volume_macro_len"]) + " ; len\n")
-        outfile.write("\t.db " + str(instrument["volume_macro_loop"]) + " ; loop\n")
 
+        # calculate flag bits dependant on vol/ex macro presence
+        flag_bits = 0
+        
+        if instrument["volume_macro_ptr"] != 0xffff:
+            flag_bits |= CHAN_FLAG_VOLUME_MACRO
+
+        if instrument["ex_macro_ptr"] != 0xffff:
+            flag_bits |= CHAN_FLAG_EX_MACRO
+        
+        outfile.write("\t.db " + str(flag_bits) + " ; flags\n")
+        
+        # volume macro
         if (instrument["volume_macro_ptr"] == 0xffff):
             outfile.write("\t.dw 0xffff ;ptr\n")
         else:
@@ -1114,8 +1132,6 @@ def main(argv=None):
 
         # ex macro
         outfile.write("\t.db " + str(instrument["ex_macro_type"]) + " ; type\n")
-        outfile.write("\t.db " + str(instrument["ex_macro_len"]) + " ; len \n")
-        outfile.write("\t.db " + str(instrument["ex_macro_loop"]) + " ; loop\n")
 
         if (instrument["ex_macro_ptr"] == 0xffff):
             outfile.write("\t.dw 0xffff ;ptr\n")
@@ -1131,6 +1147,8 @@ def main(argv=None):
         else:
             outfile.write("\t.dw " + song_prefix + "_" + str(instrument["fm_patch_ptr"]) + " ; ptr\n")
 
+        # pad out to 10 bytes
+        outfile.write("\t .db 0xff ; padding\n")
 
 
     outfile.write("\n" + "\n")
@@ -1161,7 +1179,9 @@ def main(argv=None):
                 continue
 
             outfile.write(song_prefix + "_patterns_" + str(i) + "_" + str(song['orders'][i][j]))
-            outfile.write(", ")
+
+            if (i < song['channel_count'] - 1) and (sfx == False):
+                outfile.write(", ")
 
         outfile.write("\n")
 

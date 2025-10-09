@@ -74,16 +74,16 @@ CHAN_FLAG_BIT_EX_MACRO			.equ		0x7
 
 CHAN_EVENT_PITCH_CHANGED			.equ		0x1
 CHAN_EVENT_VOLUME_CHANGE			.equ		0x2
-CHAN_EVENT_MUTE			.equ		0x4
-CHAN_EVENT_UNMUTE			.equ		0x8
+CHAN_EVENT_PITCH_CHANGE_ALWAYS			.equ		0x4
+CHAN_EVENT_VOLUME_CHANGE_ALWAYS			.equ		0x8
 CHAN_EVENT_WAVE_CHANGED			.equ		0x10
 CHAN_EVENT_DUTY_CHANGED			.equ		0x20
 CHAN_EVENT_ARP_CHANGED			.equ		0x40
 
 CHAN_EVENT_BIT_PITCH_CHANGED			.equ		0x0
 CHAN_EVENT_BIT_VOLUME_CHANGE			.equ		0x1
-CHAN_EVENT_BIT_MUTE			.equ		0x2
-CHAN_EVENT_BIT_UNMUTE			.equ		0x3
+CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS			.equ		0x2
+CHAN_EVENT_BIT_VOLUME_CHANGE_ALWAYS			.equ		0x3
 CHAN_EVENT_BIT_WAVE_CHANGED			.equ		0x4
 CHAN_EVENT_BIT_DUTY_CHANGED			.equ		0x5
 CHAN_EVENT_BIT_ARP_CHANGED			.equ		0x6
@@ -163,19 +163,15 @@ channel.arpeggio .equ 17
 channel.pattern_ptr .equ 18		; pointer to the current pattern
 channel.line_wait .equ 20		; wait for this many lines
 channel.tic_wait .equ 21		; wait for this many tics
-channel.volume_macro_len .equ 22
-channel.volume_macro_vol .equ 23
-channel.volume_macro_pos .equ 24
-channel.volume_macro_loop .equ 25
-channel.volume_macro_ptr .equ 26
+channel.volume_macro_vol .equ 22
+channel.volume_macro_pos .equ 23
+channel.volume_macro_ptr .equ 24
+channel.ex_macro_val .equ 26
+channel.ex_macro_pos .equ 27
 channel.ex_macro_type .equ 28
-channel.ex_macro_len .equ 29
-channel.ex_macro_val .equ 30
-channel.ex_macro_pos .equ 31
-channel.ex_macro_loop .equ 32
-channel.ex_macro_ptr .equ 33
-channel.patch .equ 35
-_sizeof_channel .equ 36
+channel.ex_macro_ptr .equ 29
+channel.patch .equ 31
+_sizeof_channel .equ 32
 
 music_state.magic_byte .equ 0		; should be 0xba for a valid song
 music_state.bank .equ 1

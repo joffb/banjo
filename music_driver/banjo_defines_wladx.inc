@@ -76,16 +76,16 @@
 
 .define CHAN_EVENT_PITCH_CHANGED		0x1
 .define CHAN_EVENT_VOLUME_CHANGE		0x2
-.define CHAN_EVENT_MUTE		0x4
-.define CHAN_EVENT_UNMUTE		0x8
+.define CHAN_EVENT_PITCH_CHANGE_ALWAYS		0x4
+.define CHAN_EVENT_VOLUME_CHANGE_ALWAYS		0x8
 .define CHAN_EVENT_WAVE_CHANGED		0x10
 .define CHAN_EVENT_DUTY_CHANGED		0x20
 .define CHAN_EVENT_ARP_CHANGED		0x40
 
 .define CHAN_EVENT_BIT_PITCH_CHANGED		0x0
 .define CHAN_EVENT_BIT_VOLUME_CHANGE		0x1
-.define CHAN_EVENT_BIT_MUTE		0x2
-.define CHAN_EVENT_BIT_UNMUTE		0x3
+.define CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS		0x2
+.define CHAN_EVENT_BIT_VOLUME_CHANGE_ALWAYS		0x3
 .define CHAN_EVENT_BIT_WAVE_CHANGED		0x4
 .define CHAN_EVENT_BIT_DUTY_CHANGED		0x5
 .define CHAN_EVENT_BIT_ARP_CHANGED		0x6
@@ -167,16 +167,12 @@
 	pattern_ptr: dw		; pointer to the current pattern
 	line_wait: db		; wait for this many lines
 	tic_wait: db		; wait for this many tics
-	volume_macro_len: db
 	volume_macro_vol: db
 	volume_macro_pos: db
-	volume_macro_loop: db
 	volume_macro_ptr: dw
-	ex_macro_type: db
-	ex_macro_len: db
 	ex_macro_val: db
 	ex_macro_pos: db
-	ex_macro_loop: db
+	ex_macro_type: db
 	ex_macro_ptr: dw
 	patch: db
 .ENDST

@@ -64,9 +64,6 @@ music_update_vibrato:
     ; get the value
     ld a, (de)
 
-    ; upper byte of vibrato
-    ld d, 0
-
     ; vibrato amount == 0
     or a, a
     jr z, mvu_no_invert
@@ -75,12 +72,21 @@ music_update_vibrato:
     bit 5, c
     jr z, mvu_no_invert
 
+		; upper byte of vibrato
         ld d, 0xff
-        neg
+		
+		; lower byte of vibrato
+		neg
+        ld e, a
+		
+		ret
 
     mvu_no_invert:
 
+		; upper byte of vibrato
+		ld d, 0
+		
         ; lower byte of vibrato
         ld e, a
 
-    ret
+		ret

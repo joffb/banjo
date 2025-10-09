@@ -59,11 +59,17 @@ music_volume_change_sn:
     ; set latch and volume bit
     or a, 0x90
 
-    ; load the port into c
-    ld c, (ix + channel.port)
-    
     ; update chip
-    out (c), a
+    .ifdef BANJO_SMS
+
+        out (SN76489_PORT), a
+
+    .else
+
+        ld c, (ix + channel.port)
+        out (c), a
+
+    .endif
 
     ; ALF TEST
     ; additional write delay

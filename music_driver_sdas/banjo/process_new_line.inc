@@ -76,12 +76,15 @@ music_process_new_line:
 
 			; address in table is command num * 3
 			; use it to offset into the jump table
+			; hl = (a * 3) + bc
 			ld l, a
 			add a, a
 			add a, l
+			add a, c
 			ld l, a
-			ld h, #0
-			add hl, bc
+			adc a, b
+			sub a, l
+			ld h, a
 
 			; move pattern pointer on and read
 			; the next byte into a in preparation

@@ -22,8 +22,17 @@ music_update_pitch_registers_sn:
 
             ; we're in a pitched noise channel
             ; update noise mode
-            ld c, channel.port(ix)
-            out (c), d
+            .ifdef BANJO_SMS
+
+                ld a, d
+                out (#SN76489_PORT), a
+
+            .else 
+
+                ld c, channel.port(ix)
+                out (c), d
+
+            .endif 
 
             ; ALF TEST
             ; additional write delay
@@ -40,7 +49,7 @@ music_update_pitch_registers_sn:
     mup_sn_square_channel: 
 
         ; get channel number (pre-shifted into correct position)
-        ld c, channel.subchannel(ix)
+        ld c, a
 
     mup_sn_pitched_noise_channel: 
 
@@ -57,10 +66,18 @@ music_update_pitch_registers_sn:
         or a, #0x80
         ; combine with channel number
         or a, c
-        
-        ; output first byte of tone data
-        ld c, channel.port(ix)
-        out (c), a
+
+        ; output first byte of tone data        
+        .ifdef BANJO_SMS
+
+            out (#SN76489_PORT), a
+
+        .else 
+
+            ld c, channel.port(ix)
+            out (c), a
+
+        .endif 
         
         ; ALF TEST
         ; additional write delay
@@ -81,7 +98,15 @@ music_update_pitch_registers_sn:
         rlca 
 
         ; output second byte of tone data
-        out (c), a
+        .ifdef BANJO_SMS
+
+            out (#SN76489_PORT), a
+
+        .else 
+
+            out (c), a
+
+        .endif 
 
         ; ALF TEST
         ; additional write delay
@@ -123,8 +148,16 @@ music_update_pitch_registers_sn:
         or a, c
         
         ; update chip
-        ld c, channel.port(ix)
-        out (c), a
+        .ifdef BANJO_SMS
+
+            out (#SN76489_PORT), a
+
+        .else 
+
+            ld c, channel.port(ix)
+            out (c), a
+
+        .endif 
     
         ; ALF TEST
         ; additional write delay

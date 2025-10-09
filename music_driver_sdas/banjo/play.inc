@@ -112,9 +112,10 @@ music_play:
 
 		; default slide variables to 0
 		ld channel.ex_macro_type(ix), a
+		
 		;
 		; default volume macro length to 0
-		ld channel.volume_macro_len(ix), a
+		;ld (ix + channel.volume_macro_len), a
 		;
 		; default vibrato_current and vibrato_depth to 0
 		; ld (ix + channel.vibrato_depth), a

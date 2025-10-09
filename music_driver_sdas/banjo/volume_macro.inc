@@ -4,39 +4,61 @@
 
 ; ix: channel
 ; iy: music state
-; returns new volume level in a
 music_update_volume_macro: 
     
     ; check if we've reached the end of the macro
     ld a, channel.volume_macro_pos(ix)
-    cp a, channel.volume_macro_len(ix)
-    jr nz, mpct_volume_macro_continue
+    or a, a
+    ret z
 
-        ; if loop == 0xff there's no loop so we're done
-        ld a, channel.volume_macro_loop(ix)
-        cp a, #0xff
+        ; get pointer to volume macro data in hl
+        ld l, channel.volume_macro_ptr(ix)
+        ld h, channel.volume_macro_ptr+1(ix)
+        
+        ; move position on
+        inc a
+
+        ; hl is pointing at macro length
+        ; compare our new pos with the length
+        cp a, (hl)
+        jr z, muvm_at_end
+
+            ; store the new pos
+            ld channel.volume_macro_pos(ix), a
+            
+            muvm_continue: 
+
+            ; offset into macro data
+            add a, l
+            ld l, a
+            adc a, h
+            sub a, l
+            ld h, a
+
+            ; store new macro volume
+            ld a, (hl)
+            ld channel.volume_macro_vol(ix), a
+        
+            ; flag that the volume has changed
+            set CHAN_EVENT_BIT_VOLUME_CHANGE, channel.events(ix)
+
+            ret 
+
+    muvm_at_end: 
+
+        ; pos has reached the end of the macro data
+        ; move hl to macro loop and get the value
+        inc hl
+        ld a, (hl)
+
+        ; store the new pos
+        ld channel.volume_macro_pos(ix), a
+
+        ; if the new pos == 0 then there's no looping
+        or a, a
         ret z
 
-            ; reset position to loop point
-            ld channel.volume_macro_pos(ix), a
+        ;  move the ptr back
+        dec a
 
-    mpct_volume_macro_continue: 
-
-        ; get current pointer to volume macro into hl
-        add a, channel.volume_macro_ptr(ix)
-        ld l, a
-        adc a, channel.volume_macro_ptr+1(ix)
-        sub a, l
-        ld h, a
-
-        ; store new macro volume
-        ld a, (hl)
-        ld channel.volume_macro_vol(ix), a
-
-        ; move volume macro position along and save it
-        inc channel.volume_macro_pos(ix)
-    
-        ; flag that the volume has changed
-        set CHAN_EVENT_BIT_VOLUME_CHANGE, channel.events(ix)
-
-        ret 
+        jr muvm_continue

@@ -13,6 +13,7 @@
 
 ### Furnace features and effects currently supported:
 **NB:** *Compatibility Flags > Pitch/Playback > Pitch Linearity* should be set to "None" in Furnace
++ The "Speeds" tempo mode (with separate Speed 1 and Speed 2 parameters) is supported
 + Volume macro per channel (only "sequence" mode)
 + One extra macro per channel (only "sequence" mode) supporting:
     + Pitch

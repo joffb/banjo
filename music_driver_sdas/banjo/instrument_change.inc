@@ -14,22 +14,21 @@ music_instrument_change:
 	; store the new instrument number in the channel
 	ld channel.instrument_num(ix), a
 	
-	; get instrument pointer by doing instrument_num * 12
+	; get instrument pointer by doing instrument_num * 10
 	ld l, a
 	ld h, #0
 	
-	; * 4
+	; * 2
 	add hl, hl
-	add hl, hl
-	
-	; keep * 4 for later
+	; keep * 2 for later
 	ld b, h
 	ld c, l
 	
 	; * 8
 	add hl, hl
+	add hl, hl
 	
-	; * 12
+	; * 10
 	add hl, bc
 	
 	; offset into instrument data
@@ -41,17 +40,19 @@ music_instrument_change:
 	push ix
 	pop de
 
+	; set macro flags
 	; get channel.flags (should be first byte of channel struct)
-	; then unset the macro flags and store in b 
+	; then unset the macro flags and combine with flags from first byte of instrument 
 	ld a, (de)
 	and a, #~(CHAN_FLAG_VOLUME_MACRO|CHAN_FLAG_EX_MACRO)
-	ld b, a
+	or a, (hl)
+	ld channel.flags(ix), a
 
-	; max value of c so ldi instructions don't affect b
-	ld c, #0xff
+	; move to volume macro info
+	inc hl
 
-	; move along to volume macro 
-	ld a, #channel.volume_macro_len
+	; move along to volume_macro_ptr
+	ld a, #channel.volume_macro_ptr
 	add a, e
 	ld e, a
 	adc a, d
@@ -64,66 +65,23 @@ music_instrument_change:
 	; volume macro
 	; copy over macro info
 
-	; volume macro length == 0?
-	cp a, (hl)
-	jr z, mic_no_volume_macro
+	; ptr
+	ldi 
+	ldi 
 
-		; set volume macro flag
-		set CHAN_FLAG_BIT_VOLUME_MACRO, b
-	
-	mic_no_volume_macro: 
-
-		; len
-		ldi 
-
-		; vol
-		inc de
-
-		; pos = 0
-		ld (de), a
-		inc de
-
-		; loop
-		ldi 
-
-		; ptr
-		ldi 
-		ldi 
+	; move past ex_macro_val and ex_macro_pos
+	inc de
+	inc de
 
 	; ex macro
 	; copy over macro info
 
-	; always copy over ex_macro_type
+	; ex_macro_type
 	ldi 
 
-	; check if macro_len > 0
-	cp a, (hl)
-	jr z, mic_no_ex_macro
-
-		; set volume macro flag
-		set CHAN_FLAG_BIT_EX_MACRO, b
-
-	mic_no_ex_macro: 
-
-		;len
-		ldi 
-
-		; vol
-		inc de
-
-		; pos = 0
-		ld (de), a
-		inc de
-
-		; loop
-		ldi 
-		
-		; ptr
-		ldi 
-		ldi 
-
-	; update flags
-	ld channel.flags(ix), b
+	; ex_macro_ptr
+	ldi 
+	ldi 
 
 	; restore de and bc
 	pop de

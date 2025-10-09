@@ -24,9 +24,11 @@
 .SECTION "BANJO" free
 	
 	.if BANJO_SYS == 1
+		.define BANJO_SMS 1
 		.include "check_hardware_sms.inc"
 		.include "init_sms.inc"
 	.elif BANJO_SYS == 2
+		.define BANJO_MSX 1
 		bch_msx_opll_magic_string: 
 			.db "APRLOPLL"
 		.include "check_hardware_msx.inc"

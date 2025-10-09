@@ -56,7 +56,9 @@ music_note_on:
 	mnon_done:
 
 	; mark pitch and volume as requiring update
-	ld (ix + channel.events), CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_VOLUME_CHANGE
+	ld a, CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_VOLUME_CHANGE
+	or a, (ix + channel.events)
+	ld (ix + channel.events), a
 
 	; set note-on bit
     set CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
@@ -66,9 +68,10 @@ music_note_on:
 	ret nz
 
 		; reset macro positions
+		ld (ix + channel.volume_macro_pos), 2
+		ld (ix + channel.ex_macro_pos), 2
+
 		xor a
-		ld (ix + channel.volume_macro_pos), a
-		ld (ix + channel.ex_macro_pos), a
 		ld (ix + channel.vibrato_counter), a
 
 		ret

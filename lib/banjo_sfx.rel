@@ -14,7 +14,7 @@ S _banjo_sfx_init Def000000
 S _banjo_play_sfx Def00000C
 S _banjo_update_sfx Def000069
 S _banjo_sfx_stop Def00002F
-A _DATA size 48 flags 0 addr 0
+A _DATA size 44 flags 0 addr 0
 S _sfx_playing Def000000
 S _sfx_priority Def000001
 S _sfx_channel Def000024

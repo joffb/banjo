@@ -12,6 +12,16 @@ music_jump_channels_order_and_pattern:
 	; update order index
 	ld (iy + music_state.order), a
 
+	; point de at first channel's channel.pattern_ptr 
+	; first get it into hl
+	push ix
+	pop hl
+	
+	; move along to pattern_ptr and swap into de
+	ld de, channel.pattern_ptr
+	add hl, de
+	ex de, hl
+
 	; double order number in hl
 	ld h, 0
 	ld l, a
@@ -34,17 +44,6 @@ music_jump_channels_order_and_pattern:
 	; loop through all channels
 	ld b, (iy + music_state.channel_count)
 	ld c, 0xff
-
-	; point de at first channel's channel.pattern_ptr 
-	push ix
-	pop de
-	
-	ld a, channel.pattern_ptr
-	add a, e
-	ld e, a
-	adc a, d
-	sub a, e
-	ld d, a
 
 	mjcoap_loop:		
 

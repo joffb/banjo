@@ -98,8 +98,8 @@ var defines = [
     [
         { name: "CHAN_EVENT_PITCH_CHANGED", value: 0x01 },
         { name: "CHAN_EVENT_VOLUME_CHANGE", value: 0x02 },
-        { name: "CHAN_EVENT_MUTE", value: 0x04 },
-        { name: "CHAN_EVENT_UNMUTE", value: 0x08 },
+        { name: "CHAN_EVENT_PITCH_CHANGE_ALWAYS", value: 0x04 },
+        { name: "CHAN_EVENT_VOLUME_CHANGE_ALWAYS", value: 0x08 },
         { name: "CHAN_EVENT_WAVE_CHANGED", value: 0x10 },
         { name: "CHAN_EVENT_DUTY_CHANGED", value: 0x20 },
         { name: "CHAN_EVENT_ARP_CHANGED", value: 0x40 },
@@ -107,8 +107,8 @@ var defines = [
     [
         { name: "CHAN_EVENT_BIT_PITCH_CHANGED", value: 0 },
         { name: "CHAN_EVENT_BIT_VOLUME_CHANGE", value: 1 },
-        { name: "CHAN_EVENT_BIT_MUTE", value: 2 },
-        { name: "CHAN_EVENT_BIT_UNMUTE", value: 3 },
+        { name: "CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS", value: 2 },
+        { name: "CHAN_EVENT_BIT_VOLUME_CHANGE_ALWAYS", value: 3 },
         { name: "CHAN_EVENT_BIT_WAVE_CHANGED", value: 4 },
         { name: "CHAN_EVENT_BIT_DUTY_CHANGED", value: 5 },
         { name: "CHAN_EVENT_BIT_ARP_CHANGED", value: 6 },
@@ -218,17 +218,13 @@ var structs = [
             { name: "line_wait", size: "db", comment: "wait for this many lines"},
             { name: "tic_wait", size: "db", comment: "wait for this many tics" },
             
-            { name: "volume_macro_len", size: "db"},
             { name: "volume_macro_vol", size: "db"},
             { name: "volume_macro_pos", size: "db"},
-            { name: "volume_macro_loop", size: "db"},
             { name: "volume_macro_ptr", size: "dw"},
 
-            { name: "ex_macro_type", size: "db"},
-            { name: "ex_macro_len", size: "db"},
             { name: "ex_macro_val", size: "db"},
             { name: "ex_macro_pos", size: "db"},
-            { name: "ex_macro_loop", size: "db"},
+            { name: "ex_macro_type", size: "db"},
             { name: "ex_macro_ptr", size: "dw"},
 
             { name: "patch", size: "db"},

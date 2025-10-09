@@ -29,13 +29,16 @@ mpnl_volume_change:
 
 	and a, 0xf
 
-	; store new channel volume
-	ld (ix + channel.volume), a
+	cp a, (ix + channel.volume)
+	jp z, mpnl_command_done
 
-	; set bit to indicate a channel volume change event
-	set CHAN_EVENT_BIT_VOLUME_CHANGE, (ix + channel.events)
+		; store new channel volume
+		ld (ix + channel.volume), a
 
-	jp mpnl_command_done
+		; set bit to indicate a channel volume change event
+		set CHAN_EVENT_BIT_VOLUME_CHANGE, (ix + channel.events)
+
+		jp mpnl_command_done
 	
 
 .ifndef BANJO_MINIMAL
@@ -75,6 +78,9 @@ mpnl_slide_common:
 
 	; set pitch slide flag
 	set CHAN_FLAG_BIT_SLIDE, (ix + channel.flags)
+	
+	; set "pitch always changing" flag
+	set CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
 
 	jp mpnl_command_done
 
@@ -90,6 +96,9 @@ mpnl_slide_off:
 
 	; mark pitch as requiring update
 	set CHAN_EVENT_BIT_PITCH_CHANGED, (ix + channel.events)
+
+	; check if we need to clear the "pitch always changing" flag
+	call music_refresh_pitch_change_always
 
 	jp mpnl_command_done_one_byte_command
 
@@ -107,6 +116,9 @@ mpnl_arpeggio:
 
 	; set arpeggio flag
 	set CHAN_FLAG_BIT_ARPEGGIO, (ix + channel.flags)
+	
+	; set "pitch always changing" flag
+	set CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
 
 	jp mpnl_command_done
 
@@ -123,6 +135,9 @@ mpnl_arpeggio_off:
 
 	; mark pitch as requiring update
 	set CHAN_EVENT_BIT_PITCH_CHANGED, (ix + channel.events)
+	
+	; check if we need to clear the "pitch always changing" flag
+	call music_refresh_pitch_change_always
 
 	jp mpnl_command_done_one_byte_command
 
@@ -145,6 +160,9 @@ mpnl_vibrato:
 
 	; set vibrato flag
 	set CHAN_FLAG_BIT_VIBRATO, (ix + channel.flags)
+	
+	; set "pitch always changing" flag
+	set CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
 
 	jp mpnl_command_done
 
@@ -157,6 +175,9 @@ mpnl_vibrato_off:
 
 	; mark pitch as requiring update
 	set CHAN_EVENT_BIT_PITCH_CHANGED, (ix + channel.events)
+
+	; check if we need to clear the "pitch always changing" flag
+	call music_refresh_pitch_change_always
 
 	jp mpnl_command_done_one_byte_command
 
@@ -245,6 +266,23 @@ mpnl_note_delay:
 
 	ret
 
+
+music_refresh_pitch_change_always:
+
+	; any of these effects running?
+	ld a, (ix + channel.flags)
+	and a, CHAN_FLAG_BIT_VIBRATO | CHAN_FLAG_ARPEGGIO | CHAN_FLAG_SLIDE
+	jr nz, mrpca_set
+
+		; clear PITCH_CHANGE_ALWAYS flag
+		res CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
+		ret
+	
+	; set PITCH_CHANGE_ALWAYS flag
+	mrpca_set:
+	
+		set CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
+		ret
 
 .endif
 

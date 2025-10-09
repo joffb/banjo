@@ -29,16 +29,27 @@ mpnl_note_off_sn:
 		; get channel (already shifted to the correct position)
 		ld a, (ix + channel.subchannel)
 
-		; preserve c
-		ld l, c
-
 		; set latch = 1, type = volume, volume = 0
 		or a, 0x9f
-		ld c, (ix + channel.port)
-		out (c), a
 
-		; restore c
-		ld l, c
+		; write to chip
+		.ifdef BANJO_SMS
+
+			out (SN76489_PORT), a
+
+		.else
+
+			; preserve c
+			ld l, c
+
+			ld c, (ix + channel.port)
+			out (c), a
+
+			; restore c
+			ld l, c
+			
+		.endif
+
 
         ; ALF TEST
         ; additional write delay
