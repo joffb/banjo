@@ -64,7 +64,7 @@ If the upper three bits of the command byte are all 0, then the jump table below
 | FM Patch data ptr     | 2 |
 | Padding               | 1 |
 
-### Macro data
+### Macro definition
 
 | Data | Size |
 | ---- | ---- |
@@ -72,7 +72,7 @@ If the upper three bits of the command byte are all 0, then the jump table below
 | Macro Loop point | 1 |
 | Macro data | n |
 
-Macro position starts at 2 as it's an offset from the start of the macro data.
+Macro position starts at 2 as it's an offset from the start of the macro definition.
 Similarly, the Length is calculated as `n + 2` and the Loop point is `+ 2` from the Furnace value.
 Loop point set to 0 indicates no looping.
 
