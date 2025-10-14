@@ -32,6 +32,8 @@
     + Jump to pattern (0B)
     + Jump to next pattern (0D)
         + NB: ignores the parameter and goes to the start of the next pattern
+    + Note cut (EC)
+        + NB: cut delays longer than the current line's speed will not work properly
     + Note delay (ED)
         + NB: delays longer than the current line's speed will not work properly
     + SN76489

@@ -891,6 +891,15 @@ def main(argv=None):
 
                         pattern_bin.append(NOTE_OFF)
 
+                    # check effects which we want to happen post-note
+                    for eff in range (0, len(line['effects']), 2):
+
+                        # note cut
+                        if (line['effects'][eff] == 0xec):
+
+                            pattern_bin.append(NOTE_DELAY)
+                            pattern_bin.append(line['effects'][eff + 1])
+                            pattern_bin.append(NOTE_OFF)
 
                     # end line marker
                     if (len(pattern_bin) > 0) and ((pattern_bin[len(pattern_bin) - 1] & (END_LINE | NOTE_ON)) == END_LINE):
