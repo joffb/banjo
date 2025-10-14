@@ -66,18 +66,27 @@ If the upper three bits of the command byte are all 0, then the jump table below
 
 ### Macro definition
 
-| Data | Size |
-| ---- | ---- |
-| Macro Length | 1 |
-| Macro Loop point | 1 |
-| Macro data | n |
-
-Macro position starts at 2 as it's an offset from the start of the macro definition.
-Similarly, the Length is calculated as `n + 2` and the Loop point is `+ 2` from the Furnace value.
-Loop point set to 0 indicates no looping.
+| Data | Size | Info |
+| ---- | ---- | ---- |
+| Macro Length | 1 | This is the length of the entire definition (data + length + loop) |
+| Macro Loop point | 1 | This will be the Furnace loop index + 1 |
+| Macro data | n | |
 
 e.g.
 
 | Length | Loop | d2 | d3 | d4 | d5 |
 | ------ | ---- | -- | -- | -- | -- |
-| 6      | 4    | 0  | 4  | 8  | 12 |
+| 6      | 3    | 0  | 4  | 8  | 12 |
+
+When a macro is updated:
+
+* The Macro's position is read
+* If the position is equal to 0 then the Macro has already finished processing and we return
+* The position is then incremented and compared against the Length
+* If the new position is less than the Length, then we read the next value and save the new position
+* If the new position equals the Length, then we either need to Loop or are finished with the Macro
+* The loop value becomes the new position and its value is checked
+* If the loop value is equal to 0 then the Macro has finished processing and we return
+* If the loop value is not equal to 0 then the Macro continues and we read the next value
+
+As the position is always incremented and the values are looked up by an offset from the start of the Macro definition, the position is reset or initialised to 1. The position will effectively be incremented to 2 and then added to the address of the Macro definition to get the address of the first data byte.

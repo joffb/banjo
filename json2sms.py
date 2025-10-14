@@ -380,7 +380,7 @@ def main(argv=None):
                 for j in range(0, macro["length"]):                     
                     macro['data'][j] = 15 - macro['data'][j]
 
-                macro_loop = (macro["loop"] + 2 if macro["loop"] != 0xff else 0)
+                macro_loop = (macro["loop"] + 1 if macro["loop"] != 0xff else 0)
                 macro["data"] = [macro["length"] + 2, macro_loop] + macro["data"]
 
                 macro_data_name = "macro_volume_" + str(i)
@@ -419,15 +419,7 @@ def main(argv=None):
                     for j in range(0, macro["length"]):
                         macro['data'][j] = 0x1f - macro['data'][j]
 
-                # special case for sn noise duty, similar to SN_NOISE_MODE command
-                if macro["code"] == MACRO_TYPE_DUTY and instrument["type"] == 0:
-                    for j in range(0, macro["length"]):
-                        duty = macro['data'][j]
-                        noise_mode = (duty & 0x1) << 2
-                        noise_freq = 0x3 if (duty & 0x2) else 0x0
-                        macro['data'][j] = 0x80 | (0x3 << 5) | noise_mode | noise_freq
-
-                macro_loop = (macro["loop"] + 2 if macro["loop"] != 0xff else 0)
+                macro_loop = (macro["loop"] + 1 if macro["loop"] != 0xff else 0)
                 macro["data"] = [macro["length"] + 2, macro_loop] + macro["data"]
 
                 macro_data_name = "macro_ex_" + str(i)
@@ -587,11 +579,7 @@ def main(argv=None):
                         if (line['effects'][eff] == 0x20 and channel_type['type'] == CHAN_SN76489):
 
                             pattern_bin.append(SN_NOISE_MODE)
-
-                            noise_mode = (line['effects'][eff + 1] & 0x1) << 2
-                            noise_freq = 0x3 if (line['effects'][eff + 1] & 0x10) else 0x0
-
-                            pattern_bin.append(0x80 | (0x3 << 5) | noise_mode | noise_freq)
+                            pattern_bin.append((line['effects'][eff + 1] & 0x1) | ((line['effects'][eff + 1] & 0x10) >> 3))
 
                         # Arpeggio
                         elif (line['effects'][eff] == 0x00):

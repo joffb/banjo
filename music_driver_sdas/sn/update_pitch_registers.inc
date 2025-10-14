@@ -2,6 +2,83 @@
 ; banjo sound driver
 ; Joe Kennedy 2024
 
+; a: noise node
+; iy: music_state
+; ix: channel we're updating
+music_update_noise_mode_sn_ch3_pitch: 
+
+    ; using ch3 pitch
+
+    ; white noise or periodic noise?
+    bit 0, a
+    jr nz, munmsn_ch3_white
+
+        ; ch3 pitch, periodic noise
+        ld a, #0x80|(0x3<<5)|0x3
+        out (#SN76489_PORT), a
+
+        ret 
+
+    munmsn_ch3_white: 
+    
+        ; ch3 pitch, white noise
+        ld a, #0x80|(0x3<<5)|0x7
+        out (#SN76489_PORT), a
+    
+        ret 
+    
+; a: noise node
+; iy: music_state
+; ix: channel we're updating
+music_update_noise_mode_sn_fixed_pitch: 
+
+    ; preserve noise mode
+    ld h, a
+
+    ; get midi number
+    ld a, channel.midi_note(ix)
+                
+    ; mod 12
+    ld l, #12
+    
+    fixed_noise_mod_12: 
+        sub a, l
+        jr nc, fixed_noise_mod_12
+
+    add a, l
+    
+    ; anything > 2 should be set to 2
+    cp a, #3
+    jr c, munmsn_fixed_lt_three
+
+        ld a, #2
+
+    munmsn_fixed_lt_three: 
+
+    ; actual value should be 2 minus this value
+    neg 
+    add a, #2
+
+    ; fixed pitch
+
+    ; white noise or periodic noise?
+    bit 0, h
+    jr nz, munmsn_fixed_white
+
+        ; fixed pitch, periodic noise
+        or a, #0x80|(0x3<<5)
+        out (#SN76489_PORT), a
+
+        ret 
+
+    munmsn_fixed_white: 
+    
+        ; fixed pitch, white noise
+        or a, #0x80|(0x3<<5)|0x4
+        out (#SN76489_PORT), a
+
+        ret 
+
 ; b: current channel number
 ; iy: music_state
 ; ix: channel we're updating
@@ -13,37 +90,21 @@ music_update_pitch_registers_sn:
     jr nz, mup_sn_square_channel
 
         ; we're in a noise channel
-        ; check whether it's pitched or fixed
+        ; get noise mode
         ld a, music_state.noise_mode(iy)
-        ld d, a
-        and a, #0x3
-        cp a, #0x3
-        jr nz, mup_sn_fixed_noise_channel
 
-            ; we're in a pitched noise channel
-            ; update noise mode
-            .ifdef BANJO_SMS
+        ; fixed pitch mode or ch3 pitch mode?
+        bit 1, a
+        jr nz, mupr_sn_ch3_pitch
 
-                ld a, d
-                out (#SN76489_PORT), a
+            call music_update_noise_mode_sn_fixed_pitch
+            jp music_update_pitch_registers_sn_done
 
-            .else 
+        mupr_sn_ch3_pitch: 
 
-                ld c, channel.port(ix)
-                out (c), d
-
-            .endif 
-
-            ; ALF TEST
-            ; additional write delay
-            .ifdef BANJO_ALF
-                call _banjo_sn_alf_wait
-            .endif 
-
-            ; for pitched noise it uses channel 3's pitch
-            ; we want to write to the last square channel's pitch instead
-            ld c, #0x2<<5
-            jr mup_sn_pitched_noise_channel
+        ; for pitched noise it uses channel 3's pitch
+        ; we want to write to the last square channel's pitch instead
+        ld a, #0x2<<5
 
     ; for a regular square channel we update this channel's pitch
     mup_sn_square_channel: 
@@ -117,53 +178,3 @@ music_update_pitch_registers_sn:
         ; done
         jp music_update_pitch_registers_sn_done
         
-    ; pitch not based on channel 3
-    mup_sn_fixed_noise_channel: 
-        
-        ; get midi number
-        ld a, channel.midi_note(ix)
-                    
-        ; mod 12
-        ld d, #12
-        
-        fixed_noise_mod_12: 
-            sub a, d
-            jr nc, fixed_noise_mod_12
-
-        add a, d
-        
-        ; restrict to 0-2
-        and a, #0x3
-        ld c, a
-
-        ; actual value should be 2 minus this value
-        ld a, #2
-        sub a, c
-        and a, #0x3
-        ld c, a
-    
-        ; clear bottom 2 bits of current noise mode
-        ; and or with new value
-        ld a, music_state.noise_mode(iy)
-        or a, c
-        
-        ; update chip
-        .ifdef BANJO_SMS
-
-            out (#SN76489_PORT), a
-
-        .else 
-
-            ld c, channel.port(ix)
-            out (c), a
-
-        .endif 
-    
-        ; ALF TEST
-        ; additional write delay
-        .ifdef BANJO_ALF
-            call _banjo_sn_alf_wait
-        .endif 
-
-        ; done
-        jp music_update_pitch_registers_sn_done

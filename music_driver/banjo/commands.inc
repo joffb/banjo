@@ -73,7 +73,7 @@ mpnl_portamento:
 
 mpnl_slide_common:
 
-	; load portamento amount
+	; load slide amount
 	ld (ix + channel.slide_amount), a
 
 	; set pitch slide flag

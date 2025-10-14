@@ -98,7 +98,7 @@ music_update_channel_ay:
         muc_ay_no_duty:
 
         ; check if we need to update the pitch of this channel
-        ld a, CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_PITCH_CHANGE_ALWAYS | CHAN_EVENT_ARP_CHANGED | CHAN_EVENT_DUTY_CHANGED
+        ld a, CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_PITCH_CHANGE_ALWAYS | CHAN_EVENT_ARP_CHANGED
         and a, b
         jp nz, music_update_pitch_registers_ay
         music_update_pitch_registers_ay_done:
@@ -113,7 +113,7 @@ music_update_channel_ay:
 
         ; clear events
 		ld a, b
-		and a, ~(CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_VOLUME_CHANGE)
+		and a, CHAN_EVENT_PITCH_CHANGE_ALWAYS
         ld (ix + channel.events), a
         
         mucay_done:

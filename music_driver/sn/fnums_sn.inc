@@ -183,3 +183,13 @@ sn_tone_lookup:
 .dw 9
 ; midi: G9, fur: G7
 .dw 9
+; midi: G#9, fur: G#7
+.dw 8
+; midi: A9, fur: A7
+.dw 8
+; midi: A#9, fur: A#7
+.dw 7
+; midi: B9, fur: B7
+.dw 7
+; midi: C10, fur: C8
+.dw 7

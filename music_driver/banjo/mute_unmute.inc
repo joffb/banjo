@@ -42,8 +42,9 @@ banjo_mute_song_channel:
     ld h, (hl)
     ld l, a
 
-    ; set muted flag
+    ; set muted flag and clear note-on flag
     set CHAN_FLAG_BIT_MUTED, (hl)
+    res CHAN_FLAG_BIT_NOTE_ON, (hl)
 
     ; get channel into ix
     push hl
@@ -123,8 +124,9 @@ banjo_mute_song:
 
         banjo_mute_song_loop:
 
-            ; set channel muted flag
+            ; set muted flag and clear note-on flag
             set CHAN_FLAG_BIT_MUTED, (hl)
+            res CHAN_FLAG_BIT_NOTE_ON, (hl)
             
             ; move to next channel
             add hl, de
@@ -168,7 +170,7 @@ banjo_unmute_song:
 
         banjo_unmute_song_loop:
 
-            ; set channel muted flag
+            ; unset channel muted flag
             res CHAN_FLAG_BIT_MUTED, (hl)
             
             ; move to next channel

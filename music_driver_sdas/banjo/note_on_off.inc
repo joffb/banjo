@@ -67,12 +67,13 @@ music_note_on:
 	bit CHAN_FLAG_BIT_LEGATO, channel.flags(ix)
 	ret nz
 
-		; reset macro positions
-		ld channel.volume_macro_pos(ix), #2
-		ld channel.ex_macro_pos(ix), #2
-
 		xor a
 		ld channel.vibrato_counter(ix), a
+
+		; reset macro positions
+		inc a
+		ld channel.volume_macro_pos(ix), a
+		ld channel.ex_macro_pos(ix), a
 
 		ret 
 

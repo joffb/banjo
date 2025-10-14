@@ -124,7 +124,7 @@ music_update_channel_opll:
 
         ; clear events
 		ld a, b
-		and a, #~(CHAN_EVENT_PITCH_CHANGED|CHAN_EVENT_VOLUME_CHANGE)
+		and a, #CHAN_EVENT_PITCH_CHANGE_ALWAYS
         ld channel.events(ix), a
 
         muco_done: 

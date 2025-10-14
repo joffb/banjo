@@ -73,27 +73,36 @@ music_update_channel_sn:
 
         ; process ex macro
         bit CHAN_FLAG_BIT_EX_MACRO, b
-        call nz, music_update_ex_macro
+        jr z, muc_sn_no_ex_macro
+        
+            call music_update_ex_macro
+
+            ; was this a duty macro?
+            bit MACRO_TYPE_BIT_DUTY, (ix + channel.ex_macro_type)
+            jr z, muc_sn_no_ex_macro
+
+                ; update noise mode
+                ld a, (ix + channel.ex_macro_val)
+                ld (iy + music_state.noise_mode), a
+
+        muc_sn_no_ex_macro:
 
         ; apply pitch slides/portamento
         bit CHAN_FLAG_BIT_SLIDE, b
         call nz, music_update_pitch_slide_sn
-
-        ; keep flags in a
-        ld a, b
 
         ; b now has events
         ld b, (ix + channel.events)
 
         music_update_sn_no_vib_arp:
 
-        ; change of noise duty?
+        ; change of noise duty flagged?
         bit CHAN_EVENT_BIT_DUTY_CHANGED, b
         jr z, muc_sn_no_duty
 
-            ; update noise mode
-            ld a, (ix + channel.ex_macro_val)
-            ld (iy + music_state.noise_mode), a
+            ; change noise mode here if we've gone to ch3 based pitch
+            bit 1, (iy + music_state.noise_mode)
+            call nz, music_update_noise_mode_sn_ch3_pitch
 
         muc_sn_no_duty:
 
@@ -116,7 +125,7 @@ music_update_channel_sn:
 
         ; clear events
 		ld a, b
-		and a, ~(CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_VOLUME_CHANGE)
+		and a, CHAN_EVENT_PITCH_CHANGE_ALWAYS
         ld (ix + channel.events), a
 
         mucsn_done:

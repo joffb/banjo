@@ -54,7 +54,7 @@ music_update_sn_pitch_slide_upward:
 	; if carry, de has gone < 0, so cap the pitch
 	jr nc, mu_sn_psu_done
 
-		ld hl, 10
+		ld hl, 0
 
 	; done
 	mu_sn_psu_done:
@@ -68,17 +68,19 @@ music_update_sn_pitch_slide_downward:
 	ld l, (ix + channel.slide_amount)
 	ld h, 0
 	add hl, de
-	
-	; check if h < 1024 so has gone beyond the bottom pitch
-	ld a, h
-	cp a, 4
+
+	; is freq > 1017?
+	ld de, 1017
+	sbc hl, de
 	jr c, mu_sn_psd_done
 
-		; cap pitch
-		ld hl, 1017
+		; cap pitch at 1017
+		ld hl, 0
 
 	; done
 	mu_sn_psd_done:
+	add hl, de
+
 	ex de, hl
 	jp music_update_pitch_slide_done_sn
 

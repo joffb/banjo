@@ -9,22 +9,11 @@
 ; de : instruction pointer (preserve this!)
 mpnl_sn_noise_mode: 
 
-	; check if the channel is muted
-	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
-	jp nz, mpnl_skip_2_byte_command
-	
-	; preserve c
-	ld l, c
-	
-	; update noise mode 
-	ld c, channel.port(ix)
-	out (c), a
-	
-	; restore c
-	ld c, l
-	
 	; store for later
 	ld music_state.noise_mode(iy), a
+
+	; flag that the noise mode has been changed
+	set CHAN_EVENT_BIT_DUTY_CHANGED, channel.events(ix)
 	
 	jp mpnl_command_done
 

@@ -12,7 +12,7 @@ const MUSIC_CLOCK = 3579545.0;
 
 var midi_note_frequencies = [];
 
-for (var i = 0; i < 128; i++)
+for (var i = 0; i < 133; i++)
 {
 	midi_note_frequencies.push(Math.pow(2.0, (i - 69.0)/12.0) * 440.0);
 }
@@ -22,7 +22,7 @@ for (var i = 0; i < 128; i++)
 
 var sn_fnums = [];
 
-for (var i = 0; i < 128; i++)
+for (var i = 0; i < 133; i++)
 {
 	var freq = MUSIC_CLOCK / ( 2 * 16 * midi_note_frequencies[i]);
 
@@ -31,7 +31,7 @@ for (var i = 0; i < 128; i++)
 
 var output = [];
 
-for (var i = 36; i < 128; i++)
+for (var i = 36; i < 133; i++)
 {
 	var out;
 	var note_name = note_names[i % 12];

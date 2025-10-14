@@ -29,6 +29,9 @@ _banjo_init_sn:
     ld a, #0xe7
     out (c), a
 
+    ld a, #3
+    ld music_state.noise_mode(iy), a
+
     ; ALF TEST
     ; additional write delay
     .ifdef BANJO_ALF
