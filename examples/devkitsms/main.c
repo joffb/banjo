@@ -7,7 +7,6 @@
 #include "song_table.h"
 
 channel_t song_channels[CHAN_COUNT_OPLL_DRUMS];
-channel_t *song_channel_ptrs[CHAN_COUNT_OPLL_DRUMS];
 
 unsigned char tic;
 

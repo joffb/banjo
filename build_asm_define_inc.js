@@ -175,17 +175,16 @@ var structs = [
     {
         name: "instrument",
         members: [
-            { name: "volume_macro_len", size: "db"},
-            { name: "volume_macro_loop", size: "db"},
+            { name: "macro_flags", size: "db"},
             { name: "volume_macro_ptr", size: "dw"},
 
             { name: "ex_macro_type", size: "db"},
-            { name: "ex_macro_len", size: "db"},
-            { name: "ex_macro_loop", size: "db"},
             { name: "ex_macro_ptr", size: "dw"},
             
             { name: "fm_preset", size: "db" },
             { name: "fm_patch", size: "dw" },
+
+            { name: "padding", size: "db" },
         ]
     },
     {
@@ -373,7 +372,6 @@ fs.writeSync(out_wladx, `
 
 .macro SONG_CHANNELS(N)
     song_channels: INSTANCEOF channel N
-    song_channel_ptrs: ds N * 2
 .endm
 
 `)

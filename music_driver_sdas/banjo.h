@@ -66,8 +66,7 @@
 
 // declares enough space for x song channels and pointers to them
 #define BANJO_SONG_CHANNELS(x) \
-    channel_t song_channels[x]; \
-    channel_t *song_channel_ptrs[x]; 
+    channel_t song_channels[x];
 
 typedef void (*banjo_func_ptr_t)(void);
 

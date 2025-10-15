@@ -122,7 +122,6 @@ BANJO_SONG_CHANNELS(CHAN_COUNT_SN + CHAN_COUNT_OPLL)
 
 // equivalent to:
 channel_t song_channels[CHAN_COUNT_SN + CHAN_COUNT_OPLL];
-channel_t *song_channel_ptrs[CHAN_COUNT_SN + CHAN_COUNT_OPLL];
 ```
 
 ### Initialisation

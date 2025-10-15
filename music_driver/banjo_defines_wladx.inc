@@ -136,15 +136,13 @@
 .define SYS_FLAG_BIT_SYSTEM_E		0x2
 
 .STRUCT instrument
-	volume_macro_len: db
-	volume_macro_loop: db
+	macro_flags: db
 	volume_macro_ptr: dw
 	ex_macro_type: db
-	ex_macro_len: db
-	ex_macro_loop: db
 	ex_macro_ptr: dw
 	fm_preset: db
 	fm_patch: dw
+	padding: db
 .ENDST
 
 .STRUCT channel
@@ -223,7 +221,6 @@
 
 .macro SONG_CHANNELS(N)
     song_channels: INSTANCEOF channel N
-    song_channel_ptrs: ds N * 2
 .endm
 
 .endif

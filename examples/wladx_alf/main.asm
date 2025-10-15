@@ -35,7 +35,6 @@
 	input_pressed: db
 	
 	song_channels: INSTANCEOF channel (CHAN_COUNT)
-	song_channel_ptrs: ds (CHAN_COUNT * 2)
 
 .ENDS
 

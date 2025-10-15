@@ -14,30 +14,6 @@ _banjo_init:
     ; store max number of channels
     ld (_banjo_max_channels), a
 
-	; set up array of pointers to song channels
-    ; initialise pointers to channels
-	ld b, a
-	ld de, #_song_channels
-	ld hl, #_song_channel_ptrs
-
-	bi_song_channel_pointer_loop: 
-
-		; write de to (hl)
-		ld (hl), e
-		inc hl
-		ld (hl), d
-		inc hl
-
-		; move de to the next channel
-		ld a, #_sizeof_channel
-		add a, e
-		ld e, a
-		adc a, d
-		sub a, e
-		ld d, a
-
-		djnz bi_song_channel_pointer_loop
-	
     ; no songs should be playing intially
 	ld a, #0
 	ld (song_playing), a

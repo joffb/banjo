@@ -29,18 +29,19 @@ _banjo_mute_song_channel:
 	add a, a
     push af
 
-    ; use a * 2 to get an offset into song_channel_ptrs into hl
-    add a, #<_song_channel_ptrs
-    ld l, a
-    adc a, #>_song_channel_ptrs
-    sub a, l
-    ld h, a
+    ; .assert  _sizeof_channel==32; ensure that the channel is the size we think it is!
 
-    ; get pointer to channel in hl
-    ld a, (hl)
-    inc hl
-    ld h, (hl)
+    ; hl = channel_number * 32
     ld l, a
+    ld h, #0
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+
+    ; offset into song_channels
+    ld de, #_song_channels
+    add hl, de
 
     ; set muted flag and clear note-on flag
     set CHAN_FLAG_BIT_MUTED, (hl)
@@ -86,19 +87,20 @@ _banjo_mute_song_channel:
 ; a: channel to mute
 _banjo_unmute_song_channel: 
 
-    ; use a to get an offset into song_channel_ptrs into hl
-	add a, a
-    add a, #<_song_channel_ptrs
-    ld l, a
-    adc a, #>_song_channel_ptrs
-    sub a, l
-    ld h, a
+    ; .assert  _sizeof_channel==32; ensure that the channel is the size we think it is!
 
-    ; get actual pointer into channel in hl
-    ld a, (hl)
-    inc hl
-    ld h, (hl)
+    ; hl = channel_number * 32
     ld l, a
+    ld h, #0
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+
+    ; offset into song_channels
+    ld de, #_song_channels
+    add hl, de
 
     ; clear muted flag
     res CHAN_FLAG_BIT_MUTED, (hl)

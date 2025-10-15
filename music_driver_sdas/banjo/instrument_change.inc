@@ -14,6 +14,8 @@ music_instrument_change:
 	; store the new instrument number in the channel
 	ld channel.instrument_num(ix), a
 	
+    ; .assert  _sizeof_instrument==10; ensure that an instrument is the size we think it is!
+
 	; get instrument pointer by doing instrument_num * 10
 	ld l, a
 	ld h, #0

@@ -133,16 +133,14 @@ SYS_FLAG_BIT_GG			.equ		0x0
 SYS_FLAG_BIT_MARK_III			.equ		0x1
 SYS_FLAG_BIT_SYSTEM_E			.equ		0x2
 
-instrument.volume_macro_len .equ 0
-instrument.volume_macro_loop .equ 1
-instrument.volume_macro_ptr .equ 2
-instrument.ex_macro_type .equ 4
-instrument.ex_macro_len .equ 5
-instrument.ex_macro_loop .equ 6
-instrument.ex_macro_ptr .equ 7
-instrument.fm_preset .equ 9
-instrument.fm_patch .equ 10
-_sizeof_instrument .equ 12
+instrument.macro_flags .equ 0
+instrument.volume_macro_ptr .equ 1
+instrument.ex_macro_type .equ 3
+instrument.ex_macro_ptr .equ 4
+instrument.fm_preset .equ 6
+instrument.fm_patch .equ 7
+instrument.padding .equ 9
+_sizeof_instrument .equ 10
 
 channel.flags .equ 0
 channel.subchannel .equ 1		; channel number within the chip

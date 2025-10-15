@@ -27,7 +27,7 @@
 	.area _CODE (REL,CON)
 .endif
 
-    .globl song_playing, _song_state, _song_channels, _song_channel_ptrs
+    .globl song_playing, _song_state, _song_channels
     .globl _banjo_has_chips, _banjo_system_flags, _banjo_max_channels
     .globl _banjo_song_stop, _banjo_song_resume
     .globl _banjo_init

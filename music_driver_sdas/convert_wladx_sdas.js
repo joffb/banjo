@@ -195,7 +195,7 @@ async function process_lines(lines)
 			{
 				whitespace += token;
 			}
-		
+
 			// found the opcode
 			else if (search == "opcode")
 			{
@@ -285,6 +285,12 @@ async function process_lines(lines)
 		else if (opcode == "bit" || opcode == "set" || opcode == "res")
 		{
 			source = rearrange(source);
+		}
+
+		// ignore wladx assert directives
+		else if (opcode == ".assert")
+		{
+			opcode = "; .assert ";
 		}
 		
 		outfile.write(
