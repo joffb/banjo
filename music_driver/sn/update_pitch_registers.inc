@@ -9,6 +9,9 @@ music_update_noise_mode_sn_ch3_pitch:
 
     ; using ch3 pitch
 
+    ; clear "noise mode changed" flag
+    res 7, (iy + music_state.noise_mode)
+
     ; white noise or periodic noise?
     bit 0, a
     jr nz, munmsn_ch3_white
@@ -23,7 +26,7 @@ music_update_noise_mode_sn_ch3_pitch:
     
         ; ch3 pitch, white noise
         ld a, 0x80 | (0x3 << 5) | 0x7
-        out (SN76489_PORT), a    
+        out (SN76489_PORT), a
     
         ret
     
@@ -31,6 +34,9 @@ music_update_noise_mode_sn_ch3_pitch:
 ; iy: music_state
 ; ix: channel we're updating
 music_update_noise_mode_sn_fixed_pitch:
+
+    ; clear "noise mode changed" flag
+    res 7, (iy + music_state.noise_mode)
 
     ; preserve noise mode
     ld h, a

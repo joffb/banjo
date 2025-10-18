@@ -100,9 +100,14 @@ music_update_channel_sn:
         bit CHAN_EVENT_BIT_DUTY_CHANGED, b
         jr z, muc_sn_no_duty
 
-            ; change noise mode here if we've gone to ch3 based pitch
-            bit 1, music_state.noise_mode(iy)
-            call nz, music_update_noise_mode_sn_ch3_pitch
+            ; change noise mode here if we've changed to ch3 based pitch
+            ld a, music_state.noise_mode(iy)
+            bit 1, a
+            jr z, muc_sn_no_duty
+
+            ; bit 7 being set flags that the noise mode is different
+            or a, a
+            call m, music_update_noise_mode_sn_ch3_pitch
 
         muc_sn_no_duty: 
 

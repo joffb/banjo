@@ -20,7 +20,7 @@
     + Arpeggio
     + FM Patch (OPLL)
     + Noise Freq (AY3)
-    + Duty (SN)
+    + Noise/Duty (SN)
 + YM2413 custom patches and custom drum pitches
 + Effects (multiple effects per channel are supported):
     + Arpeggios (00)

@@ -368,20 +368,34 @@ def main(argv=None):
         # macros
         for macro in instrument["macros"]:
 
+            print(macro)
+
             if macro["loop"] != 0xff and macro["loop"] >= macro["length"]:
                 macro["loop"] = 0xff
 
             # volume macro
             if macro["code"] == MACRO_TYPE_VOLUME:
 
-                new_instrument["volume_macro_len"] = macro["length"]
-                new_instrument["volume_macro_loop"] = macro["loop"]
+                macro_data = []
+                macro_delay = []
 
-                for j in range(0, macro["length"]):                     
-                    macro['data'][j] = 15 - macro['data'][j]
+                # process macro data
+                for j in range(0, macro["length"]):
+                    macro_value = 15 - macro['data'][j]
 
-                macro_loop = (macro["loop"] + 1 if macro["loop"] != 0xff else 0)
-                macro["data"] = [macro["length"] + 2, macro_loop] + macro["data"]
+                    # repeat each step if speed > 1
+                    for k in range (0, macro["speed"]):
+                        macro_data.append(macro_value)
+
+                # delay at start of macro
+                for j in range(0, macro["delay"]):
+                    macro_delay.append(macro_data[0])
+
+                # calculate loop position
+                macro_loop = (((macro["loop"] * macro["speed"]) + macro["delay"] + 1) if macro["loop"] != 0xff else 0)
+                
+                # combine all data
+                macro["data"] = [(macro["length"] * macro["speed"]) + macro["delay"] + 2, macro_loop] + macro_delay + macro_data
 
                 macro_data_name = "macro_volume_" + str(i)
                 macros[macro_data_name] = macro['data']
@@ -391,8 +405,6 @@ def main(argv=None):
             elif new_instrument["ex_macro_ptr"] == 0xffff:
 
                 new_instrument["ex_macro_type"] = macro_type_lookup[macro["code"]] if macro["code"] in macro_type_lookup else macro["code"]
-                new_instrument["ex_macro_len"] = macro["length"]
-                new_instrument["ex_macro_loop"] = macro["loop"]
 
                 if macro["code"] == MACRO_TYPE_ARP:
                     for j in range(0, macro["length"]):
@@ -419,8 +431,39 @@ def main(argv=None):
                     for j in range(0, macro["length"]):
                         macro['data'][j] = 0x1f - macro['data'][j]
 
-                macro_loop = (macro["loop"] + 1 if macro["loop"] != 0xff else 0)
-                macro["data"] = [macro["length"] + 2, macro_loop] + macro["data"]
+                macro_data = []
+                macro_delay = []
+
+                # process macro data
+                for j in range(0, macro["length"]):
+
+                    macro_value = macro['data'][j]
+
+                    # repeat each step if speed > 1
+                    for k in range (0, macro["speed"]):
+                        macro_data.append(macro_value)
+
+                # delay at start of macro
+                for j in range(0, macro["delay"]):
+                    macro_delay.append(macro_data[0])
+
+
+                # add a flag for sn noise mode to say when noise register has changed
+                # to avoid resetting lfsr every frame
+                if macro["code"] == MACRO_TYPE_DUTY and instrument["type"] == 0:
+                    for j in range(0, len(macro_data)):
+                        if (j == 0) or ((macro_data[j]) != (macro_data[j - 1] & 0x7f)):
+                            macro_data[j] = macro_data[j] | 0x80
+
+                    if (len(macro_delay) > 0):
+                        macro_delay[0] = macro_delay[0] | 0x80
+
+
+                # calculate loop position
+                macro_loop = (((macro["loop"] * macro["speed"]) + macro["delay"] + 1) if macro["loop"] != 0xff else 0)
+                
+                # combine all data
+                macro["data"] = [(macro["length"] * macro["speed"]) + macro["delay"] + 2, macro_loop] + macro_delay + macro_data
 
                 macro_data_name = "macro_ex_" + str(i)
                 macros[macro_data_name] = macro['data']

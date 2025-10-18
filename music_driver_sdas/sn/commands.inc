@@ -9,13 +9,19 @@
 ; de : instruction pointer (preserve this!)
 mpnl_sn_noise_mode: 
 
-	; store for later
-	ld music_state.noise_mode(iy), a
+	; don't update variable or flag a duty change if the noise mode is the same
+	; to avoid resetting the lfsr
+	cp a, music_state.noise_mode(iy)
+	jp z, mpnl_command_done
+		
+		; store for later w/ flag to say that the mode has changed
+		or a, #0x80
+		ld music_state.noise_mode(iy), a
 
-	; flag that the noise mode has been changed
-	set CHAN_EVENT_BIT_DUTY_CHANGED, channel.events(ix)
-	
-	jp mpnl_command_done
+		; flag that the noise mode has been changed
+		set CHAN_EVENT_BIT_DUTY_CHANGED, channel.events(ix)
+		
+		jp mpnl_command_done
 
 	
 ; a: pan value
