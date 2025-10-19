@@ -53,7 +53,7 @@
     .globl mpnl_vibrato, mpnl_vibrato_off
     .globl mpnl_order_jump, mpnl_order_next
     .globl mpnl_set_speed_1, mpnl_set_speed_2
-    .globl mpnl_note_delay
+    .globl mpnl_note_delay, mpnl_note_release
     .globl mpnl_skip_1_byte_command, mpnl_skip_2_byte_command, mpnl_skip_3_byte_command
 
     .globl music_note_on, music_note_off

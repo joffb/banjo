@@ -266,6 +266,14 @@ mpnl_note_delay:
 
 	ret 
 
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
+mpnl_note_release: 
+
+	set CHAN_EVENT_BIT_MACRO_RELEASE, channel.events(ix)
+
+	jp mpnl_command_done_one_byte_command
+
 
 music_refresh_pitch_change_always: 
 

@@ -130,7 +130,7 @@ music_update_channel_sn:
 
         ; clear events
 		ld a, b
-		and a, CHAN_EVENT_PITCH_CHANGE_ALWAYS
+		and a, CHAN_EVENT_PITCH_CHANGE_ALWAYS | CHAN_EVENT_MACRO_RELEASE
         ld (ix + channel.events), a
 
         mucsn_done:

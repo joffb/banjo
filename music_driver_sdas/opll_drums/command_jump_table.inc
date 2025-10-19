@@ -32,3 +32,4 @@ music_command_jump_table_opll_drums:
 	jp mpnl_set_speed_2
     jp mpnl_order_next
     jp mpnl_note_delay
+	jp mpnl_note_release

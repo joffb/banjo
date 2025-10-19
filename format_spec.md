@@ -50,6 +50,7 @@ If the upper three bits of the command byte are all 0, then the jump table below
 | Set Speed 2		| 0x1b | speed   |       |       | 
 | Order Next		| 0x1c |         |       |       | 
 | Note Delay		| 0x1d | tics    |       |       | 
+| Note Release		| 0x1e |         |       |       | 
 
 
 ### Instruments
@@ -66,17 +67,23 @@ If the upper three bits of the command byte are all 0, then the jump table below
 
 ### Macro definition
 
+For volume macros:
+
 | Data | Size | Info |
 | ---- | ---- | ---- |
-| Macro Length | 1 | This is the length of the entire definition (data + length + loop) |
-| Macro Loop point | 1 | This will be the Furnace loop index + 1 |
+| Macro Sustain Length | 1 | This is the length up to the Release point (or of the entire definition with no Release)|
+| Macro Sustain Loop point | 1 | This will be the Furnace loop index |
+| Macro Release Length | 1 | This is the length of the entire definition |
+| Macro Release Loop point | 1 | This will be the Furnace loop index if there's a loop after the Release point |
 | Macro data | n | |
 
-e.g.
+For ex macros:
 
-| Length | Loop | d2 | d3 | d4 | d5 |
-| ------ | ---- | -- | -- | -- | -- |
-| 6      | 3    | 0  | 4  | 8  | 12 |
+| Data | Size | Info |
+| ---- | ---- | ---- |
+| Macro Length | 1 | This is the length of the entire definition |
+| Macro Loop point | 1 | This will be the Furnace loop index |
+| Macro data | n | |
 
 When a macro is updated:
 

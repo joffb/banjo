@@ -103,6 +103,7 @@ var defines = [
         { name: "CHAN_EVENT_WAVE_CHANGED", value: 0x10 },
         { name: "CHAN_EVENT_DUTY_CHANGED", value: 0x20 },
         { name: "CHAN_EVENT_ARP_CHANGED", value: 0x40 },
+        { name: "CHAN_EVENT_MACRO_RELEASE", value: 0x80 },
     ],
     [
         { name: "CHAN_EVENT_BIT_PITCH_CHANGED", value: 0 },
@@ -112,6 +113,7 @@ var defines = [
         { name: "CHAN_EVENT_BIT_WAVE_CHANGED", value: 4 },
         { name: "CHAN_EVENT_BIT_DUTY_CHANGED", value: 5 },
         { name: "CHAN_EVENT_BIT_ARP_CHANGED", value: 6 },
+        { name: "CHAN_EVENT_BIT_MACRO_RELEASE", value: 7 },
     ],
     [
         { name: "MACRO_TYPE_PITCH", value: 0x01 },

@@ -41,6 +41,7 @@ SET_SPEED_1         = 0x1a
 SET_SPEED_2         = 0x1b
 ORDER_NEXT          = 0x1c
 NOTE_DELAY          = 0x1d
+NOTE_RELEASE        = 0x1e
 
 VOLUME_CHANGE       = 0x20
 END_LINE            = 0x40
@@ -391,11 +392,52 @@ def main(argv=None):
                 for j in range(0, macro["delay"]):
                     macro_delay.append(macro_data[0])
 
-                # calculate loop position
-                macro_loop = (((macro["loop"] * macro["speed"]) + macro["delay"] + 1) if macro["loop"] != 0xff else 0)
+                # volume macro can have a "sustain" stage and a "release" stage
+                # release stage is triggered by Note Release/Macro Release in Furnace
+
+                # calculate loop position and total length
+                macro_sus_loop = (((macro["loop"] * macro["speed"]) + macro["delay"] + 4) if macro["loop"] != 0xff else 0)
+                macro_sus_len = (macro["length"] * macro["speed"]) + macro["delay"] + 4
+
+                # no release stage, just duplicate the sustain values
+                if macro["release"] == 0xff:
+
+                    macro_rel_loop = macro_sus_loop
+                    macro_rel_len = macro_sus_len
+
+                # there is a release stage
+                else:
+
+                    # release length is the entire macro
+                    macro_rel_len = macro_sus_len
+
+                    # sustain length is up to the release point
+                    macro_sus_len = (macro["release"] * macro["speed"]) + macro["delay"] + 4 + 1
+                    
+                    # no loop point set
+                    if macro["loop"] == 0xff:
+
+                        # no release loop
+                        macro_rel_loop = 0
+                        # the sustain loop point is the release point
+                        macro_sus_loop = macro_sus_len - 1
+
+                    # loop is before the release point
+                    elif macro["loop"] < macro["release"]:
+                        
+                        # no release loop, & the sustain loop point stays the same
+                        macro_rel_loop = 0
+
+                    # loop is after the release point
+                    elif macro["loop"] >= macro["release"]:
+
+                        # release loop is the sustain loop point
+                        macro_rel_loop = macro_sus_loop
+                        # the sustain loop point is the release point
+                        macro_sus_loop = macro_sus_len - 1
                 
                 # combine all data
-                macro["data"] = [(macro["length"] * macro["speed"]) + macro["delay"] + 2, macro_loop] + macro_delay + macro_data
+                macro["data"] = [macro_sus_len, macro_sus_loop, macro_rel_len, macro_rel_loop] + macro_delay + macro_data
 
                 macro_data_name = "macro_volume_" + str(i)
                 macros[macro_data_name] = macro['data']
@@ -930,9 +972,13 @@ def main(argv=None):
 
 
                     # note off
-                    elif (line['note'] == 100 or line['note'] == 101):
+                    elif line['note'] == 100:
 
                         pattern_bin.append(NOTE_OFF)
+                        
+                    elif (line['note'] == 101) or (line['note'] == 102):
+
+                        pattern_bin.append(NOTE_RELEASE)
 
                     # check effects which we want to happen post-note
                     for eff in range (0, len(line['effects']), 2):
