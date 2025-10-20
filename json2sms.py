@@ -111,6 +111,110 @@ def ay_envelope_period(fnum, numerator, denominator):
     return period
 
 
+def adsr_to_sequence(macro):
+
+	attack = macro["data"][2]
+	hold = macro["data"][3]
+	decay = macro["data"][4]
+	sustain = macro["data"][5]
+	release = macro["data"][8]
+
+	bottom = macro["data"][0]
+	top = macro["data"][1]
+
+	new_macro = {
+		"data": [],
+		"code": macro["code"],
+		"speed": 1,
+		"delay": 0,
+		"type": 0,
+		"length": 0, 
+		"loop": 0xff,
+		"release": 0
+	}
+
+	# attack == 0 means the adsr never starts
+	if attack == 0:
+		return new_macro
+
+	done = False
+
+	pos = 0
+	state = "attack"
+
+	macro_data = []
+	sustain_index = 0xff
+
+	while done == False:
+	
+		if state == "attack":
+		
+			pos += attack
+			
+			# attack done
+			if pos >= 255:
+				pos = 255
+				state = "hold"
+				
+			macro_data.append(pos)
+			
+			
+		elif state == "hold":
+		
+			if hold == 0:
+				state = "decay"
+			
+			else:
+				hold = hold - 1			
+				macro_data.append(pos)
+				
+		elif state == "decay":
+		
+			if decay == 0:
+				state = "sustain"
+				
+			else:
+			
+				pos = pos - decay
+				
+				if pos <= sustain:
+					pos = sustain
+					state = "sustain"
+					
+				macro_data.append(pos)
+				
+		elif state == "sustain":
+		
+			sustain_index = len(macro_data)
+			
+			state = "release"
+			
+		elif state == "release":
+		
+			if release == 0:
+				done = True
+				
+			else:
+			
+				pos = pos - release
+				
+				if pos <= 0:
+					done = True
+					pos = 0
+					
+				macro_data.append(pos)
+	
+    # scale macro_data to lay in the range between top and bottom
+	for i in range(0, len(macro_data)):
+		macro_data[i] = math.floor(bottom + ((macro_data[i] * (top - bottom + 1)) / 256))
+
+	new_macro["data"] = macro_data
+	new_macro["length"] = len(macro_data)
+	new_macro["release"] = sustain_index if release > 0 else 0xff
+
+	return new_macro
+
+
 def int_def(v, d):
     try:
         return int(v)
@@ -370,6 +474,11 @@ def main(argv=None):
         for macro in instrument["macros"]:
 
             print(macro)
+
+            # adsr
+            if macro["type"] == 1:
+                macro = adsr_to_sequence(macro)
+
 
             if macro["loop"] != 0xff and macro["loop"] >= macro["length"]:
                 macro["loop"] = 0xff
