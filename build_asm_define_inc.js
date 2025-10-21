@@ -78,7 +78,7 @@ var defines = [
     [
         { name: "CHAN_FLAG_MUTED", value: 0x01 },
         { name: "CHAN_FLAG_NOTE_ON", value: 0x02 },
-        { name: "CHAN_FLAG_LEGATO", value: 0x04 },
+        { name: "CHAN_FLAG_ARP_MACRO", value: 0x04 },
         { name: "CHAN_FLAG_VOLUME_MACRO", value: 0x8 },
         { name: "CHAN_FLAG_VIBRATO", value: 0x10 },
         { name: "CHAN_FLAG_ARPEGGIO", value: 0x20 },
@@ -88,7 +88,7 @@ var defines = [
     [
         { name: "CHAN_FLAG_BIT_MUTED", value: 0 },
         { name: "CHAN_FLAG_BIT_NOTE_ON", value: 1 },
-        { name: "CHAN_FLAG_BIT_LEGATO", value: 2 },
+        { name: "CHAN_FLAG_BIT_ARP_MACRO", value: 2 },
         { name: "CHAN_FLAG_BIT_VOLUME_MACRO", value: 3 },
         { name: "CHAN_FLAG_BIT_VIBRATO", value: 4 },
         { name: "CHAN_FLAG_BIT_ARPEGGIO", value: 5 },
@@ -99,7 +99,7 @@ var defines = [
         { name: "CHAN_EVENT_PITCH_CHANGED", value: 0x01 },
         { name: "CHAN_EVENT_VOLUME_CHANGE", value: 0x02 },
         { name: "CHAN_EVENT_PITCH_CHANGE_ALWAYS", value: 0x04 },
-        { name: "CHAN_EVENT_VOLUME_CHANGE_ALWAYS", value: 0x08 },
+        { name: "CHAN_EVENT_LEGATO", value: 0x08 },
         { name: "CHAN_EVENT_WAVE_CHANGED", value: 0x10 },
         { name: "CHAN_EVENT_DUTY_CHANGED", value: 0x20 },
         { name: "CHAN_EVENT_ARP_CHANGED", value: 0x40 },
@@ -109,7 +109,7 @@ var defines = [
         { name: "CHAN_EVENT_BIT_PITCH_CHANGED", value: 0 },
         { name: "CHAN_EVENT_BIT_VOLUME_CHANGE", value: 1 },
         { name: "CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS", value: 2 },
-        { name: "CHAN_EVENT_BIT_VOLUME_CHANGE_ALWAYS", value: 3 },
+        { name: "CHAN_EVENT_BIT_LEGATO", value: 3 },
         { name: "CHAN_EVENT_BIT_WAVE_CHANGED", value: 4 },
         { name: "CHAN_EVENT_BIT_DUTY_CHANGED", value: 5 },
         { name: "CHAN_EVENT_BIT_ARP_CHANGED", value: 6 },
@@ -180,6 +180,8 @@ var structs = [
             { name: "macro_flags", size: "db"},
             { name: "volume_macro_ptr", size: "dw"},
 
+            { name: "arp_macro_ptr", size: "dw"},
+
             { name: "ex_macro_type", size: "db"},
             { name: "ex_macro_ptr", size: "dw"},
             
@@ -204,15 +206,9 @@ var structs = [
             { name: "midi_note", size: "db" },
             { name: "instrument_num", size: "db" },
             
-            { name: "slide_amount", size: "db", comment: "how much to add/subtract per tic" },
-            { name: "slide_type", size: "db", comment: "type of slide (up/down/portamento)" },
-
-            { name: "vibrato_depth", size: "db" },
-            { name: "vibrato_counter", size: "db" },
-            { name: "vibrato_counter_add", size: "db" },
-
-            { name: "arpeggio_pos", size: "db"},
-            { name: "arpeggio", size: "db" },
+            { name: "effect1", size: "db" },
+            { name: "effect2", size: "db" },
+            { name: "effect3", size: "db" },
 
             //{ name: "order_table_ptr", size: "dw", comment: "pointer to the current order"},
             { name: "pattern_ptr", size: "dw", comment: "pointer to the current pattern" },
@@ -222,6 +218,10 @@ var structs = [
             { name: "volume_macro_vol", size: "db"},
             { name: "volume_macro_pos", size: "db"},
             { name: "volume_macro_ptr", size: "dw"},
+
+            { name: "arp_macro_val", size: "db"},
+            { name: "arp_macro_pos", size: "db"},
+            { name: "arp_macro_ptr", size: "dw"},
 
             { name: "ex_macro_val", size: "db"},
             { name: "ex_macro_pos", size: "db"},

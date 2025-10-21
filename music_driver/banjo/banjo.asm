@@ -57,6 +57,7 @@
 	.include "master_volume.inc"
 	.include "vibrato.inc"
 	.include "volume_macro.inc"
+	.include "arp_macro.inc"
 	.include "ex_macro.inc"
 	.endif
 

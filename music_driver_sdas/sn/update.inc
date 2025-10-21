@@ -71,6 +71,10 @@ music_update_channel_sn:
         bit CHAN_FLAG_BIT_VOLUME_MACRO, b
         call nz, music_update_volume_macro
 
+        ; process arp macro
+        bit CHAN_FLAG_BIT_ARP_MACRO, b
+        call nz, music_update_arp_macro
+
         ; process ex macro
         bit CHAN_FLAG_BIT_EX_MACRO, b
         jr z, muc_sn_no_ex_macro
@@ -130,7 +134,7 @@ music_update_channel_sn:
 
         ; clear events
 		ld a, b
-		and a, #CHAN_EVENT_PITCH_CHANGE_ALWAYS|CHAN_EVENT_MACRO_RELEASE
+		and a, #CHAN_EVENT_PITCH_CHANGE_ALWAYS|CHAN_EVENT_MACRO_RELEASE|CHAN_EVENT_LEGATO
         ld channel.events(ix), a
 
         mucsn_done: 

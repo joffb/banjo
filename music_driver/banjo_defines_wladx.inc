@@ -58,7 +58,7 @@
 
 .define CHAN_FLAG_MUTED		0x1
 .define CHAN_FLAG_NOTE_ON		0x2
-.define CHAN_FLAG_LEGATO		0x4
+.define CHAN_FLAG_ARP_MACRO		0x4
 .define CHAN_FLAG_VOLUME_MACRO		0x8
 .define CHAN_FLAG_VIBRATO		0x10
 .define CHAN_FLAG_ARPEGGIO		0x20
@@ -67,7 +67,7 @@
 
 .define CHAN_FLAG_BIT_MUTED		0x0
 .define CHAN_FLAG_BIT_NOTE_ON		0x1
-.define CHAN_FLAG_BIT_LEGATO		0x2
+.define CHAN_FLAG_BIT_ARP_MACRO		0x2
 .define CHAN_FLAG_BIT_VOLUME_MACRO		0x3
 .define CHAN_FLAG_BIT_VIBRATO		0x4
 .define CHAN_FLAG_BIT_ARPEGGIO		0x5
@@ -77,7 +77,7 @@
 .define CHAN_EVENT_PITCH_CHANGED		0x1
 .define CHAN_EVENT_VOLUME_CHANGE		0x2
 .define CHAN_EVENT_PITCH_CHANGE_ALWAYS		0x4
-.define CHAN_EVENT_VOLUME_CHANGE_ALWAYS		0x8
+.define CHAN_EVENT_LEGATO		0x8
 .define CHAN_EVENT_WAVE_CHANGED		0x10
 .define CHAN_EVENT_DUTY_CHANGED		0x20
 .define CHAN_EVENT_ARP_CHANGED		0x40
@@ -86,7 +86,7 @@
 .define CHAN_EVENT_BIT_PITCH_CHANGED		0x0
 .define CHAN_EVENT_BIT_VOLUME_CHANGE		0x1
 .define CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS		0x2
-.define CHAN_EVENT_BIT_VOLUME_CHANGE_ALWAYS		0x3
+.define CHAN_EVENT_BIT_LEGATO		0x3
 .define CHAN_EVENT_BIT_WAVE_CHANGED		0x4
 .define CHAN_EVENT_BIT_DUTY_CHANGED		0x5
 .define CHAN_EVENT_BIT_ARP_CHANGED		0x6
@@ -140,6 +140,7 @@
 .STRUCT instrument
 	macro_flags: db
 	volume_macro_ptr: dw
+	arp_macro_ptr: dw
 	ex_macro_type: db
 	ex_macro_ptr: dw
 	fm_preset: db
@@ -157,19 +158,18 @@
 	volume: db
 	midi_note: db
 	instrument_num: db
-	slide_amount: db		; how much to add/subtract per tic
-	slide_type: db		; type of slide (up/down/portamento)
-	vibrato_depth: db
-	vibrato_counter: db
-	vibrato_counter_add: db
-	arpeggio_pos: db
-	arpeggio: db
+	effect1: db
+	effect2: db
+	effect3: db
 	pattern_ptr: dw		; pointer to the current pattern
 	line_wait: db		; wait for this many lines
 	tic_wait: db		; wait for this many tics
 	volume_macro_vol: db
 	volume_macro_pos: db
 	volume_macro_ptr: dw
+	arp_macro_val: db
+	arp_macro_pos: db
+	arp_macro_ptr: dw
 	ex_macro_val: db
 	ex_macro_pos: db
 	ex_macro_type: db

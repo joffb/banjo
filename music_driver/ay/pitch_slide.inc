@@ -23,7 +23,7 @@ music_update_pitch_slide_ay:
 	ld d, (ix + channel.freq + 1)
 
 	; offset into jump table by slide type * 2
-	ld a, (ix + channel.slide_type)
+	ld a, (ix + channel.effect1)
 	add a, a
 	add a, <music_update_pitch_slide_ay_jump_table
 	ld l, a
@@ -46,7 +46,7 @@ music_update_pitch_slide_done_ay:
 music_update_ay_pitch_slide_upward:
 
 	; sub slide_amount from freq
-	ld l, (ix + channel.slide_amount)
+	ld l, (ix + channel.effect2)
 	ld h, 0
 	ex de, hl
 	sbc hl, de
@@ -65,7 +65,7 @@ music_update_ay_pitch_slide_upward:
 music_update_ay_pitch_slide_downward:
 
 	; add slide_amount to freq
-	ld l, (ix + channel.slide_amount)
+	ld l, (ix + channel.effect2)
 	ld h, 0
 	add hl, de
 	
@@ -104,7 +104,7 @@ music_update_ay_portamento:
 		add hl, de
 
 		; add slide amount to freq
-		ld a, (ix + channel.slide_amount)
+		ld a, (ix + channel.effect2)
 		add a, e
 		ld e, a
 		adc a, d
@@ -127,7 +127,7 @@ music_update_ay_portamento:
 
 		; sub slide amount from freq
 		ld a, e
-		sub a, (ix + channel.slide_amount)
+		sub a, (ix + channel.effect2)
 		ld e, a
 		ld a, d
 		sbc a, 0
@@ -150,8 +150,8 @@ music_update_ay_portamento:
 		ex de, hl
 			
 		; cancel the portamento
-		ld a, 0
-		ld (ix + channel.slide_type), a
+		ld (ix + channel.effect1), 0
+		res CHAN_FLAG_BIT_SLIDE, (ix + channel.flags)
 
 	muay_porta_done:
 

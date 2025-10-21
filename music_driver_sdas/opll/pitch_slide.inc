@@ -23,7 +23,7 @@ music_update_pitch_slide_opll:
 	ld d, channel.freq+1(ix)
 
 	; offset into jump table by slide type * 2
-	ld a, channel.slide_type(ix)
+	ld a, channel.effect1(ix)
 	add a, a
 	add a, #<music_update_pitch_slide_opll_jump_table
 	ld l, a
@@ -48,7 +48,7 @@ music_update_fm_pitch_slide_upward:
 
 	; add slide_amount to lower byte
 	ld a, e
-	add a, channel.slide_amount(ix)
+	add a, channel.effect2(ix)
 	ld e, a
 
 	; add carry to upper byte
@@ -93,7 +93,7 @@ music_update_fm_pitch_slide_downward:
 
 	; sub slide_amount from lower byte
 	ld a, e
-	sub a, channel.slide_amount(ix)
+	sub a, channel.effect2(ix)
 	ld e, a
 
 	; sub carry from upper byte
@@ -157,7 +157,7 @@ music_update_fm_portamento:
 		add hl, de
 
 		; add slide amount to freq
-		ld a, channel.slide_amount(ix)
+		ld a, channel.effect2(ix)
 		add a, e
 		ld e, a
 		adc a, d
@@ -206,7 +206,7 @@ music_update_fm_portamento:
 
 		; sub slide amount from freq
 		ld a, e
-		sub a, channel.slide_amount(ix)
+		sub a, channel.effect2(ix)
 		ld e, a
 		ld a, d
 		sbc a, #0
@@ -250,8 +250,8 @@ music_update_fm_portamento:
 		ex de, hl
 			
 		; cancel the portamento
-		ld a, #0
-		ld channel.slide_type(ix), a
+		ld channel.effect1(ix), #0
+		res CHAN_FLAG_BIT_SLIDE, channel.flags(ix)
 
 	mufm_porta_done: 
 

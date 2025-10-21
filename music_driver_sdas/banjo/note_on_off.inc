@@ -28,9 +28,12 @@ music_note_on:
 	ld l, a
 
 	; decide where to put fnum depending on portamento mode
-	ld a, channel.slide_type(ix)
-	cp a, #SLIDE_TYPE_PORTA
-	jr z, mnon_portamento
+	bit CHAN_FLAG_BIT_SLIDE, channel.flags(ix)
+	jr z, mnon_no_portamento
+
+		ld a, channel.effect1(ix)
+		cp a, #SLIDE_TYPE_PORTA
+		jr z, mnon_portamento
 
 	mnon_no_portamento: 
 
@@ -66,16 +69,26 @@ music_note_on:
     set CHAN_FLAG_BIT_NOTE_ON, channel.flags(ix)
 
 	; if legato is on, we don't need to reset the macro
-	bit CHAN_FLAG_BIT_LEGATO, channel.flags(ix)
+	bit CHAN_EVENT_BIT_LEGATO, channel.events(ix)
 	ret nz
 
-		xor a
-		ld channel.vibrato_counter(ix), a
+		xor a, a
+
+		; reset vibrato
+		bit CHAN_FLAG_BIT_VIBRATO, channel.flags(ix)
+		jr z, mnon_no_vibrato
+		
+			ld channel.effect1(ix), a
+
+		mnon_no_vibrato: 
 
 		; reset macro positions
-		ld a, #3
-		ld channel.volume_macro_pos(ix), a
+		inc a
 		ld channel.ex_macro_pos(ix), a
+		ld channel.arp_macro_pos(ix), a
+
+		add a, #2
+		ld channel.volume_macro_pos(ix), a
 
 		ret 
 

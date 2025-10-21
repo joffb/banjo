@@ -14,23 +14,24 @@ music_instrument_change:
 	; store the new instrument number in the channel
 	ld channel.instrument_num(ix), a
 	
-    ; .assert  _sizeof_instrument==10; ensure that an instrument is the size we think it is!
+    ; .assert  _sizeof_instrument==12; ensure that an instrument is the size we think it is!
 
-	; get instrument pointer by doing instrument_num * 10
+	; get instrument pointer by doing instrument_num * 12
 	ld l, a
 	ld h, #0
 	
-	; * 2
+	; * 4
 	add hl, hl
-	; keep * 2 for later
+	add hl, hl
+
+	; keep * 4 for later
 	ld b, h
 	ld c, l
 	
 	; * 8
 	add hl, hl
-	add hl, hl
 	
-	; * 10
+	; * 12
 	add hl, bc
 	
 	; offset into instrument data
@@ -46,7 +47,7 @@ music_instrument_change:
 	; get channel.flags (should be first byte of channel struct)
 	; then unset the macro flags and combine with flags from first byte of instrument 
 	ld a, (de)
-	and a, #~(CHAN_FLAG_VOLUME_MACRO|CHAN_FLAG_EX_MACRO)
+	and a, #~(CHAN_FLAG_VOLUME_MACRO|CHAN_FLAG_EX_MACRO|CHAN_FLAG_ARP_MACRO)
 	or a, (hl)
 	ld channel.flags(ix), a
 
@@ -61,11 +62,17 @@ music_instrument_change:
 	sub a, e
 	ld d, a
 
-	; a = 0
-	xor a, a
-
 	; volume macro
 	; copy over macro info
+
+	; ptr
+	ldi 
+	ldi 
+
+	; arp macro
+	; move past arp_macro_val and arp_macro_pos
+	inc de
+	inc de
 
 	; ptr
 	ldi 

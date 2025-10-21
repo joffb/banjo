@@ -51,6 +51,7 @@ INSTRUMENT_SIZE     = 16
 FM_PATCH_SIZE       = 8
 
 CHAN_FLAG_VOLUME_MACRO = 0x08
+CHAN_FLAG_ARP_MACRO = 0x04
 CHAN_FLAG_EX_MACRO = 0x80
 
 CHIP_SN76489        = 0x03      # 0x03: SMS (SN76489) - 4 channels
@@ -461,6 +462,10 @@ def main(argv=None):
             "volume_macro_loop": 0xff,
             "volume_macro_ptr": 0xffff,
 
+            "arp_macro_len": 0,
+            "arp_macro_loop": 0xff,
+            "arp_macro_ptr": 0xffff,
+
             "ex_macro_type": 0,
             "ex_macro_len": 0,
             "ex_macro_loop": 0xff,
@@ -472,8 +477,6 @@ def main(argv=None):
 
         # macros
         for macro in instrument["macros"]:
-
-            print(macro)
 
             # adsr
             if macro["type"] == 1:
@@ -553,19 +556,47 @@ def main(argv=None):
                 new_instrument["volume_macro_ptr"] = macro_data_name
 
             # currently no ex macro for this instrument
+            elif macro["code"] == MACRO_TYPE_ARP:
+
+                for j in range(0, macro["length"]):
+                    val = macro['data'][j]
+
+                    # get the absolute/relative flag in bit 7
+                    absolute = ((abs(val) >> 23) & 0x80)
+                    
+                    # constrain the arp amount to 7 bits
+                    macro['data'][j] = (macro['data'][j] & 0x7f) | absolute
+
+                macro_data = []
+                macro_delay = []
+
+                # process macro data
+                for j in range(0, macro["length"]):
+
+                    macro_value = macro['data'][j]
+
+                    # repeat each step if speed > 1
+                    for k in range (0, macro["speed"]):
+                        macro_data.append(macro_value)
+
+                # delay at start of macro
+                for j in range(0, macro["delay"]):
+                    macro_delay.append(macro_data[0])
+
+                # calculate loop position
+                macro_loop = (((macro["loop"] * macro["speed"]) + macro["delay"] + 1) if macro["loop"] != 0xff else 0)
+                
+                # combine all data
+                macro["data"] = [(macro["length"] * macro["speed"]) + macro["delay"] + 2, macro_loop] + macro_delay + macro_data
+
+                macro_data_name = "macro_arp_" + str(i)
+                macros[macro_data_name] = macro['data']
+                new_instrument["arp_macro_ptr"] = macro_data_name
+
+            # currently no ex macro for this instrument
             elif new_instrument["ex_macro_ptr"] == 0xffff:
 
                 new_instrument["ex_macro_type"] = macro_type_lookup[macro["code"]] if macro["code"] in macro_type_lookup else macro["code"]
-
-                if macro["code"] == MACRO_TYPE_ARP:
-                    for j in range(0, macro["length"]):
-                        val = macro['data'][j]
-
-                        # get the absolute/relative flag in bit 7
-                        absolute = ((abs(val) >> 23) & 0x80)
-                        
-                        # constrain the arp amount to 7 bits
-                        macro['data'][j] = (macro['data'][j] & 0x7f) | absolute
 
                 # need to invert pitch offset for certain chips
                 if macro["code"] == MACRO_TYPE_PITCH and (instrument["type"] == 0 or instrument["type"] == 6):
@@ -598,7 +629,6 @@ def main(argv=None):
                 for j in range(0, macro["delay"]):
                     macro_delay.append(macro_data[0])
 
-
                 # add a flag for sn noise mode to say when noise register has changed
                 # to avoid resetting lfsr every frame
                 if macro["code"] == MACRO_TYPE_DUTY and instrument["type"] == 0:
@@ -608,7 +638,6 @@ def main(argv=None):
 
                     if (len(macro_delay) > 0):
                         macro_delay[0] = macro_delay[0] | 0x80
-
 
                 # calculate loop position
                 macro_loop = (((macro["loop"] * macro["speed"]) + macro["delay"] + 1) if macro["loop"] != 0xff else 0)
@@ -1314,6 +1343,9 @@ def main(argv=None):
         if instrument["volume_macro_ptr"] != 0xffff:
             flag_bits |= CHAN_FLAG_VOLUME_MACRO
 
+        if instrument["arp_macro_ptr"] != 0xffff:
+            flag_bits |= CHAN_FLAG_ARP_MACRO
+        
         if instrument["ex_macro_ptr"] != 0xffff:
             flag_bits |= CHAN_FLAG_EX_MACRO
         
@@ -1324,6 +1356,12 @@ def main(argv=None):
             outfile.write("\t.dw 0xffff ;ptr\n")
         else:
             outfile.write("\t.dw " + song_prefix + "_" + str(instrument["volume_macro_ptr"]) + " ; ptr\n")
+ 
+        # arp macro
+        if (instrument["arp_macro_ptr"] == 0xffff):
+            outfile.write("\t.dw 0xffff ;ptr\n")
+        else:
+            outfile.write("\t.dw " + song_prefix + "_" + str(instrument["arp_macro_ptr"]) + " ; ptr\n")
 
         # ex macro
         outfile.write("\t.db " + str(instrument["ex_macro_type"]) + " ; type\n")

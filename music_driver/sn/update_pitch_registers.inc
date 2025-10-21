@@ -38,11 +38,55 @@ music_update_noise_mode_sn_fixed_pitch:
     ; clear "noise mode changed" flag
     res 7, (iy + music_state.noise_mode)
 
+    ; get flags
+    ld l, (ix + channel.flags)
+
     ; preserve noise mode
     ld h, a
 
-    ; get midi number
-    ld a, (ix + channel.midi_note)
+    ; check if an arpeggio effect is running
+    bit CHAN_FLAG_BIT_ARPEGGIO, l
+    jr z, munmsnfp_no_arpeggio
+
+        call music_update_arpeggio
+        add a, (ix + channel.midi_note)
+        jr munmsnfp_arpeggio_done
+
+    munmsnfp_no_arpeggio:
+
+        ld a, (ix + channel.midi_note)
+
+    munmsnfp_arpeggio_done:
+
+    ; arp macro?
+    bit CHAN_FLAG_BIT_ARP_MACRO, l
+    jr z, munmsnfp_no_arp_macro
+
+        ld l, (ix + channel.arp_macro_val)
+
+        ; if bit 7 is set, it's absolute
+        bit 7, l
+        jr z, munmsnfp_arp_macro_relative
+
+            ; absolute arp
+            ld a, l
+            and a, 0x7f
+            
+            jr munmsnfp_no_arp_macro
+
+        munmsnfp_arp_macro_relative:
+
+            ; relative arp
+            ; sign extend bit 6 into bit 7
+            bit 6, l
+            jr z, munmsnfp_arp_rel_positive
+
+                set 7, l
+
+            munmsnfp_arp_rel_positive:
+            add a, l
+
+    munmsnfp_no_arp_macro:
                 
     ; mod 12
     ld l, 12

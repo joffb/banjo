@@ -49,7 +49,7 @@ mpnl_volume_change:
 mpnl_pitch_slide_up:
 	
 	; set slide_type = 1
-	ld (ix + channel.slide_type), SLIDE_TYPE_UP
+	ld (ix + channel.effect1), SLIDE_TYPE_UP
 
 	jr mpnl_slide_common
 
@@ -59,7 +59,7 @@ mpnl_pitch_slide_up:
 mpnl_pitch_slide_down:
 	
 	; set slide_type = 2
-	ld (ix + channel.slide_type), SLIDE_TYPE_DOWN
+	ld (ix + channel.effect1), SLIDE_TYPE_DOWN
 
 	jr mpnl_slide_common
 
@@ -69,15 +69,18 @@ mpnl_pitch_slide_down:
 mpnl_portamento:
 
 	; set slide_type = 3
-	ld (ix + channel.slide_type), SLIDE_TYPE_PORTA
+	ld (ix + channel.effect1), SLIDE_TYPE_PORTA
 
 mpnl_slide_common:
 
 	; load slide amount
-	ld (ix + channel.slide_amount), a
+	ld (ix + channel.effect2), a
 
 	; set pitch slide flag
-	set CHAN_FLAG_BIT_SLIDE, (ix + channel.flags)
+	ld a, (ix + channel.flags)
+	and a, ~(CHAN_FLAG_ARPEGGIO | CHAN_FLAG_VIBRATO | CHAN_FLAG_SLIDE)
+	or a, CHAN_FLAG_SLIDE
+	ld (ix + channel.flags), a
 	
 	; set "pitch always changing" flag
 	set CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
@@ -88,17 +91,18 @@ mpnl_slide_common:
 mpnl_slide_off:
 
 	; clear slide
-	;ld (ix + channel.slide_amount), 0
-	ld (ix + channel.slide_type), 0
+	ld (ix + channel.effect1), 0
 
 	; clear slide flag
-	res CHAN_FLAG_BIT_SLIDE, (ix + channel.flags)
+	ld a, (ix + channel.flags)
+	and a, ~(CHAN_FLAG_ARPEGGIO | CHAN_FLAG_VIBRATO | CHAN_FLAG_SLIDE)
+	ld (ix + channel.flags), a
 
 	; mark pitch as requiring update
 	set CHAN_EVENT_BIT_PITCH_CHANGED, (ix + channel.events)
 
-	; check if we need to clear the "pitch always changing" flag
-	call music_refresh_pitch_change_always
+	; clear the "pitch always changing" flag
+	res CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
 
 	jp mpnl_command_done_one_byte_command
 
@@ -108,14 +112,29 @@ mpnl_slide_off:
 ; de : instruction pointer (preserve this!)
 mpnl_arpeggio:
 
+	; keep arp values
+	ld l, a
+
 	; load arpeggio offsets
-	ld (ix + channel.arpeggio), a
+	rrca
+	rrca
+	rrca
+	rrca
+	and a, 0x0f
+	ld (ix + channel.effect2), a
+
+	ld a, l
+	and a, 0x0f
+	ld (ix + channel.effect3), a
 
 	; set arpeggio position to 3
-	ld (ix + channel.arpeggio_pos), 3
+	ld (ix + channel.effect1), 3
 
 	; set arpeggio flag
-	set CHAN_FLAG_BIT_ARPEGGIO, (ix + channel.flags)
+	ld a, (ix + channel.flags)
+	and a, ~(CHAN_FLAG_ARPEGGIO | CHAN_FLAG_VIBRATO | CHAN_FLAG_SLIDE)
+	or a, CHAN_FLAG_ARPEGGIO
+	ld (ix + channel.flags), a
 	
 	; set "pitch always changing" flag
 	set CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
@@ -126,18 +145,16 @@ mpnl_arpeggio:
 ; de : instruction pointer (preserve this!)
 mpnl_arpeggio_off:
 
-	; clear arpeggio
-	;ld (ix + channel.arpeggio_pos), 0
-	;ld (ix + channel.arpeggio), 0
-
 	; clear arpeggio flag
-	res CHAN_FLAG_BIT_ARPEGGIO, (ix + channel.flags)
+	ld a, (ix + channel.flags)
+	and a, ~(CHAN_FLAG_ARPEGGIO | CHAN_FLAG_VIBRATO | CHAN_FLAG_SLIDE)
+	ld (ix + channel.flags), a
 
 	; mark pitch as requiring update
 	set CHAN_EVENT_BIT_PITCH_CHANGED, (ix + channel.events)
 	
-	; check if we need to clear the "pitch always changing" flag
-	call music_refresh_pitch_change_always
+	; clear the "pitch always changing" flag
+	res CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
 
 	jp mpnl_command_done_one_byte_command
 
@@ -148,18 +165,21 @@ mpnl_arpeggio_off:
 mpnl_vibrato:
 
 	; initialise vibrato counter
-	ld (ix + channel.vibrato_counter), 0
+	ld (ix + channel.effect1), 0
 
 	; get vibrato counter add amount
-	ld (ix + channel.vibrato_counter_add), a
+	ld (ix + channel.effect2), a
 	
 	; load full vibrato amplitude into vibrato_depth
 	inc de
 	ld a, (de)
-	ld (ix + channel.vibrato_depth), a
+	ld (ix + channel.effect3), a
 
 	; set vibrato flag
-	set CHAN_FLAG_BIT_VIBRATO, (ix + channel.flags)
+	ld a, (ix + channel.flags)
+	and a, ~(CHAN_FLAG_ARPEGGIO | CHAN_FLAG_VIBRATO | CHAN_FLAG_SLIDE)
+	or a, CHAN_FLAG_VIBRATO
+	ld (ix + channel.flags), a
 	
 	; set "pitch always changing" flag
 	set CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
@@ -171,13 +191,15 @@ mpnl_vibrato:
 mpnl_vibrato_off:
 
 	; clear vibrato flag
-	res CHAN_FLAG_BIT_VIBRATO, (ix + channel.flags)
+	ld a, (ix + channel.flags)
+	and a, ~(CHAN_FLAG_ARPEGGIO | CHAN_FLAG_VIBRATO | CHAN_FLAG_SLIDE)
+	ld (ix + channel.flags), a
 
 	; mark pitch as requiring update
 	set CHAN_EVENT_BIT_PITCH_CHANGED, (ix + channel.events)
 
-	; check if we need to clear the "pitch always changing" flag
-	call music_refresh_pitch_change_always
+	; clear the "pitch always changing" flag
+	res CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
 
 	jp mpnl_command_done_one_byte_command
 
@@ -186,7 +208,7 @@ mpnl_vibrato_off:
 mpnl_legato_on:
 
 	; switch legato flag on
-	set CHAN_FLAG_BIT_LEGATO, (ix + channel.flags)
+	set CHAN_EVENT_BIT_LEGATO, (ix + channel.events)
 
 	jp mpnl_command_done_one_byte_command
 
@@ -195,7 +217,7 @@ mpnl_legato_on:
 mpnl_legato_off:
 
 	; switch legato flag off
-	res CHAN_FLAG_BIT_LEGATO, (ix + channel.flags)
+	res CHAN_EVENT_BIT_LEGATO, (ix + channel.events)
 
 	jp mpnl_command_done_one_byte_command
 
@@ -273,24 +295,6 @@ mpnl_note_release:
 	set CHAN_EVENT_BIT_MACRO_RELEASE, (ix + channel.events)
 
 	jp mpnl_command_done_one_byte_command
-
-
-music_refresh_pitch_change_always:
-
-	; any of these effects running?
-	ld a, (ix + channel.flags)
-	and a, CHAN_FLAG_BIT_VIBRATO | CHAN_FLAG_ARPEGGIO | CHAN_FLAG_SLIDE
-	jr nz, mrpca_set
-
-		; clear PITCH_CHANGE_ALWAYS flag
-		res CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
-		ret
-	
-	; set PITCH_CHANGE_ALWAYS flag
-	mrpca_set:
-	
-		set CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
-		ret
 
 .endif
 

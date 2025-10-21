@@ -56,7 +56,7 @@ CHAN_COUNT_AY			.equ		0x3
 
 CHAN_FLAG_MUTED			.equ		0x1
 CHAN_FLAG_NOTE_ON			.equ		0x2
-CHAN_FLAG_LEGATO			.equ		0x4
+CHAN_FLAG_ARP_MACRO			.equ		0x4
 CHAN_FLAG_VOLUME_MACRO			.equ		0x8
 CHAN_FLAG_VIBRATO			.equ		0x10
 CHAN_FLAG_ARPEGGIO			.equ		0x20
@@ -65,7 +65,7 @@ CHAN_FLAG_EX_MACRO			.equ		0x80
 
 CHAN_FLAG_BIT_MUTED			.equ		0x0
 CHAN_FLAG_BIT_NOTE_ON			.equ		0x1
-CHAN_FLAG_BIT_LEGATO			.equ		0x2
+CHAN_FLAG_BIT_ARP_MACRO			.equ		0x2
 CHAN_FLAG_BIT_VOLUME_MACRO			.equ		0x3
 CHAN_FLAG_BIT_VIBRATO			.equ		0x4
 CHAN_FLAG_BIT_ARPEGGIO			.equ		0x5
@@ -75,7 +75,7 @@ CHAN_FLAG_BIT_EX_MACRO			.equ		0x7
 CHAN_EVENT_PITCH_CHANGED			.equ		0x1
 CHAN_EVENT_VOLUME_CHANGE			.equ		0x2
 CHAN_EVENT_PITCH_CHANGE_ALWAYS			.equ		0x4
-CHAN_EVENT_VOLUME_CHANGE_ALWAYS			.equ		0x8
+CHAN_EVENT_LEGATO			.equ		0x8
 CHAN_EVENT_WAVE_CHANGED			.equ		0x10
 CHAN_EVENT_DUTY_CHANGED			.equ		0x20
 CHAN_EVENT_ARP_CHANGED			.equ		0x40
@@ -84,7 +84,7 @@ CHAN_EVENT_MACRO_RELEASE			.equ		0x80
 CHAN_EVENT_BIT_PITCH_CHANGED			.equ		0x0
 CHAN_EVENT_BIT_VOLUME_CHANGE			.equ		0x1
 CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS			.equ		0x2
-CHAN_EVENT_BIT_VOLUME_CHANGE_ALWAYS			.equ		0x3
+CHAN_EVENT_BIT_LEGATO			.equ		0x3
 CHAN_EVENT_BIT_WAVE_CHANGED			.equ		0x4
 CHAN_EVENT_BIT_DUTY_CHANGED			.equ		0x5
 CHAN_EVENT_BIT_ARP_CHANGED			.equ		0x6
@@ -137,12 +137,13 @@ SYS_FLAG_BIT_SYSTEM_E			.equ		0x2
 
 instrument.macro_flags .equ 0
 instrument.volume_macro_ptr .equ 1
-instrument.ex_macro_type .equ 3
-instrument.ex_macro_ptr .equ 4
-instrument.fm_preset .equ 6
-instrument.fm_patch .equ 7
-instrument.padding .equ 9
-_sizeof_instrument .equ 10
+instrument.arp_macro_ptr .equ 3
+instrument.ex_macro_type .equ 5
+instrument.ex_macro_ptr .equ 6
+instrument.fm_preset .equ 8
+instrument.fm_patch .equ 9
+instrument.padding .equ 11
+_sizeof_instrument .equ 12
 
 channel.flags .equ 0
 channel.subchannel .equ 1		; channel number within the chip
@@ -153,19 +154,18 @@ channel.target_freq .equ 6		; target fnum/tone used for portamento
 channel.volume .equ 8
 channel.midi_note .equ 9
 channel.instrument_num .equ 10
-channel.slide_amount .equ 11		; how much to add/subtract per tic
-channel.slide_type .equ 12		; type of slide (up/down/portamento)
-channel.vibrato_depth .equ 13
-channel.vibrato_counter .equ 14
-channel.vibrato_counter_add .equ 15
-channel.arpeggio_pos .equ 16
-channel.arpeggio .equ 17
-channel.pattern_ptr .equ 18		; pointer to the current pattern
-channel.line_wait .equ 20		; wait for this many lines
-channel.tic_wait .equ 21		; wait for this many tics
-channel.volume_macro_vol .equ 22
-channel.volume_macro_pos .equ 23
-channel.volume_macro_ptr .equ 24
+channel.effect1 .equ 11
+channel.effect2 .equ 12
+channel.effect3 .equ 13
+channel.pattern_ptr .equ 14		; pointer to the current pattern
+channel.line_wait .equ 16		; wait for this many lines
+channel.tic_wait .equ 17		; wait for this many tics
+channel.volume_macro_vol .equ 18
+channel.volume_macro_pos .equ 19
+channel.volume_macro_ptr .equ 20
+channel.arp_macro_val .equ 22
+channel.arp_macro_pos .equ 23
+channel.arp_macro_ptr .equ 24
 channel.ex_macro_val .equ 26
 channel.ex_macro_pos .equ 27
 channel.ex_macro_type .equ 28

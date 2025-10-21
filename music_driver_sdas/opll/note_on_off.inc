@@ -16,9 +16,13 @@ mpnl_note_on_opll:
 	; send note off if there's a note currently playing and we're not playing legato
 	; and the channel isn't muted
 	ld a, channel.flags(ix)
-	and a, #CHAN_FLAG_NOTE_ON|CHAN_FLAG_LEGATO|CHAN_FLAG_MUTED
+	and a, #CHAN_FLAG_NOTE_ON|CHAN_FLAG_MUTED
 	cp a, #CHAN_FLAG_NOTE_ON
 	jr nz, mnon_opll_legato_done
+
+		; check for legato
+		bit CHAN_EVENT_BIT_LEGATO, channel.events(ix)
+		jr nz, mnon_opll_legato_done
 	
 		; send note off
 		ld a, channel.subchannel(ix)

@@ -39,10 +39,10 @@ music_calc_fnum:
 		mcf_no_arpeggio_effect: 
 
 		; check if we have an arpeggio ex macro running
-		bit MACRO_TYPE_BIT_ARP, d
+		bit CHAN_FLAG_BIT_ARP_MACRO, c
 		jr z, mcf_no_arpeggio_macro
 
-			ld a, channel.ex_macro_val(ix)
+			ld a, channel.arp_macro_val(ix)
 
 			; if bit 7 is set, it's absolute
 			bit 7, a

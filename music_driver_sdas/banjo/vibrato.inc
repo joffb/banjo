@@ -30,12 +30,12 @@ music_vibrato_table:
 music_update_vibrato: 
 
     ; add to counter, wraps around at 64
-    ld a, channel.vibrato_counter(ix)
-    add a, channel.vibrato_counter_add(ix)
+    ld a, channel.effect1(ix)
+    add a, channel.effect2(ix)
     and a, #0x3f
 
     ; store new value and keep it in c
-    ld channel.vibrato_counter(ix), a
+    ld channel.effect1(ix), a
     ld c, a
 
     ; lower 4 bits value will be used as index 
@@ -54,7 +54,7 @@ music_update_vibrato:
 
     ; index into the table
     ; vibrato_depth used to select a row within music_vibrato_table
-    or a, channel.vibrato_depth(ix)
+    or a, channel.effect3(ix)
     add a, #<music_vibrato_table
     ld e, a
     adc a, #>music_vibrato_table

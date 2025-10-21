@@ -95,7 +95,8 @@ music_play:
 		
 	music_play_channel_data:
 
-		ld a, 0
+		; the following variables are initialised to 0
+		xor a, a
 
 		; clear all flags and events bits
 		ld (ix + channel.flags), a
@@ -107,21 +108,11 @@ music_play:
 		; default tic wait to 0
 		ld (ix + channel.tic_wait), a
 
-		; default arpeggios to 0
-		ld (ix + channel.arpeggio), a
-
-		; default slide variables to 0
+		; default ex_macro_type
 		ld (ix + channel.ex_macro_type), a
 		
-		;
-		; default volume macro length to 0
-		;ld (ix + channel.volume_macro_len), a
-		;
-		; default vibrato_current and vibrato_depth to 0
-		; ld (ix + channel.vibrato_depth), a
-
 		; the following variables are initialised to 0xff
-		ld a, 0xff
+		dec a
 
 		; default instrument to no instrument (0xff)
 		ld (ix + channel.instrument_num), a

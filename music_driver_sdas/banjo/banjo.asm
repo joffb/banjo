@@ -42,7 +42,7 @@
     .globl _banjo_set_song_master_volume
     .globl _banjo_song_fade_out
     .globl _banjo_song_fade_in 
-    .globl music_update_vibrato, music_update_arpeggio, music_update_volume_macro, music_update_ex_macro
+    .globl music_update_vibrato, music_update_arpeggio, music_update_volume_macro, music_update_arp_macro, music_update_ex_macro
     .endif
 
     .globl mpnl_command_done, mpnl_command_done_one_byte_command
@@ -94,5 +94,6 @@
     .include "ex_macro.inc"
     .include "master_volume.inc"
     .include "vibrato.inc"
+	.include "arp_macro.inc"
     .include "volume_macro.inc"
     .endif
