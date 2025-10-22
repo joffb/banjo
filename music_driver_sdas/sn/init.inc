@@ -62,7 +62,7 @@ _banjo_init_sn:
         .endif 
 
         ; set default channel volume
-        ld channel.volume(ix), #0x00
+        ld channel.volume(ix), #0x0f
 
         ; move to next channel
         ld de, #_sizeof_channel
@@ -119,6 +119,6 @@ _banjo_init_sfx_channel_sn:
     ld channel.subchannel(ix), a
 
     ; set default channel volume
-    ld channel.volume(ix), #0x00
+    ld channel.volume(ix), #0x0f
 
     ret 

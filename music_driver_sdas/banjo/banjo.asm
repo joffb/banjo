@@ -57,7 +57,7 @@
     .globl mpnl_skip_1_byte_command, mpnl_skip_2_byte_command, mpnl_skip_3_byte_command
 
     .globl music_note_on, music_note_off
-    .globl music_calc_fnum
+    .globl music_calc_fnum, music_calculate_volume
     .globl music_instrument_change
     
     .globl music_update
@@ -96,4 +96,5 @@
     .include "vibrato.inc"
 	.include "arp_macro.inc"
     .include "volume_macro.inc"
+    .include "volume_calculate.inc"
     .endif

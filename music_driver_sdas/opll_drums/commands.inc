@@ -20,34 +20,42 @@ mpnl_opll_drum:
     ; get instrument number in a
     ld channel.instrument_num(ix), a
 
-    ; double instrument number to get offset into instrument pointers
-    add a, a
+    ; .assert  _sizeof_instrument==12; ensure that an instrument is the size we think it is!
 
-    ; apply offset
-    add a, music_state.instrument_ptrs(iy)
-    ld l, a
-    adc a, music_state.instrument_ptrs+1(iy)
-    sub a, l
-    ld h, a
+	; get instrument pointer by doing instrument_num * 12
+	ld l, a
+	ld h, #0
+	
+	; * 4
+	add hl, hl
+	add hl, hl
 
-    ; get instrument pointer into hl
+	; keep * 4 for later
+	ld b, h
+	ld c, l
+	
+	; * 8
+	add hl, hl
+	
+	; * 12
+	add hl, bc
+
+	; offset into instrument data
+	ld c, music_state.instrument_ptrs(iy)
+	ld b, music_state.instrument_ptrs+1(iy)
+	add hl, bc
+
 	; moved along to fm patch data
-    ld a, (hl)
-	add a, #instrument.fm_preset
-	ld c, a
-    inc hl
-    adc a, (hl)
-	sub a, c
-	ld h, a
-	ld l, c
+	ld bc, #instrument.fm_preset
+	add hl, bc
 
     ; is this a fixed-frequency patch?
     ld a, (hl)
-    cp a, #0xff
+    inc a
     jr z, music_fm_drum_change_fixed_freq
 
         ; not fixed freq
-        ld a, #0
+        xor a, a
         ld (opll_drum_fixed_pitch_mode), a
         jr music_fm_drum_change_done
 

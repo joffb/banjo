@@ -494,7 +494,8 @@ def main(argv=None):
 
                 # process macro data
                 for j in range(0, macro["length"]):
-                    macro_value = 15 - macro['data'][j]
+
+                    macro_value = (macro['data'][j] & 0xf) << 4
 
                     # repeat each step if speed > 1
                     for k in range (0, macro["speed"]):
@@ -674,7 +675,7 @@ def main(argv=None):
 
 
                 operator = instrument['fm']['operator_data'][0]
-                fm_patch[2] = operator['tl'] | (operator['ksl'] << 6)
+                fm_patch[2] = ((operator['tl']) & 0x3f) | (operator['ksl'] << 6)
 
                 # op 1 and 2 half-sine modes seem to be in instrument's fms and ams in furnace format
                 operator = instrument['fm']['operator_data'][1]
@@ -686,7 +687,7 @@ def main(argv=None):
                 for j in range(0, 2):
 
                     operator = instrument['fm']['operator_data'][j]
-                    fm_patch[4 + j] = operator['dr'] | (operator['ar'] << 4)
+                    fm_patch[4 + j] = (operator['dr'] & 0xf) | ((operator['ar'] & 0xf) << 4)
                     fm_patch[6 + j] = operator['rr'] | (operator['sl'] << 4)
 
 
@@ -699,7 +700,7 @@ def main(argv=None):
             elif (instrument['fm']['opll_patch'] == 16):
 
                 # pre-shift the patch number into the upper nibble
-                new_instrument["fm_patch"] = (0xff if instrument['opl_drums']['fixed_freq'] else 0)
+                new_instrument["fm_patch"] = (0xff if instrument['opl_drums']['fixed_freq'] == 1 else 0)
 
                 fm_patch = []
 
@@ -1052,7 +1053,7 @@ def main(argv=None):
                                 if volume > 15:
                                     volume = 15
 
-                                volume_value = (15 - volume)
+                                volume_value = (volume)
 
                             elif (channel_type['type'] == CHAN_OPLL):
 
@@ -1060,7 +1061,7 @@ def main(argv=None):
                                 if volume > 15:
                                     volume = 15
                                     
-                                volume_value = ((15 - volume))
+                                volume_value = (volume)
 
                             elif (channel_type['type'] == CHAN_OPLL_DRUMS):
 
@@ -1068,7 +1069,7 @@ def main(argv=None):
                                 if volume > 15:
                                     volume = 15
 
-                                volume_value = ((15 - volume))
+                                volume_value = (15 - volume)
 
                             elif (channel_type['type'] == CHAN_AY_3_8910):
                                 
@@ -1306,19 +1307,17 @@ def main(argv=None):
     for key in macros:
 
         writelabel(key)
-        outfile.write(".db " + ", ".join(map(str, macros[key])) + "\n")
+        outfile.write(".db " + ", ".join(map(hex, macros[key])) + "\n")
 
     outfile.write("\n" + "\n")
 
     # fm patches
     writelabel("fm_patches")
 
-    print(fm_patches)
-
     for key in fm_patches:
 
         writelabel(key)
-        outfile.write(".db " + ", ".join(map(str, fm_patches[key])) + "\n")
+        outfile.write(".db " + ", ".join(map(hex, fm_patches[key])) + "\n")
 
     outfile.write("\n" + "\n")
 
@@ -1435,7 +1434,7 @@ def main(argv=None):
             pattern_index = song["patterns"][i][j]["index"]
 
             writelabel("patterns_" + str(i) + "_" + str(pattern_index))
-            outfile.write(".db " + ", ".join(map(str, patterns[i][pattern_index])) + "\n")
+            outfile.write(".db " + ", ".join(map(hex, patterns[i][pattern_index])) + "\n")
 
     #outfile.write("\n\n.rept 10000\n.db 0xba\n.endm\n")
 

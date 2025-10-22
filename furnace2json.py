@@ -928,10 +928,20 @@ def main(argv=None):
                         'opll_patch': fm_data[3] & 0x1f,
                         'am2': (fm_data[3] >> 6) & 0x3,
 
+                        'block': 0,
+
                         'operator_data': [],
                     }
 
-                    operator_pointer = feature_pointer + 4
+                    # block parameter
+                    if song["format_version"] >= 224:
+
+                        instrument["fm"]["block"] = data[fm_pointer + 4] & 0xf
+                        operator_pointer = feature_pointer + 5
+
+                    else:
+                        
+                        operator_pointer = feature_pointer + 4
 
                     # get operator data for each operator
                     for j in range (0, instrument['fm']['op_count']):

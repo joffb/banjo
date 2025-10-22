@@ -24,16 +24,16 @@ mpnl_note_on_opll:
 		bit CHAN_EVENT_BIT_LEGATO, (ix + channel.events)
 		jr nz, mnon_opll_legato_done
 	
-		; send note off
-		ld a, (ix + channel.subchannel)
-        add a, 0x20
-		out (OPLL_REG_PORT), a
+			; send note off
+			ld a, (ix + channel.subchannel)
+			add a, 0x20
+			out (OPLL_REG_PORT), a
 
-		ld a, (ix + channel.freq + 1)
-		and a, 0xf
-		out (OPLL_DATA_PORT), a
+			ld a, (ix + channel.freq + 1)
+			and a, 0xf
+			out (OPLL_DATA_PORT), a
 
-		call banjo_opll_write_delay
+			call banjo_opll_write_delay
 		
 	mnon_opll_legato_done:
 

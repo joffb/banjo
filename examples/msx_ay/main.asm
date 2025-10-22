@@ -2,6 +2,7 @@
 .include "../../music_driver/banjo_defines_wladx.inc"
 
 .define INIT32 0x6f
+.define H_TIMI 0xFD9F
 
 .define CHAN_COUNT CHAN_COUNT_OPLL + CHAN_COUNT_AY
 
@@ -74,15 +75,25 @@ init:
 
 	++:
 
+	; set up vblank interrupt call
+	ld hl, timi_hook
+	ld de, H_TIMI
+	ld bc, 4
+	ldir
+
     ei
 
 	wait_vblank:
 	
 		halt
-		
-        call banjo_update_song
-		
+
 		jr wait_vblank
+
+	timi_hook:
+
+		call banjo_update_song
+
+		ret
 
 .incdir "../../music_driver/banjo"
 .include "banjo.asm"
