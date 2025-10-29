@@ -7,7 +7,7 @@
 _banjo_check_hardware: 
 
     ; clear the "has_chips" variable and system flags
-    ld a, #0
+    xor a, a
     ld (_banjo_has_chips), a
     ld (_banjo_system_flags), a
 

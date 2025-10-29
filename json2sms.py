@@ -1092,8 +1092,28 @@ def main(argv=None):
                     # note on
                     elif (line['note'] >= 0 and line['note'] < 12):
 
+                        midi_note = (note['note'] + (note['octave'] * 12)) & 0x7f
+
+                        if (channel_type['type'] == CHAN_SN76489):
+
+                            # offset the midi note for SN7 as the note table starts at
+                            # note 0 == A rather than note 0 == C
+                            midi_note = midi_note + 3 - 12
+
+                            if midi_note < 0:
+                                midi_note += 12
+
+                        if (channel_type['type'] == CHAN_AY_3_8910):
+
+                            # offset the midi note for AY3 as the note table starts at
+                            # note 0 == A rather than note 0 == C
+                            midi_note = midi_note + 3 - 12
+
+                            if midi_note < 0:
+                                midi_note += 12
+
                         # note command and note number combined
-                        pattern_bin.append(NOTE_ON | ((note['note'] + (note['octave'] * 12)) & 0x7f))
+                        pattern_bin.append(NOTE_ON | midi_note)
                         
                         # store in last_note
                         last_note = note

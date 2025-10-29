@@ -69,29 +69,19 @@ music_update_channel_ay:
         bit CHAN_FLAG_BIT_VOLUME_MACRO, b
         call nz, music_update_volume_macro
 
+        ; process arp macro
+        bit CHAN_FLAG_BIT_ARP_MACRO, b
+        call nz, music_update_arp_macro
+        
         ; process ex macro
         bit CHAN_FLAG_BIT_EX_MACRO, b
         call nz, music_update_ex_macro
-
-        ; apply pitch slides/portamento
-        bit CHAN_FLAG_BIT_SLIDE, b
-        call nz, music_update_pitch_slide_ay
-
+        
         ; keep flags in a
         ld a, b
 
         ; b now has events
         ld b, channel.events(ix)
-
-        ; check for vibrato and arpeggio
-        ; if either of these are active, the pitch changes every frame
-        and a, #CHAN_FLAG_VIBRATO|CHAN_FLAG_ARPEGGIO
-        jr z, music_update_ay_no_vib_arp
-
-            ; if either are active, set pitch changed bit in events
-            set CHAN_EVENT_BIT_PITCH_CHANGED, b
-
-        music_update_ay_no_vib_arp: 
 
         ; change of noise duty?
         bit CHAN_EVENT_BIT_DUTY_CHANGED, b
@@ -108,7 +98,7 @@ music_update_channel_ay:
         muc_ay_no_duty: 
 
         ; check if we need to update the pitch of this channel
-        ld a, #CHAN_EVENT_PITCH_CHANGED|CHAN_EVENT_ARP_CHANGED|CHAN_EVENT_DUTY_CHANGED
+        ld a, #CHAN_EVENT_PITCH_CHANGED|CHAN_EVENT_PITCH_CHANGE_ALWAYS|CHAN_EVENT_ARP_CHANGED
         and a, b
         jp nz, music_update_pitch_registers_ay
         music_update_pitch_registers_ay_done: 
@@ -122,8 +112,10 @@ music_update_channel_ay:
         music_volume_change_ay_done: 
 
         ; clear events
-        ld channel.events(ix), #0
-
+		ld a, b
+		and a, #CHAN_EVENT_PITCH_CHANGE_ALWAYS|CHAN_EVENT_MACRO_RELEASE|CHAN_EVENT_LEGATO
+        ld channel.events(ix), a
+        
         mucay_done: 
 
             ; move on to next channel

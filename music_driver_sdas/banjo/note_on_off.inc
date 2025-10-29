@@ -4,7 +4,8 @@
 
 ; handle note-on stuff common between all channel types
 ; a: midi number
-; b: channel number
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 ; ix: channel
 ; iy: music_state
 music_note_on: 
@@ -13,24 +14,21 @@ music_note_on:
 	and a, #0x7f
 	ld channel.midi_note(ix), a
 
-	; multiply by 2 and use as offset into lookup table
-	add a, a
-	add a, l
+	; note in l
 	ld l, a
-	adc a, h
-	sub a, l
-	ld h, a
 
-	; get fnum into hl
-	ld a, (hl)
-	inc hl
-	ld h, (hl)
-	ld l, a
+	; flags in h
+	ld h, channel.flags(ix)
+	
+	; set note-on bit
+    set CHAN_FLAG_BIT_NOTE_ON, h
+	ld channel.flags(ix), h
 
 	; decide where to put fnum depending on portamento mode
-	bit CHAN_FLAG_BIT_SLIDE, channel.flags(ix)
+	bit CHAN_FLAG_BIT_SLIDE, h
 	jr z, mnon_no_portamento
 
+		; portamento on?
 		ld a, channel.effect1(ix)
 		cp a, #SLIDE_TYPE_PORTA
 		jr z, mnon_portamento
@@ -38,8 +36,8 @@ music_note_on:
 	mnon_no_portamento: 
 
 		; portamento off, put fnum in freq
-		ld channel.freq(ix), l
-		ld channel.freq+1(ix), h
+		ld channel.freq(ix), #0
+		ld channel.freq+1(ix), l
 
 		jr mnon_done
 
@@ -47,7 +45,6 @@ music_note_on:
 
 		; portamento on, put fnum in target_freq
 		ld channel.target_freq(ix), l
-		ld channel.target_freq+1(ix), h
 
 		; check high byte of freq
 		; if it's 0xff that implies no notes have played so far
@@ -60,22 +57,19 @@ music_note_on:
 
 	; mark pitch and volume as requiring update
 	; clear release flag
-	ld a, #CHAN_EVENT_PITCH_CHANGED|CHAN_EVENT_VOLUME_CHANGE
-	or a, channel.events(ix)
-	res CHAN_EVENT_BIT_MACRO_RELEASE, a
+	ld a, channel.events(ix)
+	or a, #CHAN_EVENT_PITCH_CHANGED|CHAN_EVENT_VOLUME_CHANGE
+	and a, #~CHAN_EVENT_MACRO_RELEASE
 	ld channel.events(ix), a
 
-	; set note-on bit
-    set CHAN_FLAG_BIT_NOTE_ON, channel.flags(ix)
-
 	; if legato is on, we don't need to reset the macro
-	bit CHAN_EVENT_BIT_LEGATO, channel.events(ix)
+	bit CHAN_EVENT_BIT_LEGATO, a
 	ret nz
 
 		xor a, a
 
-		; reset vibrato
-		bit CHAN_FLAG_BIT_VIBRATO, channel.flags(ix)
+		; reset vibrato position
+		bit CHAN_FLAG_BIT_VIBRATO, h
 		jr z, mnon_no_vibrato
 		
 			ld channel.effect1(ix), a
@@ -91,14 +85,3 @@ music_note_on:
 		ld channel.volume_macro_pos(ix), a
 
 		ret 
-
-; handle note-off stuff common between all channel types
-; b: channel number
-; ix: channel
-; iy: music_state
-music_note_off: 
-
-	; clear note-on bit
-    res CHAN_FLAG_BIT_NOTE_ON, channel.flags(ix)
-
-	ret 

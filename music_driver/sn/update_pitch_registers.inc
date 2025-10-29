@@ -62,41 +62,44 @@ music_update_noise_mode_sn_fixed_pitch:
     bit CHAN_FLAG_BIT_ARP_MACRO, l
     jr z, munmsnfp_no_arp_macro
 
-        ld l, (ix + channel.arp_macro_val)
+        ld l, a
+        ld a, (ix + channel.arp_macro_val)
 
         ; if bit 7 is set, it's absolute
-        bit 7, l
+        bit 7, a
         jr z, munmsnfp_arp_macro_relative
 
             ; absolute arp
-            ld a, l
             and a, 0x7f
             
             jr munmsnfp_no_arp_macro
 
         munmsnfp_arp_macro_relative:
 
-            ; relative arp
+            ; relative arp macro
             ; sign extend bit 6 into bit 7
-            bit 6, l
-            jr z, munmsnfp_arp_rel_positive
+            rla
+            sra a
 
-                set 7, l
-
-            munmsnfp_arp_rel_positive:
+            ; add note val
             add a, l
 
     munmsnfp_no_arp_macro:
-                
-    ; mod 12
-    ld l, 12
-    
-    fixed_noise_mod_12:
-        sub a, l
-        jr nc, fixed_noise_mod_12
 
-    add a, l
-    
+    ; get note number mod 12
+    sub a, 3
+    add a, <music_divmod12
+    ld e, a
+    adc a, >music_divmod12
+    sub a, e
+    ld d, a
+    ld a, (de)
+    rrca
+    rrca
+    rrca
+    rrca
+    and a, 0xf
+
     ; anything > 2 should be set to 2
     cp a, 3
     jr c, munmsn_fixed_lt_three
@@ -129,7 +132,6 @@ music_update_noise_mode_sn_fixed_pitch:
 
         ret
 
-; b: current channel number
 ; iy: music_state
 ; ix: channel we're updating
 music_update_pitch_registers_sn:
@@ -148,7 +150,7 @@ music_update_pitch_registers_sn:
         jr nz, mupr_sn_ch3_pitch
 
             call music_update_noise_mode_sn_fixed_pitch
-            jp music_update_pitch_registers_sn_done
+            ret
 
         mupr_sn_ch3_pitch:
 
@@ -164,17 +166,28 @@ music_update_pitch_registers_sn:
 
     mup_sn_pitched_noise_channel:
 
-        ; get note fnum in de
-        ld hl, sn_tone_lookup
+        push bc
+
+        ; calculate note number
         call music_calc_fnum
+
+        ; turn that into an fnum and octave
+        ld hl, sn_tone_lookup
+        call music_fnum_lookup
+
+        ; shift fnum to the correct octave
+        call music_fnum_shift_octave
+
+        pop bc
 
         ; prepare note value for writing to chip
         ; isolate lower nibble
-        ld a, e
+        ld a, l
         and a, 0xf
         
         ; set latch bit
         or a, 0x80
+
         ; combine with channel number
         or a, c
 
@@ -198,9 +211,9 @@ music_update_pitch_registers_sn:
 
         ; get upper four bits of lower byte of fnum
         ; or with lower two bits of upper byte of fnum
-        ld a, e
+        ld a, l
         and a, 0xf0
-        or a, d
+        or a, h
 
         ; rotate them into place
         rlca
@@ -226,5 +239,5 @@ music_update_pitch_registers_sn:
         .endif
 
         ; done
-        jp music_update_pitch_registers_sn_done
+        ret
         

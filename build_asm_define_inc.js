@@ -133,11 +133,13 @@ var defines = [
         { name: "STATE_FLAG_PROCESS_NEW_LINE", value: 0x01 },
         { name: "STATE_FLAG_LOOP", value: 0x02 },
         { name: "STATE_FLAG_MASTER_VOLUME_CHANGE", value: 0x04 },
+        { name: "STATE_FLAG_ORDER_JUMP", value: 0x08 },
     ],
     [
         { name: "STATE_FLAG_BIT_PROCESS_NEW_LINE", value: 0 },
         { name: "STATE_FLAG_BIT_LOOP", value: 1 },
         { name: "STATE_FLAG_BIT_MASTER_VOLUME_CHANGE", value: 2 },
+        { name: "STATE_FLAG_BIT_ORDER_JUMP", value: 3 },
     ],
     [
         { name: "BANJO_MAGIC_BYTE", value: 0xba },

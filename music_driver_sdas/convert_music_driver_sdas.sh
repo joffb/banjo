@@ -2,6 +2,11 @@ for filename in ../music_driver/banjo/*.inc; do
     node convert_wladx_sdas.js "../music_driver/banjo/$(basename $filename)" "banjo/$(basename $filename)"
 done
 
+for filename in ../music_driver/ay/*.inc; do
+    node convert_wladx_sdas.js "../music_driver/ay/$(basename $filename)" "ay/$(basename $filename)"
+done
+
+
 for filename in ../music_driver/sn/*.inc; do
     node convert_wladx_sdas.js "../music_driver/sn/$(basename $filename)" "sn/$(basename $filename)"
 done

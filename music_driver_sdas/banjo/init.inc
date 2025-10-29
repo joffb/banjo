@@ -15,7 +15,7 @@ _banjo_init:
     ld (_banjo_max_channels), a
 
     ; no songs should be playing intially
-	ld a, #0
+	xor a, a
 	ld (song_playing), a
 
 	; clear first byte which has the magic byte

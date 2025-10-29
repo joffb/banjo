@@ -67,14 +67,8 @@ banjo_sfx_stop:
         ld h, (hl)
         ld l, a
 
-        ; put return address on stack
-        ld de, music_mute_sfx_channel_done
-        push de
-
         ; call mute function
-        jp (hl)
-
-        music_mute_sfx_channel_done:
+        call banjo_jp_hl
 
         ; check if a song is playing
         ld a, (song_playing)

@@ -34,6 +34,7 @@
     .globl _banjo_play_song
     .globl _banjo_update_song
     .globl _banjo_mute_song_channel, _banjo_unmute_song_channel
+    .globl _banjo_jp_hl
     .globl bmsc_sfx_jump
     .globl _banjo_check_hardware
     .globl _banjo_set_song_loop_mode
@@ -42,6 +43,7 @@
     .globl _banjo_set_song_master_volume
     .globl _banjo_song_fade_out
     .globl _banjo_song_fade_in 
+    .globl music_update_slide
     .globl music_update_vibrato, music_update_arpeggio, music_update_volume_macro, music_update_arp_macro, music_update_ex_macro
     .endif
 
@@ -56,9 +58,10 @@
     .globl mpnl_note_delay, mpnl_note_release
     .globl mpnl_skip_1_byte_command, mpnl_skip_2_byte_command, mpnl_skip_3_byte_command
 
-    .globl music_note_on, music_note_off
-    .globl music_calc_fnum, music_calculate_volume
+    .globl music_note_on
+    .globl music_calc_fnum, music_fnum_lookup, music_fnum_shift_octave, music_calculate_volume
     .globl music_instrument_change
+    .globl music_divmod12
     
     .globl music_update
     .globl music_play
@@ -97,4 +100,7 @@
 	.include "arp_macro.inc"
     .include "volume_macro.inc"
     .include "volume_calculate.inc"
+	.include "slides.inc"
+	.include "divmod12.inc"
+	.include "fnum_lookup.inc"
     .endif

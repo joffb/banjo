@@ -94,10 +94,6 @@ music_update_channel_opll:
         bit CHAN_FLAG_BIT_EX_MACRO, b
         call nz, music_update_ex_macro
 
-        ; apply pitch slides/portamento
-        bit CHAN_FLAG_BIT_SLIDE, b
-        call nz, music_update_pitch_slide_opll
-
         ; keep flags in a
         ld a, b
 

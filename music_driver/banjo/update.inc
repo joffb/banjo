@@ -3,6 +3,9 @@
 ; Joe Kennedy 2023
 
 
+banjo_jp_hl:
+    jp (hl)
+
 ; update the song if one is playing
 banjo_update_song:
 
@@ -40,11 +43,11 @@ music_update:
 		set STATE_FLAG_BIT_PROCESS_NEW_LINE, (iy + music_state.flags)
 
 		; check if we need to jump to a new order
-		ld a, (iy + music_state.order_jump)
-		cp a, 0xff
+		bit STATE_FLAG_BIT_ORDER_JUMP, (iy + music_state.flags)
 		jr z, music_update_no_jump
-		
+
 			call music_jump_channels_order_and_pattern
+		
 			jr music_update_tics_done
 
 		music_update_no_jump:
@@ -121,19 +124,12 @@ music_update:
 
 		.endif
 
-		; address for call to `ret` to
-		ld hl, music_update_call_done
-		push hl
-
 		; get pointer to channel update call
 		ld l, (iy + music_state.channel_update_call)
 		ld h, (iy + music_state.channel_update_call + 1)
 
-		; run call
-		jp (hl)
-
-		; then return here
-		music_update_call_done:
+		; do call
+		call banjo_jp_hl
 
 		; clear process new line flag
 		res STATE_FLAG_BIT_PROCESS_NEW_LINE, (iy + music_state.flags)

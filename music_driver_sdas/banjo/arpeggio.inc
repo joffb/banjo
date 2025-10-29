@@ -4,26 +4,26 @@
 
 music_update_arpeggio: 
 
-    ; decrement arpeggio position and check if it has hit 0
+    ; decrement arpeggio position and check if it has gone negative
     dec channel.effect1(ix)
-    jr z, mpct_arp_zero
+    jp m, mpct_arp_reset
 
-        ; arpeggio_pos == 2? if not we don't shift
-        bit 1, channel.effect1(ix)
-        jr z, mpct_arp_no_shift
+        ; if it wasn't zero after decrementing, use the first value
+        jr z, mpct_arp_val2
 
             ld a, channel.effect2(ix)
             ret 
 
-        mpct_arp_no_shift: 
+        ; if it was zero after decrementing, use the second value
+        mpct_arp_val2: 
 
             ld a, channel.effect3(ix)
             ret 
 
-    mpct_arp_zero: 
+    mpct_arp_reset: 
 
-        ; if so, reset arpeggio position to 3
-        ld channel.effect1(ix), #3
+        ; arp position has gone negative, reset it to 2
+        ld channel.effect1(ix), #2
 
         ; return 0
         xor a, a

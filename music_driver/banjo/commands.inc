@@ -2,7 +2,6 @@
 ; banjo sound driver
 ; Joe Kennedy 2023
 
-; a: instrument number
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
 mpnl_instrument_change:
@@ -11,24 +10,22 @@ mpnl_instrument_change:
 	bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
 	jp nz, mpnl_skip_2_byte_command
 
-	; don't do anything if the instrument number is the same
-	cp a, (ix + channel.instrument_num)
-	jr z, mpnl_instrument_change_done
-		
-		; update the instrument
-		call music_instrument_change
-		
-	mpnl_instrument_change_done:
+		; don't do anything if the instrument number is the same
+		ld a, (de)
+		cp a, (ix + channel.instrument_num)
+		call nz, music_instrument_change
 
-	jp mpnl_command_done
+		jp mpnl_command_done
 
-; a: new volume
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
 mpnl_volume_change:
 
+	; get new volume
+	ld a, (de)
 	and a, 0xf
 
+	; don't do anything if the volume is the same
 	cp a, (ix + channel.volume)
 	jp z, mpnl_command_done
 
@@ -43,7 +40,6 @@ mpnl_volume_change:
 
 .ifndef BANJO_MINIMAL
 
-; a: slide amount
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
 mpnl_pitch_slide_up:
@@ -53,7 +49,6 @@ mpnl_pitch_slide_up:
 
 	jr mpnl_slide_common
 
-; a: slide amount
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
 mpnl_pitch_slide_down:
@@ -63,7 +58,6 @@ mpnl_pitch_slide_down:
 
 	jr mpnl_slide_common
 
-; a: portamento amount
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
 mpnl_portamento:
@@ -74,6 +68,7 @@ mpnl_portamento:
 mpnl_slide_common:
 
 	; load slide amount
+	ld a, (de)
 	ld (ix + channel.effect2), a
 
 	; set pitch slide flag
@@ -107,12 +102,12 @@ mpnl_slide_off:
 	jp mpnl_command_done_one_byte_command
 
 
-; a: arpeggio values
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
 mpnl_arpeggio:
 
 	; keep arp values
+	ld a, (de)
 	ld l, a
 
 	; load arpeggio offsets
@@ -127,8 +122,8 @@ mpnl_arpeggio:
 	and a, 0x0f
 	ld (ix + channel.effect3), a
 
-	; set arpeggio position to 3
-	ld (ix + channel.effect1), 3
+	; set arpeggio position to 2
+	ld (ix + channel.effect1), 2
 
 	; set arpeggio flag
 	ld a, (ix + channel.flags)
@@ -159,7 +154,6 @@ mpnl_arpeggio_off:
 	jp mpnl_command_done_one_byte_command
 
 
-; a: vibrato amount
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
 mpnl_vibrato:
@@ -168,6 +162,7 @@ mpnl_vibrato:
 	ld (ix + channel.effect1), 0
 
 	; get vibrato counter add amount
+	ld a, (de)
 	ld (ix + channel.effect2), a
 	
 	; load full vibrato amplitude into vibrato_depth
@@ -226,8 +221,10 @@ mpnl_legato_off:
 mpnl_order_jump:
 
 	; get order to jump to and store it
+	ld a, (de)
 	ld (iy + music_state.order_jump), a
-
+	set STATE_FLAG_BIT_ORDER_JUMP, (iy + music_state.flags)
+	
 	jp mpnl_command_done
 
 ; bc : jump table address (preserve this!)
@@ -242,42 +239,43 @@ mpnl_order_next:
     cp a, (iy + music_state.orders_length)
     jr c, mpnlon_order_ok
 
-        ld a, 0
+        xor a, a
 
     mpnlon_order_ok:
 	ld (iy + music_state.order_jump), a
+	set STATE_FLAG_BIT_ORDER_JUMP, (iy + music_state.flags)
 
 	jp mpnl_command_done_one_byte_command
 
 
-; a: new speed
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
 mpnl_set_speed_1:
 
 	; get new speed
+	ld a, (de)
 	ld (iy + music_state.speed_1), a
 
 	jp mpnl_command_done
 
 
-; a: new speed
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
 mpnl_set_speed_2:
 
 	; get new speed
+	ld a, (de)
 	ld (iy + music_state.speed_2), a
 
 	jp mpnl_command_done
 
 
-; a: delay amount
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
 mpnl_note_delay:
 
 	; get new note delay
+	ld a, (de)
 	ld (ix + channel.tic_wait), a
 
 	; store the pointer to the next command and return

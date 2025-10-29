@@ -2,25 +2,26 @@
 ; banjo sound driver
 ; Joe Kennedy 2023
 
-; b  : current channel number
-; de : instruction pointer - needs to be exhanged with hl by the time we return
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 ; ix : channel
 ; iy : music state
 mpnl_note_on_sn: 
 
 	; standard note-on stuff
-	ld hl, #sn_tone_lookup
 	call music_note_on
 
 	jp mpnl_command_done
 
-; de: instruction pointer - needs to be exhanged with hl by the time we return
+
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 ; ix : channel
 ; iy : music state
 mpnl_note_off_sn: 
 
-	; standard note-off stuff
-	call music_note_off
+	; clear note-on bit
+    res CHAN_FLAG_BIT_NOTE_ON, channel.flags(ix)
 
     ; check if the channel is muted
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)

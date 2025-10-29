@@ -1,209 +1,25 @@
 ay_tone_lookup: 
-; midi: C1, fur: C0
-.dw 4095
-; midi: C#1, fur: C#0
-.dw 4095
-; midi: D1, fur: D0
-.dw 4095
-; midi: D#1, fur: D#0
-.dw 4095
-; midi: E1, fur: E0
-.dw 4095
-; midi: F1, fur: F0
-.dw 4095
-; midi: F#1, fur: F#0
-.dw 4095
-; midi: G1, fur: G0
-.dw 4095
-; midi: G#1, fur: G#0
-.dw 4095
-; midi: A1, fur: A0
-.dw 4068
-; midi: A#1, fur: A#0
-.dw 3839
-; midi: B1, fur: B0
-.dw 3624
-; midi: C2, fur: C1
-.dw 3420
-; midi: C#2, fur: C#1
-.dw 3229
-; midi: D2, fur: D1
-.dw 3047
-; midi: D#2, fur: D#1
-.dw 2876
-; midi: E2, fur: E1
-.dw 2715
-; midi: F2, fur: F1
-.dw 2562
-; midi: F#2, fur: F#1
-.dw 2419
-; midi: G2, fur: G1
-.dw 2283
-; midi: G#2, fur: G#1
-.dw 2155
-; midi: A2, fur: A1
-.dw 2034
-; midi: A#2, fur: A#1
-.dw 1920
-; midi: B2, fur: B1
-.dw 1812
-; midi: C3, fur: C2
-.dw 1710
-; midi: C#3, fur: C#2
-.dw 1614
-; midi: D3, fur: D2
-.dw 1524
-; midi: D#3, fur: D#2
-.dw 1438
-; midi: E3, fur: E2
-.dw 1357
-; midi: F3, fur: F2
-.dw 1281
-; midi: F#3, fur: F#2
-.dw 1209
-; midi: G3, fur: G2
-.dw 1141
-; midi: G#3, fur: G#2
-.dw 1077
-; midi: A3, fur: A2
-.dw 1017
-; midi: A#3, fur: A#2
-.dw 960
-; midi: B3, fur: B2
-.dw 906
-; midi: C4, fur: C3
-.dw 855
-; midi: C#4, fur: C#3
-.dw 807
-; midi: D4, fur: D3
-.dw 762
-; midi: D#4, fur: D#3
-.dw 719
-; midi: E4, fur: E3
-.dw 679
-; midi: F4, fur: F3
-.dw 641
-; midi: F#4, fur: F#3
-.dw 605
-; midi: G4, fur: G3
-.dw 571
-; midi: G#4, fur: G#3
-.dw 539
-; midi: A4, fur: A3
-.dw 508
-; midi: A#4, fur: A#3
-.dw 480
-; midi: B4, fur: B3
-.dw 453
-; midi: C5, fur: C4
-.dw 428
-; midi: C#5, fur: C#4
-.dw 404
-; midi: D5, fur: D4
-.dw 381
-; midi: D#5, fur: D#4
-.dw 360
-; midi: E5, fur: E4
-.dw 339
-; midi: F5, fur: F4
-.dw 320
-; midi: F#5, fur: F#4
-.dw 302
-; midi: G5, fur: G4
-.dw 285
-; midi: G#5, fur: G#4
-.dw 269
-; midi: A5, fur: A4
-.dw 254
-; midi: A#5, fur: A#4
-.dw 240
-; midi: B5, fur: B4
-.dw 226
-; midi: C6, fur: C5
-.dw 214
-; midi: C#6, fur: C#5
-.dw 202
-; midi: D6, fur: D5
-.dw 190
-; midi: D#6, fur: D#5
-.dw 180
-; midi: E6, fur: E5
-.dw 170
-; midi: F6, fur: F5
-.dw 160
-; midi: F#6, fur: F#5
-.dw 151
-; midi: G6, fur: G5
-.dw 143
-; midi: G#6, fur: G#5
-.dw 135
-; midi: A6, fur: A5
-.dw 127
-; midi: A#6, fur: A#5
-.dw 120
-; midi: B6, fur: B5
-.dw 113
-; midi: C7, fur: C6
-.dw 107
-; midi: C#7, fur: C#6
-.dw 101
-; midi: D7, fur: D6
-.dw 95
-; midi: D#7, fur: D#6
-.dw 90
-; midi: E7, fur: E6
-.dw 85
-; midi: F7, fur: F6
-.dw 80
-; midi: F#7, fur: F#6
-.dw 76
-; midi: G7, fur: G6
-.dw 71
-; midi: G#7, fur: G#6
-.dw 67
-; midi: A7, fur: A6
-.dw 64
-; midi: A#7, fur: A#6
-.dw 60
-; midi: B7, fur: B6
-.dw 57
-; midi: C8, fur: C7
-.dw 53
-; midi: C#8, fur: C#7
-.dw 50
-; midi: D8, fur: D7
-.dw 48
-; midi: D#8, fur: D#7
-.dw 45
-; midi: E8, fur: E7
-.dw 42
-; midi: F8, fur: F7
-.dw 40
-; midi: F#8, fur: F#7
-.dw 38
-; midi: G8, fur: G7
-.dw 36
-; midi: G#8, fur: G#7
-.dw 34
-; midi: A8, fur: A7
-.dw 32
-; midi: A#8, fur: A#7
-.dw 30
-; midi: B8, fur: B7
-.dw 28
-; midi: C9, fur: C8
-.dw 27
-; midi: C#9, fur: C#8
-.dw 25
-; midi: D9, fur: D8
-.dw 24
-; midi: D#9, fur: D#8
-.dw 22
-; midi: E9, fur: E8
-.dw 21
-; midi: F9, fur: F8
-.dw 20
-; midi: F#9, fur: F#8
-.dw 19
-; midi: G9, fur: G8
-.dw 18
+; A
+.dw 0xfe4, 0xfd5,0xfc6,0xfb8,0xfa9,0xf9b,0xf8d,0xf7e,0xf70,0xf62,0xf53,0xf45,0xf37,0xf29,0xf1b,0xf0d
+; A#
+.dw 0xeff, 0xef2,0xee4,0xed6,0xec8,0xebb,0xead,0xea0,0xe92,0xe85,0xe77,0xe6a,0xe5d,0xe4f,0xe42,0xe35
+; B
+.dw 0xe28, 0xe1b,0xe0e,0xe01,0xdf4,0xde7,0xdda,0xdcd,0xdc1,0xdb4,0xda7,0xd9b,0xd8e,0xd82,0xd75,0xd69
+; C
+.dw 0xd5c, 0xd50,0xd44,0xd38,0xd2b,0xd1f,0xd13,0xd07,0xcfb,0xcef,0xce3,0xcd7,0xccb,0xcc0,0xcb4,0xca8
+; C#
+.dw 0xc9d, 0xc91,0xc85,0xc7a,0xc6e,0xc63,0xc57,0xc4c,0xc41,0xc35,0xc2a,0xc1f,0xc14,0xc08,0xbfd,0xbf2
+; D
+.dw 0xbe7, 0xbdc,0xbd1,0xbc6,0xbbc,0xbb1,0xba6,0xb9b,0xb91,0xb86,0xb7b,0xb71,0xb66,0xb5c,0xb51,0xb47
+; D#
+.dw 0xb3c, 0xb32,0xb28,0xb1d,0xb13,0xb09,0xaff,0xaf4,0xaea,0xae0,0xad6,0xacc,0xac2,0xab8,0xaaf,0xaa5
+; E
+.dw 0xa9b, 0xa91,0xa87,0xa7e,0xa74,0xa6a,0xa61,0xa57,0xa4e,0xa44,0xa3b,0xa31,0xa28,0xa1e,0xa15,0xa0c
+; F
+.dw 0xa02, 0x9f9,0x9f0,0x9e7,0x9de,0x9d5,0x9cc,0x9c3,0x9ba,0x9b1,0x9a8,0x99f,0x996,0x98d,0x984,0x97b
+; F#
+.dw 0x973, 0x96a,0x961,0x959,0x950,0x947,0x93f,0x936,0x92e,0x925,0x91d,0x914,0x90c,0x904,0x8fb,0x8f3
+; G
+.dw 0x8eb, 0x8e3,0x8da,0x8d2,0x8ca,0x8c2,0x8ba,0x8b2,0x8aa,0x8a2,0x89a,0x892,0x88a,0x882,0x87a,0x873
+; G#
+.dw 0x86b, 0x863,0x85b,0x854,0x84c,0x844,0x83d,0x835,0x82d,0x826,0x81e,0x817,0x80f,0x808,0x801,0x7f9

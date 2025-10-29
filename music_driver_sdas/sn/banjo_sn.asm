@@ -36,7 +36,3 @@ SN76489_4_PORT .equ 0x7f
 	.include "update.inc"
 	.include "update_pitch_registers.inc"
 	.include "volume_change.inc"
-
-	.ifndef BANJO_MINIMAL
-	.include "pitch_slide.inc"
-	.endif

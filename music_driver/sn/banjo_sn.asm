@@ -37,8 +37,4 @@
 	.include "update_pitch_registers.inc"
 	.include "volume_change.inc"
 
-	.ifndef BANJO_MINIMAL
-	.include "pitch_slide.inc"
-	.endif
-
 .ENDS

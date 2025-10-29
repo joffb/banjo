@@ -22,7 +22,7 @@ music_process_new_line:
 	; get current pattern pointer for this channel
 	ld e, (ix + channel.pattern_ptr)
 	ld d, (ix + channel.pattern_ptr + 1)
-	
+
 	mpnl_loop:
 	
 		; get command
@@ -86,10 +86,8 @@ music_process_new_line:
 			sub a, l
 			ld h, a
 
-			; move pattern pointer on and read
-			; the next byte into a in preparation
+			; move pattern pointer on
 			inc de
-			ld a, (de)
 
 			; jump to jump table address
 			jp (hl)

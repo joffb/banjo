@@ -46,8 +46,8 @@ mpnl_note_on_opll:
 ; iy : pointer to music state
 mpnl_note_off_opll:
 
-	; standard note-off stuff
-	call music_note_off
+	; clear note-on bit
+    res CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
 
     ; check if the channel is muted
 	bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)

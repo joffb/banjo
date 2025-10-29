@@ -39,8 +39,7 @@ music_update_channel_sn:
     jr z, muc_sn_no_note_delay
 
         ; decrement tic wait and check if it's zero
-        dec a
-        ld (ix + channel.tic_wait), a
+        dec (ix + channel.tic_wait)
         jr nz, muc_sn_no_note_delay
 
             ; if it is, process the delayed line data
@@ -83,24 +82,20 @@ music_update_channel_sn:
 
             ; was this a duty macro?
             bit MACRO_TYPE_BIT_DUTY, (ix + channel.ex_macro_type)
-            jr z, muc_sn_no_ex_macro
+            jr z, muc_sn_ex_macro_done
 
                 ; update noise mode
                 ld a, (ix + channel.ex_macro_val)
                 ld (iy + music_state.noise_mode), a
 
+        muc_sn_ex_macro_done:
         muc_sn_no_ex_macro:
-
-        ; apply pitch slides/portamento
-        bit CHAN_FLAG_BIT_SLIDE, b
-        call nz, music_update_pitch_slide_sn
 
         ; b now has events
         ld b, (ix + channel.events)
 
-        music_update_sn_no_vib_arp:
-
         ; change of noise duty flagged?
+        ; could be set by noise command or ex macro
         bit CHAN_EVENT_BIT_DUTY_CHANGED, b
         jr z, muc_sn_no_duty
 
@@ -109,18 +104,16 @@ music_update_channel_sn:
             bit 1, a
             jr z, muc_sn_no_duty
 
-            ; bit 7 being set flags that the noise mode is different
-            or a, a
-            call m, music_update_noise_mode_sn_ch3_pitch
+                ; bit 7 being set flags that the noise mode is different
+                or a, a
+                call m, music_update_noise_mode_sn_ch3_pitch
 
         muc_sn_no_duty:
 
         ; check if we need to update the pitch of this channel
         ld a, CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_PITCH_CHANGE_ALWAYS | CHAN_EVENT_ARP_CHANGED | CHAN_EVENT_DUTY_CHANGED
         and a, b 
-        jp nz, music_update_pitch_registers_sn
-        
-        music_update_pitch_registers_sn_done:
+        call nz, music_update_pitch_registers_sn
 
         ; update volume if there's been a volume change event
         bit CHAN_EVENT_BIT_VOLUME_CHANGE, b
@@ -132,7 +125,7 @@ music_update_channel_sn:
 
         music_volume_change_sn_done:
 
-        ; clear events
+        ; clear events which only last one frame
 		ld a, b
 		and a, CHAN_EVENT_PITCH_CHANGE_ALWAYS | CHAN_EVENT_MACRO_RELEASE | CHAN_EVENT_LEGATO
         ld (ix + channel.events), a

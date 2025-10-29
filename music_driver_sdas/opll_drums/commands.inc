@@ -18,6 +18,7 @@ mpnl_opll_drum:
 	push bc
 
     ; get instrument number in a
+	ld a, (de)
     ld channel.instrument_num(ix), a
 
     ; .assert  _sizeof_instrument==12; ensure that an instrument is the size we think it is!

@@ -141,19 +141,11 @@ music_play:
 	; preserve channel data pointer
 	push ix
 
-	; address for call to `ret` to
-	ld hl, #music_channel_init_call_done
-	push hl
-
 	; get pointer to channel init call
 	ld l, music_state.channel_init_call(iy)
 	ld h, music_state.channel_init_call+1(iy)
 
-	; run call
-	jp (hl)
-
-	; then return here
-	music_channel_init_call_done: 
+	call _banjo_jp_hl
 		
 	; restore channel data pointer
 	pop ix

@@ -70,14 +70,8 @@ _banjo_mute_song_channel:
     ld h, (hl)
     ld l, a
 
-    ; put return address on stack
-    ld de, #_banjo_mute_song_channel_done
-    push de
-
     ; call function
-    jp (hl)
-
-    _banjo_mute_song_channel_done: 
+    call _banjo_jp_hl
 
     pop iy
     pop ix
@@ -139,14 +133,8 @@ _banjo_mute_song:
         ld l, music_state.song_mute(iy)
         ld h, music_state.song_mute+1(iy)
 
-        ; set up return address
-        ld de, #_banjo_mute_song_continue
-        push de
-
-        ; jump to song mute call
-        jp (hl)
-
-        _banjo_mute_song_continue: 
+        ; song mute call
+        call _banjo_jp_hl
 
         pop iy
         pop hl

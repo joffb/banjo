@@ -65,9 +65,8 @@ music_jump_channels_order_and_pattern:
 
 		djnz mjcoap_loop
 
-	; reset order_jump to 0xff to indicate we don't need to jump
-	ld a, #0xff
-	ld music_state.order_jump(iy), a
+	; reset order_jump flag to indicate we don't need to jump
+	res STATE_FLAG_BIT_ORDER_JUMP, music_state.flags(iy)
 
 	; reset line and tic
 	ld a, music_state.pattern_length(iy)

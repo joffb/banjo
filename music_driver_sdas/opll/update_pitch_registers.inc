@@ -7,9 +7,26 @@
 ; ix: channel we're updating
 music_update_pitch_registers_opll: 
 
-    ; get note fnum in de
-    ld hl, #fm_tone_lookup
+    push bc
+
+    ; calculate note number
     call music_calc_fnum
+
+    ; turn that into an fnum and octave
+    ld hl, #fm_tone_lookup
+    call music_fnum_lookup
+
+    ; combine upper byte of fnum with octave in b register
+    ld a, b
+    rlca 
+
+    ; set octave (block)
+    and a, #0x0e
+    or a, h
+
+    ; set key on bit
+    or a, #0x10
+    ld h, a
 
     ; get f-number register to write to for this channel
     ld a, channel.subchannel(ix)
@@ -18,7 +35,7 @@ music_update_pitch_registers_opll:
     out (#OPLL_REG_PORT), a
     
     ; lower 8 bits of f number
-    ld a, e
+    ld a, l
     out (#OPLL_DATA_PORT), a
     
     call _banjo_opll_write_delay
@@ -29,14 +46,12 @@ music_update_pitch_registers_opll:
     add a, #0x10
     out (#OPLL_REG_PORT), a
     
-    ; get octave and 9th bit of f number
-    ld a, d
-    
-    ; set key on bit and write
-    and a, #0xf
-    or a, #0x10
+    ; write octave/9th bit of f number/note on bit
+    ld a, h
     out (#OPLL_DATA_PORT), a
     
     call _banjo_opll_write_delay
+
+    pop bc
 
     jp music_update_pitch_registers_opll_done

@@ -11,7 +11,9 @@
 
 	banjo_has_chips: db
 	banjo_system_flags: db
-	banjo_max_channels: db	
+	banjo_max_channels: db
+
+	banjo_current_channel: dw
 
 	; state and channel data for song
 	song_playing: db
@@ -60,6 +62,9 @@
 	.include "volume_macro.inc"
 	.include "arp_macro.inc"
 	.include "ex_macro.inc"
+	.include "slides.inc"
+	.include "divmod12.inc"
+	.include "fnum_lookup.inc"
 	.endif
 
 .ENDS

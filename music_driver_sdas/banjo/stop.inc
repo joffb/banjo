@@ -16,24 +16,17 @@ _banjo_song_stop:
         ld ix, #_song_channels
         ld iy, #_song_state
 
-		; address for call to `ret` to
-		ld hl, #music_song_mute_call_done
-		push hl
-
 		; get pointer to channel init call
 		ld l, music_state.song_mute(iy)
 		ld h, music_state.song_mute+1(iy)
 
 		; run call
-		jp (hl)
-
-		; then return here
-		music_song_mute_call_done: 
+        call _banjo_jp_hl
 
         pop iy
         pop ix
 
-        ld a, #0
+        xor a, a
         ld (song_playing), a
 
         ret 
