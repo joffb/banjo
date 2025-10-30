@@ -2,13 +2,16 @@
 ; banjo sound driver
 ; Joe Kennedy 2024
 
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
 mpnl_opll_instrument_change:
-			
+
 	; check if the channel is muted and skip command if it is
 	bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
 	jp nz, mpnl_skip_2_byte_command
 
 	; don't do anything if the instrument number is the same
+	ld a, (de)
 	cp a, (ix + channel.instrument_num)
 	jr z, mpnl_opll_instrument_change_done
 		
@@ -36,28 +39,30 @@ mpnl_opll_instrument_change:
 
 			; preserve bc
 			push bc
+			
+			; 8 registers, multiplied by 2
+			; as b will be decremented by both outi and djnz
+			ld b, 16
 
-			; start register number
-			ld c, 0x00
+			; destination for outi
+			ld c, OPLL_DATA_PORT
+			
+			; start at register 0
+			xor a, a
 			
 			music_instrument_change_opll_patch:
 			
-				ld a, c
+				; set opll register
 				out (OPLL_REG_PORT), a
+				inc a
 				
-				ld a, (hl)
-				out (OPLL_DATA_PORT), a
+				; write new value from (hl)
+				outi
 				
 				call banjo_opll_write_delay
 				
-				; next register and next patch data
-				inc hl
-				inc c
-				
 				; reached the last register?
-				ld a, 0x08
-				cp a, c
-				jr nz, music_instrument_change_opll_patch
+				djnz music_instrument_change_opll_patch
 				
 			; restore bc
 			pop bc
