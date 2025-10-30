@@ -4,13 +4,13 @@
 
 ; commands will be jumped to from music_process_new_line
 
-; a: noise mode
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
 mpnl_sn_noise_mode: 
 
 	; don't update variable or flag a duty change if the noise mode is the same
 	; to avoid resetting the lfsr
+	ld a, (de)
 	cp a, music_state.noise_mode(iy)
 	jp z, mpnl_command_done
 		
@@ -24,12 +24,12 @@ mpnl_sn_noise_mode:
 		jp mpnl_command_done
 
 	
-; a: pan value
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
 mpnl_game_gear_pan: 
 
 	; get pan value in l
+	ld a, (de)
 	ld l, a
 
 	; get pan mask

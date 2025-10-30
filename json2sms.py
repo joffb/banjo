@@ -495,7 +495,7 @@ def main(argv=None):
                 # process macro data
                 for j in range(0, macro["length"]):
 
-                    macro_value = (macro['data'][j] & 0xf) << 4
+                    macro_value = (macro['data'][j] & 0xf)
 
                     # repeat each step if speed > 1
                     for k in range (0, macro["speed"]):
