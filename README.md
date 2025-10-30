@@ -8,25 +8,25 @@
     + YM2413 OPLL FM
     + AY-3-8910 PSG
 + Intended for use in homebrew games
-    + Playback takes more CPU time than VGM but song data uses a lot less ROM space
+    + Playback takes more CPU time than VGM but song data uses less ROM space
     + A limited number of effects are supported to keep code size and RAM usage low
 
 ### Furnace features and effects currently supported:
-**NB:** *Compatibility Flags > Pitch/Playback > Pitch Linearity* should be set to "None" in Furnace
 + The "Speeds" tempo mode (with separate Speed 1 and Speed 2 parameters) is supported
 + Volume macro per channel (only "sequence" mode)
++ Arpeggio macro per channel (only "sequence" mode)
 + One extra macro per channel (only "sequence" mode) supporting:
     + Pitch
-    + Arpeggio
-    + FM Patch (OPLL)
+    + FM Patch (YM2413)
     + Noise Freq (AY3)
-    + Noise/Duty (SN)
+    + Noise/Duty (SN76489)
 + YM2413 custom patches and custom drum pitches
 + Effects (multiple effects per channel are supported):
-    + Arpeggios (00)
-    + Pitch slides up and down (01, 02)
-    + Portamento (03)
-    + Vibrato (04)
+    + Arpeggios (00) *
+    + Pitch slides up (01) *
+    + Pitch slide down (02) *
+    + Portamento (03) *
+    + Vibrato (04) *
     + Set speed 1 (09)
     + Set speed 2 (0F)
     + Jump to pattern (0B)
@@ -46,6 +46,8 @@
         + Set envelope low byte (23)
         + Set envelope high byte (24)
         + Set auto envelope (29)
+
+(*) Arpeggio, Slide up/down, Portamento and Vibrato use the same memory in each channel, so only one of these effects can be used on a channel at one time e.g. using vibrato when arpeggio is enabled will switch off the arpeggio and enable vibrato instead. Across channels however, channel 1 could have vibrato going while channel 3 has arpeggios going.
 
 ## Notes for working with chips
 ### AY3
