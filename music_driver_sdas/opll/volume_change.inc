@@ -37,7 +37,7 @@ music_volume_change_opll:
 
         ; get current patch which is the upper nibble of the volume reg
         ; and combine with new volume level
-        ld a, channel.patch(ix)
+        ld a, channel.gp1(ix)
         or a, l
 
     mvcopll_write: 

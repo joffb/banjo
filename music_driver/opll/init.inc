@@ -14,7 +14,7 @@ banjo_init_opll:
         ld (ix + channel.volume), 0x0f
 
         ; temp set fm patch to 15
-        ld (ix + channel.patch), 0xf0
+        ld (ix + channel.gp1), 0xf0
         
         ; subchannel number
         ld a, 9
@@ -57,7 +57,7 @@ banjo_init_sfx_channel_opll:
     ld (ix + channel.volume), 0x0f
 
     ; temp set fm patch to 15
-    ld (ix + channel.patch), 0xf0
+    ld (ix + channel.gp1), 0xf0
 
     ; subchannel number
     ld a, (iy + music_state.sfx_subchannel)

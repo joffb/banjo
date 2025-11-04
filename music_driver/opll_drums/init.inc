@@ -15,7 +15,7 @@ banjo_init_opll_drums:
         ld (ix + channel.volume), 0x0f
 
         ; temp set fm patch to 15
-        ld (ix + channel.patch), 0xf0
+        ld (ix + channel.gp1), 0xf0
         
         ; subchannel number
         ld a, 6
@@ -43,7 +43,7 @@ banjo_init_opll_drums:
         ld (ix + channel.volume), 0x00
 
         ; temp set fm patch to 15
-        ld (ix + channel.patch), 0xf0
+        ld (ix + channel.gp1), 0xf0
 
         ; subchannel number
         ld a, 5

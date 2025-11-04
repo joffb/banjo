@@ -153,26 +153,27 @@ channel.port .equ 2		; output port, used for certain chips
 channel.events .equ 3		; 
 channel.freq .equ 4		; current fnum/tone of the voice
 channel.target_freq .equ 6		; target fnum/tone used for portamento
-channel.volume .equ 8
-channel.midi_note .equ 9
-channel.instrument_num .equ 10
-channel.effect1 .equ 11
-channel.effect2 .equ 12
-channel.effect3 .equ 13
-channel.pattern_ptr .equ 14		; pointer to the current pattern
-channel.line_wait .equ 16		; wait for this many lines
-channel.tic_wait .equ 17		; wait for this many tics
-channel.volume_macro_vol .equ 18
-channel.volume_macro_pos .equ 19
-channel.volume_macro_ptr .equ 20
-channel.arp_macro_val .equ 22
-channel.arp_macro_pos .equ 23
-channel.arp_macro_ptr .equ 24
-channel.ex_macro_val .equ 26
-channel.ex_macro_pos .equ 27
-channel.ex_macro_type .equ 28
-channel.ex_macro_ptr .equ 29
-channel.patch .equ 31
+channel.volume .equ 7
+channel.midi_note .equ 8
+channel.instrument_num .equ 9
+channel.effect1 .equ 10
+channel.effect2 .equ 11
+channel.effect3 .equ 12
+channel.pattern_ptr .equ 13		; pointer to the current pattern
+channel.line_wait .equ 15		; wait for this many lines
+channel.tic_wait .equ 16		; wait for this many tics
+channel.volume_macro_vol .equ 17
+channel.volume_macro_pos .equ 18
+channel.volume_macro_ptr .equ 19
+channel.arp_macro_val .equ 21
+channel.arp_macro_pos .equ 22
+channel.arp_macro_ptr .equ 23
+channel.ex_macro_val .equ 25
+channel.ex_macro_pos .equ 26
+channel.ex_macro_type .equ 27
+channel.ex_macro_ptr .equ 28
+channel.gp1 .equ 30		; general purpose: opll patch
+channel.gp2 .equ 31		; general purpose:
 _sizeof_channel .equ 32
 
 music_state.magic_byte .equ 0		; should be 0xba for a valid song

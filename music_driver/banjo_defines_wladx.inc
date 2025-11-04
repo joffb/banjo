@@ -156,7 +156,7 @@
 	port: db		; output port, used for certain chips
 	events: db		; 
 	freq: dw		; current fnum/tone of the voice
-	target_freq: dw		; target fnum/tone used for portamento
+	target_freq: db		; target fnum/tone used for portamento
 	volume: db
 	midi_note: db
 	instrument_num: db
@@ -176,7 +176,8 @@
 	ex_macro_pos: db
 	ex_macro_type: db
 	ex_macro_ptr: dw
-	patch: db
+	gp1: db		; general purpose: opll patch
+	gp2: db		; general purpose:
 .ENDST
 
 .STRUCT music_state

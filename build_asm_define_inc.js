@@ -202,7 +202,7 @@ var structs = [
             { name: "events", size: "db", comment: "" },
 
             { name: "freq", size: "dw", comment: "current fnum/tone of the voice" },
-            { name: "target_freq", size: "dw", comment: "target fnum/tone used for portamento" },
+            { name: "target_freq", size: "db", comment: "target fnum/tone used for portamento" },
 
             { name: "volume", size: "db" },
             { name: "midi_note", size: "db" },
@@ -230,7 +230,8 @@ var structs = [
             { name: "ex_macro_type", size: "db"},
             { name: "ex_macro_ptr", size: "dw"},
 
-            { name: "patch", size: "db"},
+            { name: "gp1", size: "db", comment: "general purpose: opll patch" },
+            { name: "gp2", size: "db", comment: "general purpose:" },
         ]
     },
     {

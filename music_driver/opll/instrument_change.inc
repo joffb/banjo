@@ -23,7 +23,7 @@ mpnl_opll_instrument_change:
 
         ; store the patch number shifted left by 4
 		ld a, (hl)
-		ld (ix + channel.patch), a
+		ld (ix + channel.gp1), a
 		
 		; if it's patch 0, update the fm registers with the custom patch data
 		; otherwise we're done
