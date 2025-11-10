@@ -102,7 +102,7 @@ var defines = [
         { name: "CHAN_EVENT_LEGATO", value: 0x08 },
         { name: "CHAN_EVENT_WAVE_CHANGED", value: 0x10 },
         { name: "CHAN_EVENT_DUTY_CHANGED", value: 0x20 },
-        { name: "CHAN_EVENT_ARP_CHANGED", value: 0x40 },
+        { name: "CHAN_EVENT_TIC_WAIT", value: 0x40 },
         { name: "CHAN_EVENT_MACRO_RELEASE", value: 0x80 },
     ],
     [
@@ -112,7 +112,7 @@ var defines = [
         { name: "CHAN_EVENT_BIT_LEGATO", value: 3 },
         { name: "CHAN_EVENT_BIT_WAVE_CHANGED", value: 4 },
         { name: "CHAN_EVENT_BIT_DUTY_CHANGED", value: 5 },
-        { name: "CHAN_EVENT_BIT_ARP_CHANGED", value: 6 },
+        { name: "CHAN_EVENT_BIT_TIC_WAIT", value: 6 },
         { name: "CHAN_EVENT_BIT_MACRO_RELEASE", value: 7 },
     ],
     [
@@ -214,8 +214,7 @@ var structs = [
 
             //{ name: "order_table_ptr", size: "dw", comment: "pointer to the current order"},
             { name: "pattern_ptr", size: "dw", comment: "pointer to the current pattern" },
-            { name: "line_wait", size: "db", comment: "wait for this many lines"},
-            { name: "tic_wait", size: "db", comment: "wait for this many tics" },
+            { name: "wait", size: "db", comment: "wait for this many lines"},
             
             { name: "volume_macro_vol", size: "db"},
             { name: "volume_macro_pos", size: "db"},
@@ -232,6 +231,7 @@ var structs = [
 
             { name: "gp1", size: "db", comment: "general purpose: opll patch" },
             { name: "gp2", size: "db", comment: "general purpose:" },
+            { name: "gp3", size: "db", comment: "general purpose:" },
         ]
     },
     {

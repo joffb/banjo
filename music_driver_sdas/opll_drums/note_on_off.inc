@@ -23,7 +23,10 @@ mpnl_note_on_opll_drums:
 
 	; sending note-off
 	ld hl, #opll_drum_note_ons
-	ld a, (opll_drum_trigger)
+
+	; get drum trigger bit
+	; and use it to clear the bit for this drum
+	ld a, channel.gp2(ix)
 	ld c, a
 	cpl 
 	and a, (hl)
@@ -43,38 +46,18 @@ mpnl_note_on_opll_drums:
     or a, a
     jr nz, mfmdno_fixed_pitch
 
-        ; set pitch register for this drum	
-        ; set register for low 8 bits of f number
-        ld a, (opll_drum_pitch_register)
-        out (#OPLL_REG_PORT), a
-        
         ; update midi number field
         ld a, (de)
+		and a, #0x7f
         ld channel.midi_note(ix), a
-        
-        ; get pitch data
-		add a, a
-		add a, #<fm_tone_lookup
-		ld l, a
-		adc a, #>fm_tone_lookup
-		sub a, l
-		ld h, a
 
-        ; write low 8 bits of f number
-        ld a, (hl)
-        out (#OPLL_DATA_PORT), a
-        
-		call _banjo_opll_write_delay
+        ; update freq
+        ld channel.freq+1(ix), a
+		xor a, a
+		ld channel.freq(ix), a
 
-        ; set register for 9th bit of f number and octave
-        ld a, (opll_drum_pitch_register)
-        add a, #0x10
-        out (#OPLL_REG_PORT), a
-        
-        ; output 9th bit of f number and octave
-        inc hl
-        ld a, (hl)
-        out (#OPLL_DATA_PORT), a
+		; mark pitch as requiring update
+		set CHAN_EVENT_BIT_PITCH_CHANGED, channel.events(ix)
 
     mfmdno_fixed_pitch: 
 	
@@ -96,9 +79,12 @@ mpnl_note_off_opll_drums:
 	ld a, #0x0e
 	out (#OPLL_REG_PORT), a
 
-	; clear trigger bit for this drum
+	; sending note-off
 	ld hl, #opll_drum_note_ons
-	ld a, (opll_drum_trigger)
+
+	; get drum trigger bit
+	; and use it to clear the bit for this drum
+	ld a, channel.gp2(ix)
 	cpl 
 	and a, (hl)
 	ld (hl), a

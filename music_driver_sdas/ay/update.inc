@@ -7,13 +7,9 @@
 ; iy: music state
 _banjo_update_channels_ay: 
 
-    push bc
-
     call music_update_channel_ay
     call music_update_channel_ay
     call music_update_channel_ay
-
-    pop bc
 
     ret 
 
@@ -31,30 +27,8 @@ _banjo_update_channel_ay:
 ; iy: music state
 music_update_channel_ay: 
 
-    ; note delay?
-    ld a, channel.tic_wait(ix)
-    or a, a
-    jr z, muc_ay_no_note_delay
-
-        ; decrement tic wait and check if it's zero
-        dec a
-        ld channel.tic_wait(ix), a
-        jr nz, muc_ay_no_note_delay
-
-            ; if it is, process the delayed line data
-            ld bc, #music_command_jump_table_ay
-	        call music_process_new_line
-
-    muc_ay_no_note_delay: 
-
-    ; process new line if necessary
-	bit STATE_FLAG_BIT_PROCESS_NEW_LINE, music_state.flags(iy)
-    jr z, muc_sn_no_process_new_line
-
-        ld bc, #music_command_jump_table_ay
-        call music_process_new_line
-
-    muc_sn_no_process_new_line: 
+    ld bc, #music_command_jump_table_ay
+    call music_process_new_line
 
     ; get flags in b for later
     ld b, channel.flags(ix)
@@ -98,7 +72,7 @@ music_update_channel_ay:
         muc_ay_no_duty: 
 
         ; check if we need to update the pitch of this channel
-        ld a, #CHAN_EVENT_PITCH_CHANGED|CHAN_EVENT_PITCH_CHANGE_ALWAYS|CHAN_EVENT_ARP_CHANGED
+        ld a, #CHAN_EVENT_PITCH_CHANGED|CHAN_EVENT_PITCH_CHANGE_ALWAYS
         and a, b
         jp nz, music_update_pitch_registers_ay
         music_update_pitch_registers_ay_done: 
@@ -113,7 +87,7 @@ music_update_channel_ay:
 
         ; clear events
 		ld a, b
-		and a, #CHAN_EVENT_PITCH_CHANGE_ALWAYS|CHAN_EVENT_MACRO_RELEASE|CHAN_EVENT_LEGATO
+		and a, #CHAN_EVENT_PITCH_CHANGE_ALWAYS|CHAN_EVENT_MACRO_RELEASE|CHAN_EVENT_LEGATO|CHAN_EVENT_TIC_WAIT
         ld channel.events(ix), a
         
         mucay_done: 

@@ -6,41 +6,19 @@ music_volume_change_opll_drums:
 
     ; get channel volume
     ld a, (ix + channel.volume)
+    ld c, 15
+    call music_calculate_volume
 
-    ; is the master volume less than 0x80?
-    bit 7, (iy + music_state.master_volume)
-    jr nz, mvcopll_drums_no_master_volume
-
-        ; preserve current volume
-        ld c, a
-        
-        ; make master volume a 4 bit number
-        ld a, (iy + music_state.master_volume)
-        rrca
-        rrca
-        rrca
-        and a, 0xf
-
-        ; subtract from 15
-        neg
-        add a, 0xf
-
-        ; add to current volume total
-        add a, c
-        cp a, 0x10
-        jr c, mvcopll_drums_no_master_volume
-
-            ; max out volume value at 0xf
-            ld a, 0x0f
-
-    mvcopll_drums_no_master_volume:
+    ; convert to opll volume
+    neg
+    add a, 15
 
     ; preserve (possibly attenuated) volume
     ld d, a
 
     ; get current volume for the drum pair
     ; from the opll_drum_volumes table
-    ld a, (opll_drum_pitch_register)
+    ld a, (ix + channel.subchannel)
     sub a, 0x16
     
     add a, <opll_drum_volumes
@@ -53,7 +31,7 @@ music_volume_change_opll_drums:
     ld c, (hl)
 
     ; get volume mask and use it to check if the new volume will need to be shifted
-    ld a, (opll_drum_volume_mask)
+    ld a, (ix + channel.gp3)
     cp a, 0xf0
     jr z, mvc_opll_no_shift
         
@@ -84,7 +62,7 @@ music_volume_change_opll_drums:
         ld c, a
 
         ; get rhythm volume port to write to
-        ld a, (opll_drum_pitch_register)
+        ld a, (ix + channel.subchannel)
         add a, 0x20
         out (OPLL_REG_PORT), a
 

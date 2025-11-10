@@ -9,7 +9,9 @@ music_volume_change_opll:
     add a, #0x30
     out (#OPLL_REG_PORT), a
     
-    ; get channel volume
+    ; calculate volume w/ volume macros and master volume
+    ld a, channel.volume(ix)
+    ld c, #15
     call music_calculate_volume
     
     ; convert to opll volume

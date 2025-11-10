@@ -10,7 +10,7 @@
 ; iy: music_state
 music_note_on: 
 
-	; get and store midi number
+	; restrict to 0-127 and save in channel
 	and a, #0x7f
 	ld channel.midi_note(ix), a
 

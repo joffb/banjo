@@ -2,7 +2,6 @@
 ; banjo sound driver
 ; Joe Kennedy 2024
 
-; b: current channel number
 ; iy: music_state
 ; ix: channel we're updating
 music_update_pitch_registers_opll:

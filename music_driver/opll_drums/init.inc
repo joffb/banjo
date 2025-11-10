@@ -35,20 +35,31 @@ banjo_init_opll_drums:
         djnz music_init_opll_drums_loop_1
 
     ld b, 5
+    ld hl, opll_drum_pitch_trigger_masks
 
     ; initialise rhythm channels
     music_init_opll_drums_loop_2:
 
         ; default volume
-        ld (ix + channel.volume), 0x00
+        ld (ix + channel.volume), 0x0f
 
         ; temp set fm patch to 15
         ld (ix + channel.gp1), 0xf0
 
-        ; subchannel number
-        ld a, 5
-        sub a, b
+        ; subchannel is pitch register
+        ld a, (hl)
         ld (ix + channel.subchannel), a
+        inc hl
+
+        ; drum trigger bit
+        ld a, (hl)
+        ld (ix + channel.gp2), a
+        inc hl
+
+        ; volume mask
+        ld a, (hl)
+        ld (ix + channel.gp3), a
+        inc hl
 
         ; move to next channel
         ld de, _sizeof_channel
@@ -67,7 +78,6 @@ banjo_init_opll_drums:
         inc hl
 
         djnz music_init_opll_drums_loop_3
-
 
 	; select rhythm trigger register
 	ld a, 0xe

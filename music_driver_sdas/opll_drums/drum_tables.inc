@@ -33,50 +33,58 @@ opll_drum_pitch_trigger_masks:
 	.db 0x01
 	.db 0x0f
 
-music_set_default_opll_drum_pitches: 
+opll_default_drum_pitches: 
 
 	; tom?
+	.db 0x20
+	.db 0x05
+
+	.db 0x50
+	.db 0x05
+
+	.db 0xc0
+	.db 0x01
+
+music_set_default_opll_drum_pitches: 
+
+	ld hl, #opll_default_drum_pitches
+	ld b, #9
+	ld c, #OPLL_REG_PORT
+
+	; start reg
 	ld a, #0x16
-	out (#OPLL_REG_PORT), a
-	ld a, #0x20
-	out (#OPLL_DATA_PORT), a
-	
-	call _banjo_opll_write_delay
 
-	ld a, #0x26
-	out (#OPLL_REG_PORT), a
-	ld a, #0x05
-	out (#OPLL_DATA_PORT), a
-	
-	call _banjo_opll_write_delay
+	msdodp_loop: 
 
-	; snare?
-	ld a, #0x17
-	out (#OPLL_REG_PORT), a
-	ld a, #0x50
-	out (#OPLL_DATA_PORT), a
+		; set register
+		out (c), a
 
-	call _banjo_opll_write_delay
+		; send data
+		inc c
+		outi 
 
-	ld a, #0x27
-	out (#OPLL_REG_PORT), a
-	ld a, #0x05
-	out (#OPLL_DATA_PORT), a
-	
-	call _banjo_opll_write_delay
+		call _banjo_opll_write_delay
 
-	; kick?
-	ld a, #0x18
-	out (#OPLL_REG_PORT), a
-	ld a, #0xc0
-	out (#OPLL_DATA_PORT), a
+		; move to next register
+		add a, #0x10
 
-	call _banjo_opll_write_delay
-	ld a, #0x28
-	out (#OPLL_REG_PORT), a
-	ld a, #0x01
-	out (#OPLL_DATA_PORT), a
-	
-	call _banjo_opll_write_delay
+		; set register
+		dec c
+		out (c), a
+
+		; send data
+		inc c
+		outi 
+
+		call _banjo_opll_write_delay
+
+		; move back to register port
+		dec c
+
+		; move to next register
+		sub a, #0x10-1
+
+		djnz msdodp_loop
 
 	ret 
+

@@ -102,11 +102,8 @@ music_play:
 		ld channel.flags(ix), a
 		ld channel.events(ix), a
 		
-		; default line wait to 0
-		ld channel.line_wait(ix), a
-
-		; default tic wait to 0
-		ld channel.tic_wait(ix), a
+		; default waits to 0
+		ld channel.wait(ix), a
 
 		; default ex_macro_type
 		ld channel.ex_macro_type(ix), a
@@ -177,7 +174,7 @@ _banjo_song_rewind:
 		bsrw_channel_loop: 
 
 			ld channel.flags(ix), a
-			ld channel.line_wait(ix), a
+			ld channel.wait(ix), a
 
 			add ix, de
 			djnz bsrw_channel_loop

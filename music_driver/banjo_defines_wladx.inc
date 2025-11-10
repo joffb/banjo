@@ -80,7 +80,7 @@
 .define CHAN_EVENT_LEGATO		0x8
 .define CHAN_EVENT_WAVE_CHANGED		0x10
 .define CHAN_EVENT_DUTY_CHANGED		0x20
-.define CHAN_EVENT_ARP_CHANGED		0x40
+.define CHAN_EVENT_TIC_WAIT		0x40
 .define CHAN_EVENT_MACRO_RELEASE		0x80
 
 .define CHAN_EVENT_BIT_PITCH_CHANGED		0x0
@@ -89,7 +89,7 @@
 .define CHAN_EVENT_BIT_LEGATO		0x3
 .define CHAN_EVENT_BIT_WAVE_CHANGED		0x4
 .define CHAN_EVENT_BIT_DUTY_CHANGED		0x5
-.define CHAN_EVENT_BIT_ARP_CHANGED		0x6
+.define CHAN_EVENT_BIT_TIC_WAIT		0x6
 .define CHAN_EVENT_BIT_MACRO_RELEASE		0x7
 
 .define MACRO_TYPE_PITCH		0x1
@@ -164,8 +164,7 @@
 	effect2: db
 	effect3: db
 	pattern_ptr: dw		; pointer to the current pattern
-	line_wait: db		; wait for this many lines
-	tic_wait: db		; wait for this many tics
+	wait: db		; wait for this many lines
 	volume_macro_vol: db
 	volume_macro_pos: db
 	volume_macro_ptr: dw
@@ -178,6 +177,7 @@
 	ex_macro_ptr: dw
 	gp1: db		; general purpose: opll patch
 	gp2: db		; general purpose:
+	gp3: db		; general purpose:
 .ENDST
 
 .STRUCT music_state

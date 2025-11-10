@@ -78,7 +78,7 @@ CHAN_EVENT_PITCH_CHANGE_ALWAYS			.equ		0x4
 CHAN_EVENT_LEGATO			.equ		0x8
 CHAN_EVENT_WAVE_CHANGED			.equ		0x10
 CHAN_EVENT_DUTY_CHANGED			.equ		0x20
-CHAN_EVENT_ARP_CHANGED			.equ		0x40
+CHAN_EVENT_TIC_WAIT			.equ		0x40
 CHAN_EVENT_MACRO_RELEASE			.equ		0x80
 
 CHAN_EVENT_BIT_PITCH_CHANGED			.equ		0x0
@@ -87,7 +87,7 @@ CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS			.equ		0x2
 CHAN_EVENT_BIT_LEGATO			.equ		0x3
 CHAN_EVENT_BIT_WAVE_CHANGED			.equ		0x4
 CHAN_EVENT_BIT_DUTY_CHANGED			.equ		0x5
-CHAN_EVENT_BIT_ARP_CHANGED			.equ		0x6
+CHAN_EVENT_BIT_TIC_WAIT			.equ		0x6
 CHAN_EVENT_BIT_MACRO_RELEASE			.equ		0x7
 
 MACRO_TYPE_PITCH			.equ		0x1
@@ -160,20 +160,20 @@ channel.effect1 .equ 10
 channel.effect2 .equ 11
 channel.effect3 .equ 12
 channel.pattern_ptr .equ 13		; pointer to the current pattern
-channel.line_wait .equ 15		; wait for this many lines
-channel.tic_wait .equ 16		; wait for this many tics
-channel.volume_macro_vol .equ 17
-channel.volume_macro_pos .equ 18
-channel.volume_macro_ptr .equ 19
-channel.arp_macro_val .equ 21
-channel.arp_macro_pos .equ 22
-channel.arp_macro_ptr .equ 23
-channel.ex_macro_val .equ 25
-channel.ex_macro_pos .equ 26
-channel.ex_macro_type .equ 27
-channel.ex_macro_ptr .equ 28
-channel.gp1 .equ 30		; general purpose: opll patch
-channel.gp2 .equ 31		; general purpose:
+channel.wait .equ 15		; wait for this many lines
+channel.volume_macro_vol .equ 16
+channel.volume_macro_pos .equ 17
+channel.volume_macro_ptr .equ 18
+channel.arp_macro_val .equ 20
+channel.arp_macro_pos .equ 21
+channel.arp_macro_ptr .equ 22
+channel.ex_macro_val .equ 24
+channel.ex_macro_pos .equ 25
+channel.ex_macro_type .equ 26
+channel.ex_macro_ptr .equ 27
+channel.gp1 .equ 29		; general purpose: opll patch
+channel.gp2 .equ 30		; general purpose:
+channel.gp3 .equ 31		; general purpose:
 _sizeof_channel .equ 32
 
 music_state.magic_byte .equ 0		; should be 0xba for a valid song

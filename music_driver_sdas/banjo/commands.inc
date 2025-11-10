@@ -161,13 +161,17 @@ mpnl_vibrato:
 	; initialise vibrato counter
 	ld channel.effect1(ix), #0
 
-	; get vibrato counter add amount
+	; get vibrato params
 	ld a, (de)
+	ld l, a
+
+	; add amount
+	and a, #0xf
 	ld channel.effect2(ix), a
 	
-	; load full vibrato amplitude into vibrato_depth
-	inc de
-	ld a, (de)
+	; vibrato amplitude
+	ld a, l
+	and a, #0xf0
 	ld channel.effect3(ix), a
 
 	; set vibrato flag
@@ -276,7 +280,10 @@ mpnl_note_delay:
 
 	; get new note delay
 	ld a, (de)
-	ld channel.tic_wait(ix), a
+	ld channel.wait(ix), a
+
+	; set tic wait flag
+	set CHAN_EVENT_BIT_TIC_WAIT, channel.events(ix)
 
 	; store the pointer to the next command and return
 	; this will be picked up when tic_wait hits zero

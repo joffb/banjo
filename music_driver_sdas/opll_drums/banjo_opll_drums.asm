@@ -19,10 +19,6 @@
 .area _DATA (REL,CON)
 
     opll_drum_fixed_pitch_mode: .ds 1
-
-    opll_drum_pitch_register: .ds 1
-	opll_drum_trigger: .ds 1
-	opll_drum_volume_mask: .ds 1
     
 	opll_drum_volumes: .ds 3
 
@@ -45,4 +41,5 @@
     .include "mute_unmute.inc"
     .include "note_on_off.inc"
     .include "update.inc"
+    .include "update_pitch_registers.inc"
     .include "volume_change.inc"

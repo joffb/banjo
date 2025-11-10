@@ -22,4 +22,5 @@
 !wladx_alf/main.asm
 !wladx_no_queue/main.asm
 !msx_ay/main.asm
+!msx_opl/main.asm
 !msx_reg_test/main.asm

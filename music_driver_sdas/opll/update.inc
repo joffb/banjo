@@ -7,8 +7,6 @@
 ; iy: music state
 _banjo_update_channels_opll: 
 
-    push bc
-
     call music_update_channel_opll
     call music_update_channel_opll
     call music_update_channel_opll
@@ -18,8 +16,6 @@ _banjo_update_channels_opll:
     call music_update_channel_opll
     call music_update_channel_opll
     call music_update_channel_opll
-
-    pop bc
 
     ret 
 
@@ -48,30 +44,8 @@ _banjo_opll_write_delay:
 ; iy: music state
 music_update_channel_opll: 
 
-    ; note delay?
-    ld a, channel.tic_wait(ix)
-    or a, a
-    jr z, muc_opll_no_note_delay
-
-        ; decrement tic wait and check if it's zero
-        dec a
-        ld channel.tic_wait(ix), a
-        jr nz, muc_opll_no_note_delay
-
-            ; if it is, process the delayed line data
-            ld bc, #music_command_jump_table_opll
-	        call music_process_new_line
-
-    muc_opll_no_note_delay: 
-
-    ; process new line if necessary
-	bit STATE_FLAG_BIT_PROCESS_NEW_LINE, music_state.flags(iy)
-    jr z, muc_opll_no_process_new_line
-
-        ld bc, #music_command_jump_table_opll
-        call music_process_new_line
-
-    muc_opll_no_process_new_line: 
+    ld bc, #music_command_jump_table_opll
+    call music_process_new_line
 
     ; get flags in b for later
     ld b, channel.flags(ix)
@@ -109,7 +83,7 @@ music_update_channel_opll:
         muc_opll_no_wave_change: 
 
         ; check if we need to update the pitch of this channel
-        ld a, #CHAN_EVENT_PITCH_CHANGED|CHAN_EVENT_PITCH_CHANGE_ALWAYS|CHAN_EVENT_ARP_CHANGED|CHAN_EVENT_DUTY_CHANGED
+        ld a, #CHAN_EVENT_PITCH_CHANGED|CHAN_EVENT_PITCH_CHANGE_ALWAYS|CHAN_EVENT_DUTY_CHANGED
         and a, b
         jp nz, music_update_pitch_registers_opll
         music_update_pitch_registers_opll_done: 
@@ -124,7 +98,7 @@ music_update_channel_opll:
 
         ; clear events
 		ld a, b
-		and a, #CHAN_EVENT_PITCH_CHANGE_ALWAYS|CHAN_EVENT_MACRO_RELEASE|CHAN_EVENT_LEGATO
+		and a, #CHAN_EVENT_PITCH_CHANGE_ALWAYS|CHAN_EVENT_MACRO_RELEASE|CHAN_EVENT_LEGATO|CHAN_EVENT_TIC_WAIT
         ld channel.events(ix), a
 
         muco_done: 
@@ -134,6 +108,8 @@ music_update_channel_opll:
             add ix, de
 
             ret 
+
+
 
 .endif 
 
@@ -169,7 +145,7 @@ music_update_channel_opll:
         ld b, channel.events(ix)
 
         ; check if we need to update the pitch of this channel
-        ld a, #CHAN_EVENT_PITCH_CHANGED|CHAN_EVENT_ARP_CHANGED|CHAN_EVENT_DUTY_CHANGED
+        ld a, #CHAN_EVENT_PITCH_CHANGED|CHAN_EVENT_DUTY_CHANGED
         and a, b
         jp nz, music_update_pitch_registers_opll
         music_update_pitch_registers_opll_done: 

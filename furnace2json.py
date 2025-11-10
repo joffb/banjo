@@ -473,7 +473,7 @@ def main(argv=None):
                             line['effects'].append(struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0])
                             pattern_data_pointer += 1
 
-                            line['effects'].append(-1)
+                            line['effects'].append(0)
 
                         elif (read_byte & 0x10):
 
@@ -927,7 +927,7 @@ def main(argv=None):
 
                         'opll_patch': fm_data[3] & 0x1f,
                         'am2': (fm_data[3] >> 6) & 0x3,
-
+                        
                         'block': 0,
 
                         'operator_data': [],

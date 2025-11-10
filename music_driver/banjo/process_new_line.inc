@@ -2,22 +2,40 @@
 ; banjo sound driver
 ; Joe Kennedy 2023
 
-; b: channel number
 ; bc: jump table to handle commands (e.g. music_command_jump_table_sn)
 ; ix: channels
 ; iy: state
 music_process_new_line:
-	
-	; don't do anything if line_wait > 0
-	ld a, (ix + channel.line_wait)
-	or a, a
-	jr z, mpnl_no_line_wait
 
-		; update line_wait value and return
-		dec (ix + channel.line_wait)
-		ret
+    ; note delay?
+    bit CHAN_EVENT_BIT_TIC_WAIT, (ix + channel.events)
+    jr z, mpnl_no_tic_wait
 
-	mpnl_no_line_wait:
+        ; decrement tic wait and return if not zero
+        dec (ix + channel.wait)
+        ret nz
+
+			; tic wait is now zero
+			; reset tic wait flag and continue
+			res CHAN_EVENT_BIT_TIC_WAIT, (ix + channel.events)
+			jr music_process_new_line_continue
+
+    mpnl_no_tic_wait:
+
+    ; process new line if necessary
+	bit STATE_FLAG_BIT_PROCESS_NEW_LINE, (iy + music_state.flags)
+    ret z
+
+		; is there a line wait?
+		ld a, (ix + channel.wait)
+		or a, a
+		jr z, music_process_new_line_continue
+
+			; decrease line wait and return if not zero
+			dec (ix + channel.wait)
+			ret
+
+    music_process_new_line_continue:
 
 	; get current pattern pointer for this channel
 	ld e, (ix + channel.pattern_ptr)
@@ -52,7 +70,7 @@ music_process_new_line:
 			; end of this line reached
 			; get line_wait amount and set it in channel
 			and a, 0x3f
-			ld (ix + channel.line_wait), a
+			ld (ix + channel.wait), a
 
 			; store the pointer to the next command and return
 			inc de

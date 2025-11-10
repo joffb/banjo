@@ -47,6 +47,8 @@ VOLUME_CHANGE       = 0x20
 END_LINE            = 0x40
 NOTE_ON             = 0x80
 
+TEMP_END_LINE       = 0x100    # used when processing end line to avoid collisions
+
 INSTRUMENT_SIZE     = 16
 FM_PATCH_SIZE       = 8
 
@@ -57,19 +59,28 @@ CHAN_FLAG_EX_MACRO = 0x80
 CHIP_SN76489        = 0x03      # 0x03: SMS (SN76489) - 4 channels
 CHIP_SN76489_OPLL   = 0x43      # 0x43: SMS (SN76489) + OPLL (YM2413) - 13 channels (compound!)
 CHIP_OPLL           = 0x89      # 0x89: OPLL (YM2413) - 9 channels
+CHIP_OPL            = 0x8f      # 0x8f: OPL (YM3526) - 9 channels
+CHIP_OPL2           = 0x90      # 0x90: OPL2 (YM3812) - 9 channels
 CHIP_OPLL_DRUMS     = 0xa7      # 0xa7: OPLL drums (YM2413) - 11 channels
 CHIP_AY_3_8910      = 0x80      # AY-3-8910 - 3 channels
+
+INS_TYPE_SN76489    = 0
+INS_TYPE_OPLL       = 13
+INS_TYPE_OPL        = 14
+INS_TYPE_AY_3_8910  = 6
 
 CHAN_SN76489        = 0x00
 CHAN_OPLL           = 0x01
 CHAN_OPLL_DRUMS     = 0x02
 CHAN_AY_3_8910      = 0x03
+CHAN_OPL_2OP        = 0x04
 
 BANJO_HAS_SN        = 0x01
 BANJO_HAS_OPLL      = 0x02
 BANJO_HAS_AY        = 0x04
 BANJO_HAS_DUAL_SN   = 0x08
 BANJO_HAS_GG        = 0x10
+BANJO_HAS_OPL       = 0x20
 
 MACRO_TYPE_VOLUME   = 0
 MACRO_TYPE_ARP      = 1
@@ -426,6 +437,27 @@ def main(argv=None):
 
             channel_update_calls.append("banjo_update_channels_ay")
 
+        elif (sound_chip == CHIP_OPL) or (sound_chip == CHIP_OPL2):
+
+            # flag that we have an OPL chip
+            song['has_chips'] |= BANJO_HAS_OPL
+
+            # add init and mute functions to lists
+            channel_init_calls.append("banjo_init_opl_2op")
+            song_mute_calls.append("banjo_mute_all_opl_2op")
+            
+            for i in range(0, 9):
+
+                channel_types.append({
+                    'type': CHAN_OPL_2OP,
+                    'update': "banjo_update_channel_opl_2op",
+                    'subchannel': i
+                    })
+
+                channel_mute_calls.append("banjo_mute_channel_opl_2op")
+
+            channel_update_calls.append("banjo_update_channels_opl_2op")
+
     # in sfx mode, only include channel_types for the specified sfx channel
     if (sfx):
 
@@ -605,7 +637,7 @@ def main(argv=None):
                         macro['data'][j] = -macro['data'][j]
 
                 # need to pre-shift fm patch for opll patch macro
-                if macro["code"] == MACRO_TYPE_WAVE and instrument["type"] == 13:
+                if macro["code"] == MACRO_TYPE_WAVE and instrument["type"] == INS_TYPE_OPLL:
                     for j in range(0, macro["length"]):
                         macro['data'][j] = macro['data'][j] << 4
 
@@ -651,7 +683,7 @@ def main(argv=None):
                 new_instrument["ex_macro_ptr"] = macro_data_name
 
         # FM preset change (only for OPLL FM instruments)
-        if (instrument['type'] == 13 and "fm" in instrument):
+        if (instrument['type'] == INS_TYPE_OPLL and "fm" in instrument):
 
             # custom fm patch data
             if (instrument['fm']['opll_patch'] == 0):
@@ -722,6 +754,62 @@ def main(argv=None):
                 # pre-shift the patch number into the upper nibble
                 new_instrument["fm_patch"] = (instrument['fm']['opll_patch'] & 0xf) << 4
 
+        # OPL FM instrument
+        if (instrument['type'] == INS_TYPE_OPL and "fm" in instrument):
+            
+            fm_patch = []
+            
+            # registers staring 0x20
+            for j in range(0, 2):
+                operator = instrument['fm']['operator_data'][j]
+                fm_patch.append(operator['mult'] | \
+                                (operator['ksr'] << 4) | \
+                                (operator['sus'] << 5) | \
+                                (operator['vib'] << 6) | \
+                                (operator['am'] << 7))
+                                        
+            # registers staring 0x40
+            # one byte per op/slot
+            for j in range(0, 2):
+                operator = instrument['fm']['operator_data'][j]
+                fm_patch.append(operator['tl'] | (operator['ksl'] << 6))
+
+            # registers staring 0x60
+            # one byte per op/slot
+            for j in range(0, 2):
+                operator = instrument['fm']['operator_data'][j]
+                fm_patch.append(operator['dr'] | (operator['ar'] << 4))
+
+            # registers staring 0x80
+            # one byte per op/slot
+            for j in range(0, 2):
+                operator = instrument['fm']['operator_data'][j]
+                fm_patch.append(operator['rr'] | (operator['sl'] << 4))
+
+            # registers staring 0xc0
+            # one byte for the channel
+            fm_patch.append((instrument['fm']['algorithm'] & 0x1) | (instrument['fm']['feedback'] << 1))
+            
+            # registers staring 0xe0
+            # one byte per op/slot
+            for j in range(0, 2):
+                operator = instrument['fm']['operator_data'][j]
+                fm_patch.append(operator['ws'])
+
+            # additional copies of data for volume changes
+            
+            # algorithm
+            fm_patch.append((instrument['fm']['algorithm'] & 0x1) | (instrument['fm']['feedback'] << 1))
+
+            # tls
+            for j in range(0, 2):
+                operator = instrument['fm']['operator_data'][j]
+                fm_patch.append(operator['tl'] | (operator['ksl'] << 6))
+
+            fm_patch_name = "fm_patch_" + str(i)
+            fm_patches[fm_patch_name] = fm_patch
+            new_instrument["fm_patch_ptr"] = fm_patch_name
+            
         instruments.append(new_instrument)
 
     # process patterns
@@ -854,13 +942,8 @@ def main(argv=None):
                                 pattern_bin.append(VIBRATO_OFF)
 
                             else:
-                                # need to invert pitch offset for certain chips
-                                if (channel_type['type'] == CHAN_SN76489 or channel_type['type'] == CHAN_AY_3_8910):
-                                    vibrato_speed = -vibrato_speed
-                                    
                                 pattern_bin.append(VIBRATO)
-                                pattern_bin.append(vibrato_speed)
-                                pattern_bin.append(vibrato_amount << 4)
+                                pattern_bin.append(vibrato_speed | (vibrato_amount << 4))
 
                         # legato
                         elif (line['effects'][eff] == 0xea):
@@ -1069,7 +1152,7 @@ def main(argv=None):
                                 if volume > 15:
                                     volume = 15
 
-                                volume_value = (15 - volume)
+                                volume_value = (volume)
 
                             elif (channel_type['type'] == CHAN_AY_3_8910):
                                 
@@ -1078,9 +1161,22 @@ def main(argv=None):
                                     volume = 15
 
                                 volume_value = (volume)
-                        
+
+                            elif (channel_type['type'] == CHAN_OPL_2OP):
+                                
+                                # cap volume
+                                if volume > 0x3f:
+                                    volume = 0x3f
+
+                                volume_value = (volume)
+
                             # volume change command and value combined
                             pattern_bin.append(VOLUME_CHANGE | (volume_value & 0x1f))
+                            
+                            # opl requires almost a full byte for the volume
+                            if (channel_type['type'] == CHAN_OPL_2OP):
+
+                                pattern_bin.append(volume_value & 0x3f)
 
                         current_vol = volume
 
@@ -1150,21 +1246,28 @@ def main(argv=None):
                             pattern_bin.append(NOTE_OFF)
 
                     # end line marker
-                    if (len(pattern_bin) > 0) and ((pattern_bin[len(pattern_bin) - 1] & (END_LINE | NOTE_ON)) == END_LINE):
+                    if (len(pattern_bin) > 0) and ((pattern_bin[len(pattern_bin) - 1] & TEMP_END_LINE) == TEMP_END_LINE):
                         
                         # combine wait value with previous END_LINE if possible
                         wait = pattern_bin[len(pattern_bin) - 1] & 0x3f
                         
                         if (wait + 1) <= 0x3f:
-                            pattern_bin[len(pattern_bin) - 1] = END_LINE | (wait + 1)
+                            pattern_bin[len(pattern_bin) - 1] = TEMP_END_LINE | (wait + 1)
                         else:
-                            pattern_bin.append(END_LINE)
+                            pattern_bin.append(TEMP_END_LINE)
                             
                     else:
-                        pattern_bin.append(END_LINE)
+                        pattern_bin.append(TEMP_END_LINE)
+
+                # turn TEMP_END_LINE into END_LINE now we're done with this pattern
+                for j in range(0, len(pattern_bin)):
+                    if (pattern_bin[j] & TEMP_END_LINE) == TEMP_END_LINE:
+                        pattern_bin[j] = (pattern_bin[j] & ~TEMP_END_LINE) | END_LINE
 
                 # add to patterns array
                 patterns[i][pattern["index"]] = pattern_bin
+
+
 
     # output asm/h file
     outfile = open(str(out_filename), "w")

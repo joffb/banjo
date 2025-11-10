@@ -4,6 +4,9 @@
 
 music_volume_change_sn:
     
+    ; calculate volume w/ volume macros and master volume
+    ld a, (ix + channel.volume)
+    ld c, 15
     call music_calculate_volume
 
     ; convert to sn volume 

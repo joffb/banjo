@@ -115,7 +115,7 @@ music_calc_fnum:
 
 	; add the channel's midi note to the arpeggio note
 	; then double to make it an offset into the fnum table
-	ld a, (ix + channel.midi_note)
+	ld a, (ix + channel.freq)
 	add a, a
 
 	; add to tone lookup table address in hl

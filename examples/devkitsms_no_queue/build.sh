@@ -1,5 +1,5 @@
 
-python3 ../../furnace2json.py -o ./cmajor.json ../cmajor.fur
+python3 ../../furnace2json.py -o ./cmajor.json ../cmajor_opll_drum.fur
 python3 ../../json2sms.py -o cmajor.asm -i cmajor --sdas -a BANK -b 2 ./cmajor.json 
 sdasz80 -g -o cmajor.rel ../../music_driver_sdas/banjo_defines_sdas.inc cmajor.asm
 
