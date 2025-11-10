@@ -12,9 +12,7 @@
 	banjo_has_chips: db
 	banjo_system_flags: db
 	banjo_max_channels: db
-
-	banjo_current_channel: dw
-
+	
 	; state and channel data for song
 	song_playing: db
 	song_state: INSTANCEOF music_state

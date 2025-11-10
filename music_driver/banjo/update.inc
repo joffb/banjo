@@ -132,9 +132,9 @@ music_update:
 		call banjo_jp_hl
 
 		; clear process new line flag
-		res STATE_FLAG_BIT_PROCESS_NEW_LINE, (iy + music_state.flags)
-
 		; clear master volume change flag
-		res STATE_FLAG_BIT_MASTER_VOLUME_CHANGE, (iy + music_state.flags)
+		ld a, (iy + music_state.flags)
+		and a, ~(STATE_FLAG_PROCESS_NEW_LINE | STATE_FLAG_MASTER_VOLUME_CHANGE)
+		ld (iy + music_state.flags), a
 
 		ret

@@ -61,7 +61,7 @@ var defines = [
         { name: "SLIDE_TYPE_NONE", value: 0x00 },
         { name: "SLIDE_TYPE_UP", value: 0x01 },
         { name: "SLIDE_TYPE_DOWN", value: 0x02 },
-        { name: "SLIDE_TYPE_PORTA", value: 0x03 },
+        { name: "SLIDE_TYPE_PORTA", value: 0x04 },
     ],
     [
         { name: "CHAN_SN76489", value: 0x00 },
@@ -97,8 +97,8 @@ var defines = [
     ],
     [
         { name: "CHAN_EVENT_PITCH_CHANGED", value: 0x01 },
-        { name: "CHAN_EVENT_VOLUME_CHANGE", value: 0x02 },
-        { name: "CHAN_EVENT_PITCH_CHANGE_ALWAYS", value: 0x04 },
+        { name: "CHAN_EVENT_PITCH_CHANGE_ALWAYS", value: 0x02 },
+        { name: "CHAN_EVENT_VOLUME_CHANGE", value: 0x04 },
         { name: "CHAN_EVENT_LEGATO", value: 0x08 },
         { name: "CHAN_EVENT_WAVE_CHANGED", value: 0x10 },
         { name: "CHAN_EVENT_DUTY_CHANGED", value: 0x20 },
@@ -107,8 +107,8 @@ var defines = [
     ],
     [
         { name: "CHAN_EVENT_BIT_PITCH_CHANGED", value: 0 },
-        { name: "CHAN_EVENT_BIT_VOLUME_CHANGE", value: 1 },
-        { name: "CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS", value: 2 },
+        { name: "CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS", value: 1 },
+        { name: "CHAN_EVENT_BIT_VOLUME_CHANGE", value: 2 },
         { name: "CHAN_EVENT_BIT_LEGATO", value: 3 },
         { name: "CHAN_EVENT_BIT_WAVE_CHANGED", value: 4 },
         { name: "CHAN_EVENT_BIT_DUTY_CHANGED", value: 5 },

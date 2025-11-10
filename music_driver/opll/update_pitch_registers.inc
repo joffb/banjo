@@ -48,6 +48,9 @@ music_update_pitch_registers_opll:
     ; write octave/9th bit of f number/note on bit
     ld a, h
     out (OPLL_DATA_PORT), a
+
+    ; keep it around in gp2 for use with note-off
+    ld (ix + channel.gp2), a
     
     call banjo_opll_write_delay
 

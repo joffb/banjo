@@ -5,7 +5,7 @@
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
 mpnl_instrument_change:
-			
+
 	; check if the channel is muted and skip command if it is
 	bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
 	jp nz, mpnl_skip_2_byte_command
@@ -62,7 +62,7 @@ mpnl_pitch_slide_down:
 ; de : instruction pointer (preserve this!)
 mpnl_portamento:
 
-	; set slide_type = 3
+	; set slide_type = 4
 	ld (ix + channel.effect1), SLIDE_TYPE_PORTA
 
 mpnl_slide_common:

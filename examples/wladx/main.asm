@@ -145,6 +145,8 @@ init:
 	ld (input_last), a
 	ld (input_pressed), a
 
+	call banjo_queue_init
+
 	; check whether we're on a game gear in game gear mode
 	; and whether there's an fm unit installed
 	call banjo_check_hardware

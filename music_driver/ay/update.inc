@@ -33,11 +33,10 @@ music_update_channel_ay:
     ; get flags in b for later
     ld b, (ix + channel.flags)
 
-    ; check that the note is on and the channel isn't muted
-    ld a, CHAN_FLAG_MUTED | CHAN_FLAG_NOTE_ON
-    and a, b
-    cp a, CHAN_FLAG_NOTE_ON
-    jr nz, mucay_done
+    ; check that note on is set
+    ; this should never be set if the channel is muted
+    bit CHAN_FLAG_BIT_NOTE_ON, b
+    jr z, mucay_done
 
         ; process volume macro
         bit CHAN_FLAG_BIT_VOLUME_MACRO, b
@@ -78,10 +77,10 @@ music_update_channel_ay:
         music_update_pitch_registers_ay_done:
 
         ; update volume if there's been a volume change event
-        bit CHAN_EVENT_BIT_VOLUME_CHANGE, b
-        jp nz, music_volume_change_ay
-        ; if not, has the master volume changed?
-        bit STATE_FLAG_BIT_MASTER_VOLUME_CHANGE, (iy + music_state.flags)
+        ; or the master volume changed
+        ld a, b
+        or a, (iy + music_state.flags)
+        and a, CHAN_EVENT_VOLUME_CHANGE
         jp nz, music_volume_change_ay      
         music_volume_change_ay_done:
 

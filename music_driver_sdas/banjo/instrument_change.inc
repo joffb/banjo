@@ -47,12 +47,9 @@ music_instrument_change:
 	; get channel.flags (should be first byte of channel struct)
 	; then unset the macro flags and combine with flags from first byte of instrument 
 	ld a, (de)
-	and a, #~(CHAN_FLAG_VOLUME_MACRO|CHAN_FLAG_EX_MACRO|CHAN_FLAG_ARP_MACRO)
+	and a, #~(CHAN_FLAG_VOLUME_MACRO|CHAN_FLAG_ARP_MACRO|CHAN_FLAG_EX_MACRO)
 	or a, (hl)
-	ld channel.flags(ix), a
-
-	; move to volume macro info
-	inc hl
+	ld (de), a
 
 	; move along to volume_macro_ptr
 	ld a, #channel.volume_macro_ptr
@@ -62,29 +59,31 @@ music_instrument_change:
 	sub a, e
 	ld d, a
 
+	; move to volume macro info
+	inc hl
+
 	; volume macro
 	; copy over macro info
-
 	; ptr
 	ldi 
 	ldi 
 
 	; arp macro
-	; move past arp_macro_val and arp_macro_pos
+	; move past arp_macro_val and arp_macro_pos to arp_macro_ptr
 	inc de
 	inc de
 
+	; copy over macro info
 	; ptr
 	ldi 
 	ldi 
 
-	; move past ex_macro_val and ex_macro_pos
-	inc de
-	inc de
-
 	; ex macro
-	; copy over macro info
+	; move past ex_macro_val and ex_macro_pos to arp_macro_type
+	inc de
+	inc de
 
+	; copy over macro info
 	; ex_macro_type
 	ldi 
 

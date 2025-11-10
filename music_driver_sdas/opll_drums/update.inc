@@ -44,11 +44,10 @@ music_update_channel_opll_drums:
     ; get flags in b for later
     ld b, channel.flags(ix)
 
-    ; check that the note is on and the channel isn't muted
-    ld a, #CHAN_FLAG_MUTED|CHAN_FLAG_NOTE_ON
-    and a, b
-    cp a, #CHAN_FLAG_NOTE_ON
-    jr nz, mucod_done
+    ; check that note on is set
+    ; this should never be set if the channel is muted
+    bit CHAN_FLAG_BIT_NOTE_ON, b
+    jr z, mucod_done
 
         ld b, channel.events(ix)
 
@@ -58,10 +57,10 @@ music_update_channel_opll_drums:
         music_update_pitch_registers_opll_drums_done: 
 
         ; update volume if there's been a volume change event
-        bit CHAN_EVENT_BIT_VOLUME_CHANGE, b
-        jp nz, music_volume_change_opll_drums
-        ; if not, has the master volume changed?
-        bit STATE_FLAG_BIT_MASTER_VOLUME_CHANGE, music_state.flags(iy)
+        ; or the master volume changed
+        ld a, b
+        or a, music_state.flags(iy)
+        and a, #CHAN_EVENT_VOLUME_CHANGE
         jp nz, music_volume_change_opll_drums
         music_volume_change_opll_drums_done: 
 
