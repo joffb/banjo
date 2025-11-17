@@ -31,8 +31,8 @@ music_calculate_volume:
 		mcv_no_volume_macro:
 		
 		; master volume active? (bit 7 set)
-		ld h, (iy + music_state.master_volume)
-		bit 7, h
+		ld l, (iy + music_state.master_volume)
+		bit 7, l
 		jr nz, mcv_no_master_volume
 
 			; scale channel volume by master volume
@@ -44,18 +44,17 @@ music_calculate_volume:
 			bit 6, c
 			jr nz, mcv_mvv_no_shift
 
-				srl h
+				srl l
 
 			; if max_volume == 0x3f we only shift once
 			bit 5, c
 			jr nz, mcv_mvv_no_shift
 
-				srl h
-				srl h
+				srl l
+				srl l
 
 			mcv_mvv_no_shift:
 
-			add a, h
 			add a, l
 			sub a, c
 

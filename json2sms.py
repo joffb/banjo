@@ -63,24 +63,32 @@ CHIP_OPL            = 0x8f      # 0x8f: OPL (YM3526) - 9 channels
 CHIP_OPL2           = 0x90      # 0x90: OPL2 (YM3812) - 9 channels
 CHIP_OPLL_DRUMS     = 0xa7      # 0xa7: OPLL drums (YM2413) - 11 channels
 CHIP_AY_3_8910      = 0x80      # AY-3-8910 - 3 channels
+CHIP_OPN            = 0x8d      # YM2203 - 6 channels
+CHIP_OPNA           = 0x8e      # YM2608 - 16 channels
 
 INS_TYPE_SN76489    = 0
+INS_TYPE_OPN        = 1
+INS_TYPE_AY_3_8910  = 6
 INS_TYPE_OPLL       = 13
 INS_TYPE_OPL        = 14
-INS_TYPE_AY_3_8910  = 6
 
 CHAN_SN76489        = 0x00
 CHAN_OPLL           = 0x01
 CHAN_OPLL_DRUMS     = 0x02
 CHAN_AY_3_8910      = 0x03
 CHAN_OPL_2OP        = 0x04
+CHAN_OPL_DRUMS      = 0x05
+CHAN_OPN            = 0x06
+CHAN_OPNA_RHYTHM    = 0x07
+CHAN_OPNA_ADPCM     = 0x08
 
 BANJO_HAS_SN        = 0x01
 BANJO_HAS_OPLL      = 0x02
 BANJO_HAS_AY        = 0x04
 BANJO_HAS_DUAL_SN   = 0x08
-BANJO_HAS_GG        = 0x10
-BANJO_HAS_OPL       = 0x20
+BANJO_HAS_OPL       = 0x10
+BANJO_HAS_OPN       = 0x20
+BANJO_HAS_OPNA      = 0x40
 
 MACRO_TYPE_VOLUME   = 0
 MACRO_TYPE_ARP      = 1
@@ -97,6 +105,10 @@ macro_type_lookup = {
     MACRO_TYPE_PITCH: 0x01,
     MACRO_TYPE_EX1: 0
 }
+
+# default patch data for fm chips
+opl_default_patch = [0x3, 0x1, 0x56, 0x0, 0xf2, 0xf3, 0xf7, 0xbc, 0xe, 0x0, 0x0, 0xe, 0x56, 0x0]
+opn_default_patch = [0x5, 0x1, 0x1, 0x1, 0x2a, 0x30, 0x12, 0x2, 0x1f, 0x1f, 0x1f, 0x1f, 0x8, 0x4, 0xa, 0x9, 0x0, 0x0, 0x0, 0x0, 0xf3, 0xb1, 0xf4, 0xf9, 0x0, 0x0, 0x0, 0x0, 0x20, 0xc0, 0x1, 0x4c, 0x2]
 
 # whether the drum channel needs its volume to be pre-shifted
 pre_shift_fm_drum_value = [0,0,4,0,4]
@@ -458,6 +470,82 @@ def main(argv=None):
 
             channel_update_calls.append("banjo_update_channels_opl_2op")
 
+        elif (sound_chip == CHIP_OPN):
+
+            # flag that we have an OPL chip
+            song['has_chips'] |= BANJO_HAS_OPN
+
+            # add init and mute functions to lists
+            channel_init_calls.append("banjo_init_opn")
+            song_mute_calls.append("banjo_mute_all_opn")
+            
+            for i in range(0, 3):
+
+                channel_types.append({
+                    'type': CHAN_OPN,
+                    'update': "banjo_update_channel_opn",
+                    'subchannel': i
+                    })
+
+                channel_mute_calls.append("banjo_mute_channel_opn")
+
+            for i in range(0, 3):
+
+                channel_types.append({
+                    'type': CHAN_AY_3_8910,
+                    'update': "banjo_update_channel_ay",
+                    'subchannel': i
+                    })
+
+                channel_mute_calls.append("banjo_mute_channel_ay")
+
+            channel_update_calls.append("banjo_update_channels_opn")
+
+        elif (sound_chip == CHIP_OPNA):
+
+            # flag that we have an OPL chip
+            song['has_chips'] |= BANJO_HAS_OPNA
+
+            # add init and mute functions to lists
+            channel_init_calls.append("banjo_init_opna")
+            song_mute_calls.append("banjo_mute_all_opna")
+            
+            for i in range(0, 6):
+
+                channel_types.append({
+                    'type': CHAN_OPN,
+                    'update': "banjo_update_channel_opn",
+                    'subchannel': i
+                    })
+
+                channel_mute_calls.append("banjo_mute_channel_opn")
+
+            for i in range(0, 3):
+
+                channel_types.append({
+                    'type': CHAN_AY_3_8910,
+                    'update': "banjo_update_channel_ay",
+                    'subchannel': i
+                    })
+
+                channel_mute_calls.append("banjo_mute_channel_ay")
+
+            for i in range(0, 6):
+
+                channel_types.append({
+                    'type': CHAN_OPNA_RHYTHM,
+                    'update': "banjo_update_opna_rhythm",
+                    'subchannel': i
+                    })
+
+            channel_types.append({
+                'type': CHAN_OPNA_ADPCM,
+                'update': "banjo_update_channel_adpcm",
+                'subchannel': 0
+                })
+
+            channel_update_calls.append("banjo_update_channels_opna")
+
     # in sfx mode, only include channel_types for the specified sfx channel
     if (sfx):
 
@@ -631,6 +719,14 @@ def main(argv=None):
 
                 new_instrument["ex_macro_type"] = macro_type_lookup[macro["code"]] if macro["code"] in macro_type_lookup else macro["code"]
 
+                # keep macro values within a byte
+                if macro["code"] == MACRO_TYPE_PITCH:
+                    for j in range(0, macro["length"]):
+                        if macro['data'][j] > 255:
+                            macro['data'][j] = 255
+                        elif macro['data'][j] < -128:
+                            macro['data'][j] = -128
+
                 # need to invert pitch offset for certain chips
                 if macro["code"] == MACRO_TYPE_PITCH and (instrument["type"] == 0 or instrument["type"] == 6):
                     for j in range(0, macro["length"]):
@@ -755,61 +851,166 @@ def main(argv=None):
                 new_instrument["fm_patch"] = (instrument['fm']['opll_patch'] & 0xf) << 4
 
         # OPL FM instrument
-        if (instrument['type'] == INS_TYPE_OPL and "fm" in instrument):
+        if instrument['type'] == INS_TYPE_OPL:
+
+            # use default patch if there's no FM data
+            if "fm" not in instrument: 
+
+                fm_patch = opl_default_patch
+        
+            # use custom patch
+            else: 
             
-            fm_patch = []
-            
-            # registers staring 0x20
-            for j in range(0, 2):
-                operator = instrument['fm']['operator_data'][j]
-                fm_patch.append(operator['mult'] | \
-                                (operator['ksr'] << 4) | \
-                                (operator['sus'] << 5) | \
-                                (operator['vib'] << 6) | \
-                                (operator['am'] << 7))
-                                        
-            # registers staring 0x40
-            # one byte per op/slot
-            for j in range(0, 2):
-                operator = instrument['fm']['operator_data'][j]
-                fm_patch.append(operator['tl'] | (operator['ksl'] << 6))
+                fm_patch = []
+                
+                # registers staring 0x20
+                for j in range(0, 2):
+                    operator = instrument['fm']['operator_data'][j]
+                    fm_patch.append(operator['mult'] | \
+                                    (operator['ksr'] << 4) | \
+                                    (operator['sus'] << 5) | \
+                                    (operator['vib'] << 6) | \
+                                    (operator['am'] << 7))
+                                            
+                # registers staring 0x40
+                # one byte per op/slot
+                for j in range(0, 2):
+                    operator = instrument['fm']['operator_data'][j]
+                    fm_patch.append(operator['tl'] | (operator['ksl'] << 6))
 
-            # registers staring 0x60
-            # one byte per op/slot
-            for j in range(0, 2):
-                operator = instrument['fm']['operator_data'][j]
-                fm_patch.append(operator['dr'] | (operator['ar'] << 4))
+                # registers staring 0x60
+                # one byte per op/slot
+                for j in range(0, 2):
+                    operator = instrument['fm']['operator_data'][j]
+                    fm_patch.append(operator['dr'] | (operator['ar'] << 4))
 
-            # registers staring 0x80
-            # one byte per op/slot
-            for j in range(0, 2):
-                operator = instrument['fm']['operator_data'][j]
-                fm_patch.append(operator['rr'] | (operator['sl'] << 4))
+                # registers staring 0x80
+                # one byte per op/slot
+                for j in range(0, 2):
+                    operator = instrument['fm']['operator_data'][j]
+                    fm_patch.append(operator['rr'] | (operator['sl'] << 4))
 
-            # registers staring 0xc0
-            # one byte for the channel
-            fm_patch.append((instrument['fm']['algorithm'] & 0x1) | (instrument['fm']['feedback'] << 1))
-            
-            # registers staring 0xe0
-            # one byte per op/slot
-            for j in range(0, 2):
-                operator = instrument['fm']['operator_data'][j]
-                fm_patch.append(operator['ws'])
+                # registers staring 0xc0
+                # one byte for the channel
+                fm_patch.append((instrument['fm']['algorithm'] & 0x1) | (instrument['fm']['feedback'] << 1))
+                
+                # registers staring 0xe0
+                # one byte per op/slot
+                for j in range(0, 2):
+                    operator = instrument['fm']['operator_data'][j]
+                    fm_patch.append(operator['ws'])
 
-            # additional copies of data for volume changes
-            
-            # algorithm
-            fm_patch.append((instrument['fm']['algorithm'] & 0x1) | (instrument['fm']['feedback'] << 1))
+                # additional copies of data for volume changes
+                
+                # algorithm
+                fm_patch.append((instrument['fm']['algorithm'] & 0x1) | (instrument['fm']['feedback'] << 1))
 
-            # tls
-            for j in range(0, 2):
-                operator = instrument['fm']['operator_data'][j]
-                fm_patch.append(operator['tl'] | (operator['ksl'] << 6))
+                # tls
+                for j in range(0, 2):
+                    operator = instrument['fm']['operator_data'][j]
+                    fm_patch.append(operator['tl'] | (operator['ksl'] << 6))
 
+            # write out patch data
             fm_patch_name = "fm_patch_" + str(i)
             fm_patches[fm_patch_name] = fm_patch
             new_instrument["fm_patch_ptr"] = fm_patch_name
             
+        # OPN FM instrument
+        if instrument['type'] == INS_TYPE_OPN:
+
+            # use default patch if there's no FM data
+            if "fm" not in instrument: 
+
+                fm_patch = opn_default_patch
+        
+            # use custom patch
+            else: 
+
+                fm_patch = []
+                
+                # registers staring 0x30
+                for j in range(0, 4):
+                    operator = instrument['fm']['operator_data'][j]
+                    fm_patch.append(operator['mult'] | \
+                                    (operator['dt2'] << 4))
+                                            
+                # registers staring 0x40
+                # one byte per op/slot
+                for j in range(0, 4):
+                    operator = instrument['fm']['operator_data'][j]
+                    fm_patch.append(operator['tl'])
+
+                # registers staring 0x50
+                # one byte per op/slot
+                for j in range(0, 4):
+                    operator = instrument['fm']['operator_data'][j]
+                    fm_patch.append(operator['ar'] | (operator['ksr'] << 6))
+
+                # registers staring 0x60
+                # one byte per op/slot
+                for j in range(0, 4):
+                    operator = instrument['fm']['operator_data'][j]
+                    fm_patch.append(operator['dr'] | (operator['am'] << 7))
+
+                # registers staring 0x70
+                # one byte per op/slot
+                for j in range(0, 4):
+                    operator = instrument['fm']['operator_data'][j]
+                    fm_patch.append(operator['rs'])
+
+                # registers staring 0x80
+                # one byte per op/slot
+                for j in range(0, 4):
+                    operator = instrument['fm']['operator_data'][j]
+                    fm_patch.append(operator['rr'] | (operator['sl'] << 4))
+
+                # registers staring 0x90
+                # one byte per op/slot
+                for j in range(0, 4):
+                    operator = instrument['fm']['operator_data'][j]
+                    fm_patch.append(operator['ssg'])
+
+                # registers staring 0xb0
+                # one byte for the channel
+                fm_patch.append((instrument['fm']['algorithm'] & 0x7) | (instrument['fm']['feedback'] << 3))
+                
+                # registers staring 0xb4
+                # one byte for the channel
+                fm_patch.append((instrument['fm']['fms'] & 0x7) | (instrument['fm']['ams'] << 4) | 0x40 | 0x80)
+                            
+                # additional copies of data for volume changes
+                
+                # different params for different algorithms
+                algorithm = instrument['fm']['algorithm'] & 0x7
+                
+                if algorithm < 4:
+                    op_count = 1
+                    start_reg = 0x4c
+                elif algorithm == 4:
+                    op_count = 2
+                    start_reg = 0x48
+                elif algorithm < 7:
+                    op_count = 3
+                    start_reg = 0x44
+                else:
+                    op_count = 4
+                    start_reg = 0x40
+
+                # number of ops to update
+                # reg of first op
+                fm_patch.append(op_count)
+                fm_patch.append(start_reg)
+
+                # tls to use
+                for j in range(4 - op_count, 4):
+                    operator = instrument['fm']['operator_data'][j]
+                    fm_patch.append(operator['tl'])                    
+
+            # write out patch data
+            fm_patch_name = "fm_patch_" + str(i)
+            fm_patches[fm_patch_name] = fm_patch
+            new_instrument["fm_patch_ptr"] = fm_patch_name
+
         instruments.append(new_instrument)
 
     # process patterns
@@ -822,6 +1023,10 @@ def main(argv=None):
         # in sfx mode, only process sfx channel
         if (sfx and i != sfx_channel):
 
+            continue
+
+        if (channel_types[i] == CHAN_OPNA_ADPCM):
+            
             continue
 
         # only one channel for sfx
@@ -908,7 +1113,7 @@ def main(argv=None):
 
                             if (line['effects'][eff + 1] != 0):
                                 pattern_bin.append(SLIDE_UP)
-                                pattern_bin.append(line['effects'][eff + 1])
+                                pattern_bin.append(line['effects'][eff + 1] & 0xff)
                             else:
                                 pattern_bin.append(SLIDE_OFF)
 
@@ -918,7 +1123,7 @@ def main(argv=None):
 
                             if (line['effects'][eff + 1] != 0):
                                 pattern_bin.append(SLIDE_DOWN)
-                                pattern_bin.append(line['effects'][eff + 1])
+                                pattern_bin.append(line['effects'][eff + 1] & 0xff)
                             else:
                                 pattern_bin.append(SLIDE_OFF)
 
@@ -928,17 +1133,17 @@ def main(argv=None):
 
                             if (line['effects'][eff + 1] != 0):
                                 pattern_bin.append(SLIDE_PORTA)
-                                pattern_bin.append(line['effects'][eff + 1])
+                                pattern_bin.append(line['effects'][eff + 1] & 0xff)
                             else:
                                 pattern_bin.append(SLIDE_OFF)
 
                         # Vibrato
                         elif (line['effects'][eff] == 0x04):
 
-                            vibrato_speed = line['effects'][eff + 1] >> 4
+                            vibrato_speed = (line['effects'][eff + 1] >> 4) & 0xf
                             vibrato_amount = line['effects'][eff + 1] & 0xf
 
-                            if (vibrato_speed == 0 and vibrato_amount == 0):
+                            if (vibrato_speed == 0 or vibrato_amount == 0):
                                 pattern_bin.append(VIBRATO_OFF)
 
                             else:
@@ -1170,6 +1375,22 @@ def main(argv=None):
 
                                 volume_value = (volume)
 
+                            elif (channel_type['type'] == CHAN_OPN):
+                                
+                                # cap volume
+                                if volume > 0x7f:
+                                    volume = 0x7f
+
+                                volume_value = (volume)
+
+                            elif (channel_type['type'] == CHAN_OPNA_RHYTHM):
+                                
+                                # cap volume
+                                if volume > 0x1f:
+                                    volume = 0x1f
+
+                                volume_value = (volume)
+
                             # volume change command and value combined
                             pattern_bin.append(VOLUME_CHANGE | (volume_value & 0x1f))
                             
@@ -1177,6 +1398,11 @@ def main(argv=None):
                             if (channel_type['type'] == CHAN_OPL_2OP):
 
                                 pattern_bin.append(volume_value & 0x3f)
+
+                            # opl requires almost a full byte for the volume
+                            elif (channel_type['type'] == CHAN_OPN):
+
+                                pattern_bin.append(volume_value & 0x7f)
 
                         current_vol = volume
 
@@ -1192,18 +1418,14 @@ def main(argv=None):
 
                         if (channel_type['type'] == CHAN_SN76489):
 
-                            # offset the midi note for SN7 as the note table starts at
-                            # note 0 == A rather than note 0 == C
-                            midi_note = midi_note + 3 - 12
+                            midi_note = midi_note - 12
 
                             if midi_note < 0:
                                 midi_note += 12
 
                         if (channel_type['type'] == CHAN_AY_3_8910):
 
-                            # offset the midi note for AY3 as the note table starts at
-                            # note 0 == A rather than note 0 == C
-                            midi_note = midi_note + 3 - 12
+                            midi_note = midi_note - 12
 
                             if midi_note < 0:
                                 midi_note += 12

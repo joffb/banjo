@@ -503,7 +503,7 @@ def main(argv=None):
                                 line['effects'].append(struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0])
                                 pattern_data_pointer += 1
 
-                                line['effects'].append(-1)
+                                line['effects'].append(0)
 
                             elif (fx_byte & 0x2):
 
@@ -820,6 +820,8 @@ def main(argv=None):
                 'features': [],
             }
 
+            #print(instrument)
+
             # go through features and add them to the instrument
             feature_pointer = instrument_pointer + 12
 
@@ -832,6 +834,8 @@ def main(argv=None):
                     'length': feature_header[1],
                     'data': [],
                 }
+
+                #print(feature)
 
                 # move pointer past header
                 feature_pointer += 4

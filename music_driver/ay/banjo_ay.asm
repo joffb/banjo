@@ -4,13 +4,30 @@
 
 .include "../banjo_defines_wladx.inc"
 
-.define AY_REG_WRITE 0xa0
-.define AY_DATA_WRITE 0xa1
-.define AY_DATA_READ 0xa2
+.if BANJO_SYS == 1
+	.define AY_REG_WRITE 0xa0
+	.define AY_DATA_WRITE 0xa1
+	.define AY_DATA_READ 0xa2
+.elif BANJO_SYS == 2
+	.define AY_REG_WRITE 0xa0
+	.define AY_DATA_WRITE 0xa1
+	.define AY_DATA_READ 0xa2
+.elif BANJO_SYS == 3
+	.define AY_REG_WRITE 0x44
+	.define AY_DATA_WRITE 0x45
+	.define AY_DATA_READ 0x45
+.endif
 
 .SECTION "BANJO_AY" free
 
-	.include "fnums_ay.inc"
+	.ifdef BANJO_3_57MHZ
+	.include "fnums_3p57mhz.inc"
+	.endif
+
+	.ifdef BANJO_4MHZ
+	.include "fnums_4mhz.inc"
+	.endif
+	
 	.include "command_jump_table.inc"
 	.include "commands.inc"
 	.include "commands_envelopes.inc"

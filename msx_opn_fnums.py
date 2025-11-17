@@ -6,17 +6,19 @@ import math
 note_names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
 chips = [
-    { "filename": "fnums_4mhz.inc", "clock": 3993600.0, "start_note": 36 },    # midi C3/furnace C1
-    { "filename": "fnums_3p57mhz.inc", "clock": 3579545.0, "start_note": 33 },    # midi A2/furnace A0
+    { "filename": "fnums_4mhz.inc", "clock": 3993600.0 },
+    { "filename": "fnums_3p57mhz.inc", "clock": 3579545.0 },
 ]
 
 for chip in chips:
 
     MUSIC_CLOCK = chip["clock"]
+    MUSIC_FM_FSAM = (MUSIC_CLOCK / 72.0)
     STEP_COUNT = 16
 
     # start at the lowest unique & accurate pitch
-    START_NOTE = chip["start_note"]
+    # where the octave fits into 12 bits
+    START_NOTE = 12
 
     # midi note frequencies for lowest octave of 12 notes
     # with a number of steps in between
@@ -33,13 +35,12 @@ for chip in chips:
     for n in range(0, 12):
         fnums.append([])
         for s in range(0, STEP_COUNT):
-            freq = round(MUSIC_CLOCK / ( 2 * 8 * midi_note_frequencies[n][s]))
-            freq = 4095 if freq > 4095 else freq
-            fnums[n].append(freq)
+            fnum = round((144.0 * midi_note_frequencies[n][s] * math.pow(2.0, 20))/ MUSIC_CLOCK) 
+            fnums[n].append(fnum)
 
-    outfile = open("music_driver/ay/" + chip["filename"], "w")
+    outfile = open("music_driver/opn/" + chip["filename"], "w")
 
-    outfile.write("ay_tone_lookup:\n")
+    outfile.write("opn_tone_lookup:\n")
 
     for n in range(0, 12):
         note = (START_NOTE + n)

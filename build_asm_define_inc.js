@@ -152,12 +152,18 @@ var defines = [
         { name: "BANJO_HAS_OPLL", value: 0x02 },
         { name: "BANJO_HAS_AY", value: 0x04 },
         { name: "BANJO_HAS_DUAL_SN", value: 0x08 },
+        { name: "BANJO_HAS_OPL", value: 0x10 },
+        { name: "BANJO_HAS_OPN", value: 0x20 },
+        { name: "BANJO_HAS_OPNA", value: 0x40 },
     ],
     [
         { name: "BANJO_HAS_BIT_SN", value: 0 },
         { name: "BANJO_HAS_BIT_OPLL", value: 1 },
         { name: "BANJO_HAS_BIT_AY", value: 2 },
         { name: "BANJO_HAS_BIT_DUAL_SN", value: 3 },
+        { name: "BANJO_HAS_BIT_OPL", value: 4 },
+        { name: "BANJO_HAS_BIT_OPN", value: 5 },
+        { name: "BANJO_HAS_BIT_OPNA", value: 6 },
     ],
     [
         { name: "BANJO_LOOP_OFF", value: 0},

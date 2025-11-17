@@ -8,6 +8,11 @@
 ; iy : music state
 mpnl_note_on_sn:
 
+    .ifdef BANJO_3_57MHZ
+		; add 3 to the note number as the 3.57mhz pitch table starts at the note A
+		add a, 3
+    .endif
+
 	; standard note-on stuff
 	call music_note_on
 
