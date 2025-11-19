@@ -15,12 +15,55 @@ banjo_update_channels_opll_drums:
     call music_update_channel_opll
     call music_update_channel_opll
 
+    ; clear note-on/note-off bytes
+    ld hl, 0
+    ld (opll_drum_note_ons), hl
+
     ; update rhythm channels
     call music_update_channel_opll_drums
     call music_update_channel_opll_drums
     call music_update_channel_opll_drums
     call music_update_channel_opll_drums
     call music_update_channel_opll_drums
+
+    ; process note-on/note-off events
+    ; note-offs in d, note-ons in e
+    ld de, (opll_drum_note_ons)
+    ld hl, opll_drum_note_status
+
+    ; writing note-offs to rhythm register
+    ld a, 0xe
+    out (OPLL_REG_PORT), a
+
+    ; any note-off events?
+    ld a, d
+    or a, a
+    jr z, buc_opll_dr_no_note_offs
+
+        ; invert bits to clear drum note-offs
+        cpl
+        and a, (hl)
+        ld (hl), a
+
+        ; write to rhythm register
+        out (OPLL_DATA_PORT), a
+
+        call banjo_opll_write_delay
+
+    buc_opll_dr_no_note_offs:
+
+    ; any note-on events?
+    ld a, e
+    or a, a
+    jr z, buc_opll_dr_no_note_ons
+
+        or a, (hl)
+        ld (hl), a
+
+        ; write to rhythm register
+        out (OPLL_DATA_PORT), a
+
+    buc_opll_dr_no_note_ons:
 
     ret
 

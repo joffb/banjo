@@ -13,7 +13,7 @@ mpnl_opl_2op_instrument_change:
 	; don't do anything if the instrument number is the same
 	ld a, (de)
 	cp a, (ix + channel.instrument_num)
-	jr z, mpnl_opl_2op_instrument_change_done
+	jp z, mpnl_skip_2_byte_command
 		
 		; update the instrument
 		call music_instrument_change

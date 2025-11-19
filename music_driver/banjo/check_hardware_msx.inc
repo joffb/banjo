@@ -137,4 +137,35 @@ banjo_check_hardware:
 
     bch_msx_opll_done:
 
+    ld b, 0x10
+
+    bch_msx_opm_search:
+
+        ; opm detection
+        ld hl, MSX_OPM_STRING_LOC
+        ld de, bch_msx_sfg_magic_string
+        ld c, 6
+        call bch_string_search
+
+        ; check whether string search is completed
+        or a, a
+        jr z, bch_msx_opm_not_matched
+
+            ld a, b
+            dec a
+            ld (banjo_opm_slot), a
+
+            ld a, (banjo_has_chips)
+            or a, BANJO_HAS_OPM
+            ld (banjo_has_chips), a
+
+            jr bch_msx_opm_done
+
+        bch_msx_opm_not_matched:
+
+            ; loop to next slot
+            djnz bch_msx_opm_search
+
+    bch_msx_opm_done:
+
     ret

@@ -40,6 +40,7 @@
 .define BANJO_WRTSLT		0x14
 .define MSX_FMPAC_IO_ENABLE		0x7ff6
 .define MSX_FMPAC_STRING_LOC		0x4018
+.define MSX_OPM_STRING_LOC		0x80
 
 .define SLIDE_TYPE_NONE		0x0
 .define SLIDE_TYPE_UP		0x1
@@ -122,11 +123,19 @@
 .define BANJO_HAS_OPLL		0x2
 .define BANJO_HAS_AY		0x4
 .define BANJO_HAS_DUAL_SN		0x8
+.define BANJO_HAS_OPL		0x10
+.define BANJO_HAS_OPN		0x20
+.define BANJO_HAS_OPNA		0x40
+.define BANJO_HAS_OPM		0x80
 
 .define BANJO_HAS_BIT_SN		0x0
 .define BANJO_HAS_BIT_OPLL		0x1
 .define BANJO_HAS_BIT_AY		0x2
 .define BANJO_HAS_BIT_DUAL_SN		0x3
+.define BANJO_HAS_BIT_OPL		0x4
+.define BANJO_HAS_BIT_OPN		0x5
+.define BANJO_HAS_BIT_OPNA		0x6
+.define BANJO_HAS_BIT_OPM		0x7
 
 .define BANJO_LOOP_OFF		0x0
 .define BANJO_LOOP_ON		0x1

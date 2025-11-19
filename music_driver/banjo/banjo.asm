@@ -17,8 +17,11 @@
 	song_playing: db
 	song_state: INSTANCEOF music_state
 
-	banjo_memory_control_value: db
-
+	.if BANJO_SYS == 1
+		banjo_memory_control_value: db
+	.elif BANJO_SYS == 2
+		banjo_opm_slot: db
+	.endif
 .ENDS
 
 .SECTION "BANJO" free
@@ -38,6 +41,9 @@
 
 		bch_msx_opll_magic_string: 
 			.db "APRLOPLL"
+		bch_msx_sfg_magic_string:
+			.db "MCHFM0"
+
 		.include "check_hardware_msx.inc"
 		.include "init_msx.inc"
 

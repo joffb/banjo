@@ -56,6 +56,7 @@ var defines = [
         { name: "BANJO_WRTSLT", value: 0x0014 },
         { name: "MSX_FMPAC_IO_ENABLE", value: 0x7ff6 },
         { name: "MSX_FMPAC_STRING_LOC", value: 0x4018 },
+        { name: "MSX_OPM_STRING_LOC", value: 0x80 },
     ],
     [
         { name: "SLIDE_TYPE_NONE", value: 0x00 },
@@ -155,6 +156,7 @@ var defines = [
         { name: "BANJO_HAS_OPL", value: 0x10 },
         { name: "BANJO_HAS_OPN", value: 0x20 },
         { name: "BANJO_HAS_OPNA", value: 0x40 },
+        { name: "BANJO_HAS_OPM", value: 0x80 },
     ],
     [
         { name: "BANJO_HAS_BIT_SN", value: 0 },
@@ -164,6 +166,7 @@ var defines = [
         { name: "BANJO_HAS_BIT_OPL", value: 4 },
         { name: "BANJO_HAS_BIT_OPN", value: 5 },
         { name: "BANJO_HAS_BIT_OPNA", value: 6 },
+        { name: "BANJO_HAS_BIT_OPM", value: 7 },
     ],
     [
         { name: "BANJO_LOOP_OFF", value: 0},

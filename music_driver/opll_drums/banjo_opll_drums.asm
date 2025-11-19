@@ -8,6 +8,9 @@
 
     opll_drum_fixed_pitch_mode: db
 
+	opll_drum_note_ons: db
+    opll_drum_note_offs: db
+
 	opll_drum_volumes: ds 3
 
 .ENDS

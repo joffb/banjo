@@ -1,4 +1,4 @@
-python ..\..\furnace2json.py -o .\cmajor.json ..\cmajor.fur
+python ..\..\furnace2json.py -o .\cmajor.json ..\cmajor_opll_drum.fur
 python ..\..\json2sms.py -o cmajor.asm -i cmajor .\cmajor.json 
 
 python ..\..\furnace2json.py -o .\cmajor_sn.json ..\cmajor_sn.fur
