@@ -27,7 +27,7 @@ mpnl_note_on_opm:
 
     ; send note on
     ld a, (ix + channel.subchannel)
-    or a, 0x78
+    or a, (ix + channel.gp1)
     ld h, 0x8
     ld l, a
     call banjo_opm_write

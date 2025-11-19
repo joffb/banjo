@@ -23,6 +23,7 @@
 !wladx_no_queue/main.asm
 !msx_ay/main.asm
 !msx_opl/main.asm
+!msx_opm/main.asm
 !msx_opn/main.asm
 !msx_reg_test/main.asm
 

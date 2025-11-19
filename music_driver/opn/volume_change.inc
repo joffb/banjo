@@ -4,6 +4,8 @@
 
 music_volume_change_opn:
 
+	push bc
+
 	; hl = pointer to op slot count for this algorithm, first slot reg, and tls for this patch
 	; different algoritms can require a different number of tls (output volumes) to be updated
 	ld l, (ix + channel.gp2)
@@ -60,5 +62,7 @@ music_volume_change_opn:
 		ld h, a
 
 		djnz opn_slot_volume_update_loop
+
+	pop bc
 
     jp music_volume_change_opn_done

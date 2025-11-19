@@ -56,14 +56,11 @@ music_update_channel_opm:
         bit CHAN_FLAG_BIT_EX_MACRO, b
         call nz, music_update_ex_macro
 
-        ; keep flags in a
-        ld a, b
-
         ; b now has events
         ld b, (ix + channel.events)
 
         ; check if we need to update the pitch of this channel
-        ld a, CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_PITCH_CHANGE_ALWAYS | CHAN_EVENT_DUTY_CHANGED
+        ld a, CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_PITCH_CHANGE_ALWAYS
         and a, b
         jp nz, music_update_pitch_registers_opm
         music_update_pitch_registers_opm_done:

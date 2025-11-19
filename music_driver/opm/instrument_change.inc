@@ -86,6 +86,11 @@ mpnl_opm_instrument_change:
         ; clear register number from stack
         pop af
 
+        ; operator enable value for key-on
+        ld a, (de)
+        ld (ix + channel.gp1), a
+        inc de
+
         ; store pointer to rest of patch data
 		; used for volume changes
 		ld (ix + channel.gp2), e

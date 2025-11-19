@@ -28,8 +28,8 @@ music_command_jump_table_opm:
     jp mpnl_skip_2_byte_command     ; mpnl_ay_env_period_hi
 	jp mpnl_skip_2_byte_command     ; mpnl_ay_env_period_lo
 	jp mpnl_skip_2_byte_command     ; mpnl_ay_channel_mix
-	jp mpnl_skip_2_byte_command     ; mpnl_ay_noise_pitch
-	jp mpnl_skip_3_byte_command     ; mpnl_ay_env_period_word
+	jp mpnl_opm_lfo_rate
+	jp mpnl_opm_lfo_wave
 	jp mpnl_order_jump
 	jp mpnl_set_speed_1
 	jp mpnl_set_speed_2

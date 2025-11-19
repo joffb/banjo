@@ -24,4 +24,13 @@ banjo_init_opm:
 
         djnz music_init_opm_loop
 
+    ; init pms/ams depth to max
+    ld h, 0x19
+    ld l, 0x7f
+    call banjo_opm_write
+
+    ld h, 0x19
+    ld l, 0xff
+    call banjo_opm_write
+
     ret

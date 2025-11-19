@@ -36,6 +36,8 @@ AY_ENV_PERIOD_LO    = 0x15
 AY_CHANNEL_MIX      = 0x16
 AY_NOISE_PITCH      = 0x17
 AY_ENV_PERIOD_WORD  = 0x18
+OPM_LFO_RATE        = 0x17
+OPM_LFO_WAVE        = 0x18
 ORDER_JUMP          = 0x19
 SET_SPEED_1         = 0x1a
 SET_SPEED_2         = 0x1b
@@ -1053,7 +1055,7 @@ def main(argv=None):
                 fm_patch.append(0x80 | 0x40 | (instrument['fm']['algorithm'] & 0x7) | (instrument['fm']['feedback'] << 3))
 
                 # registers staring 0x30
-                fm_patch.append((instrument['fm']['ams'] & 0x7) | (instrument['fm']['fms'] << 4))
+                fm_patch.append((instrument['fm']['ams'] & 0x3) | (instrument['fm']['fms'] << 4))
 
                 # registers staring 0x40
                 # one byte per op/slot
@@ -1091,8 +1093,14 @@ def main(argv=None):
                     operator = instrument['fm']['operator_data'][j]
                     fm_patch.append(operator['rr'] | (operator['sl'] << 4))
                             
-                # additional copies of data for volume changes
+                # which operators are enabled? used for key-ons
+                # they need to be massaged a bit as the chip expects 0,1,2,3 but furnace gives 0,2,1,3
+                op_enabled = instrument['fm']['op_enabled']
+                op_enabled = (op_enabled & (1 | 8)) | ((op_enabled & 0x2) << 1) | ((op_enabled & 0x4) >> 1)
+                fm_patch.append(op_enabled << 3)
                 
+                # additional copies of data for volume changes
+
                 # different params for different algorithms
                 algorithm = instrument['fm']['algorithm'] & 0x7
                 
@@ -1431,6 +1439,21 @@ def main(argv=None):
                                     pattern_bin.append(period & 0xff)
                                     pattern_bin.append((period >> 8) & 0xff)
 
+                        # OPM effects
+                        elif channel_type['type'] == CHAN_OPM:
+
+                            # set lfo speed
+                            if line['effects'][eff] == 0x17:
+
+                                pattern_bin.append(OPM_LFO_RATE)
+                                pattern_bin.append(line['effects'][eff + 1] & 0xff)
+
+                            # set lfo wave
+                            elif line['effects'][eff] == 0x18:
+
+                                pattern_bin.append(OPM_LFO_WAVE)
+                                pattern_bin.append(line['effects'][eff + 1] & 0x3)
+                                
                     # volume
                     # if the volume has been specified on the line, or we haven't provided a volume command yet
                     if (line['volume'] != -1):

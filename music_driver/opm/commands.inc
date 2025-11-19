@@ -22,3 +22,28 @@ mpnl_opm_volume_change:
 		set CHAN_EVENT_BIT_VOLUME_CHANGE, (ix + channel.events)
 
 		jp mpnl_command_done
+
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
+mpnl_opm_lfo_rate:
+
+	; get lfo value
+	ld a, (de)
+	ld l, a
+	ld h, 0x18
+	call banjo_opm_write
+
+	jp mpnl_command_done
+
+
+; bc : jump table address (preserve this!)
+; de : instruction pointer (preserve this!)
+mpnl_opm_lfo_wave:
+
+	; get wave value
+	ld a, (de)
+	ld l, a
+	ld h, 0x1b
+	call banjo_opm_write
+
+	jp mpnl_command_done
