@@ -36,6 +36,8 @@ AY_ENV_PERIOD_LO    = 0x15
 AY_CHANNEL_MIX      = 0x16
 AY_NOISE_PITCH      = 0x17
 AY_ENV_PERIOD_WORD  = 0x18
+OPM_PAN             = 0x10
+OPM_NOISE_FREQ      = 0x16
 OPM_LFO_RATE        = 0x17
 OPM_LFO_WAVE        = 0x18
 ORDER_JUMP          = 0x19
@@ -102,6 +104,28 @@ MACRO_TYPE_DUTY     = 2
 MACRO_TYPE_WAVE     = 3
 MACRO_TYPE_PITCH    = 4
 MACRO_TYPE_EX1      = 5
+
+chan_volume_lookup = {
+    CHAN_SN76489        : 0xf,
+    CHAN_OPLL           : 0xf,
+    CHAN_OPLL_DRUMS     : 0xf,
+    CHAN_AY_3_8910      : 0xf,
+    CHAN_OPL_2OP        : 0x3f,
+    CHAN_OPL_DRUMS      : 0x3f,
+    CHAN_OPN            : 0x7f,
+    CHAN_OPNA_RHYTHM    : 0x1f,
+    CHAN_OPNA_ADPCM     : 0xff,
+    CHAN_OPM            : 0x7f,
+}
+
+inst_volume_lookup = {
+    INS_TYPE_SN76489    : 0xf,
+    INS_TYPE_OPN        : 0x7f,
+    INS_TYPE_AY_3_8910  : 0xf,
+    INS_TYPE_OPLL       : 0xf,
+    INS_TYPE_OPL        : 0x3f,
+    INS_TYPE_OPM        : 0x7f,
+}
 
 macro_type_lookup = {
     MACRO_TYPE_VOLUME: 0x02,
@@ -639,10 +663,13 @@ def main(argv=None):
                 macro_data = []
                 macro_delay = []
 
+                max_volume = inst_volume_lookup[instrument["type"]]
+
                 # process macro data
                 for j in range(0, macro["length"]):
 
-                    macro_value = (macro['data'][j] & 0xf)
+                    # convert to an attenuation
+                    macro_value = max_volume - (macro['data'][j] & max_volume)
 
                     # repeat each step if speed > 1
                     for k in range (0, macro["speed"]):
@@ -1052,16 +1079,20 @@ def main(argv=None):
                 fm_patch = []
                 
                 # registers staring 0x20
-                fm_patch.append(0x80 | 0x40 | (instrument['fm']['algorithm'] & 0x7) | (instrument['fm']['feedback'] << 3))
+                alg_fb_reg = 0x80 | 0x40 | (instrument['fm']['algorithm'] & 0x7) | (instrument['fm']['feedback'] << 3)
+                fm_patch.append(alg_fb_reg)
 
                 # registers staring 0x30
                 fm_patch.append((instrument['fm']['ams'] & 0x3) | (instrument['fm']['fms'] << 4))
+
+                # translate from export values to chip values
+                opn_dt_translate = [7, 6, 5, 0, 1, 2, 3, 4]
 
                 # registers staring 0x40
                 # one byte per op/slot
                 for j in range(0, 4):
                     operator = instrument['fm']['operator_data'][j]
-                    fm_patch.append((operator['mult'] & 0xf) | ((operator['dt'] & 0x7) << 4))
+                    fm_patch.append((operator['mult'] & 0xf) | (opn_dt_translate[operator['dt'] & 0x7] << 4))
 
                 # registers staring 0x60
                 # one byte per op/slot
@@ -1085,7 +1116,7 @@ def main(argv=None):
                 # one byte per op/slot
                 for j in range(0, 4):
                     operator = instrument['fm']['operator_data'][j]
-                    fm_patch.append(operator['rs'] | ((operator['dt2'] & 0x3) << 6))
+                    fm_patch.append(operator['d2r'] | ((operator['dt2'] & 0x3) << 6))
 
                 # registers staring 0xe0
                 # one byte per op/slot
@@ -1098,11 +1129,14 @@ def main(argv=None):
                 op_enabled = instrument['fm']['op_enabled']
                 op_enabled = (op_enabled & (1 | 8)) | ((op_enabled & 0x2) << 1) | ((op_enabled & 0x4) >> 1)
                 fm_patch.append(op_enabled << 3)
+
+                # panning shares algorithm and feedback register
+                fm_patch.append(alg_fb_reg)
                 
                 # additional copies of data for volume changes
 
                 # different params for different algorithms
-                algorithm = instrument['fm']['algorithm'] & 0x7
+                algorithm = alg_fb_reg & 0x7
                 
                 if algorithm < 4:
                     op_count = 1
@@ -1443,7 +1477,24 @@ def main(argv=None):
                         elif channel_type['type'] == CHAN_OPM:
 
                             # set lfo speed
-                            if line['effects'][eff] == 0x17:
+                            if line['effects'][eff] == 0x10:
+
+                                noise_val = line['effects'][eff + 1] & 0xff
+
+                                if noise_val != 0:
+
+                                    # max noise val
+                                    if noise_val > 32:
+                                        noise_val = 32
+
+                                    # switch noise on and set frequency
+                                    noise_val = 0x80 | (noise_val - 1)
+
+                                pattern_bin.append(OPM_NOISE_FREQ)
+                                pattern_bin.append(noise_val)
+
+                            # set lfo speed
+                            elif line['effects'][eff] == 0x17:
 
                                 pattern_bin.append(OPM_LFO_RATE)
                                 pattern_bin.append(line['effects'][eff + 1] & 0xff)
@@ -1453,7 +1504,33 @@ def main(argv=None):
 
                                 pattern_bin.append(OPM_LFO_WAVE)
                                 pattern_bin.append(line['effects'][eff + 1] & 0x3)
-                                
+
+                            # Panning
+                            elif (line['effects'][eff] == 0x80):
+
+                                pattern_bin.append(OPM_PAN)
+
+                                pan_val = line['effects'][eff + 1]
+
+                                if pan_val == 0x80:
+                                    pan_out = 0x80 | 0x40
+                                elif pan_val < 0x80:
+                                    pan_out = 0x40
+                                else:
+                                    pan_out = 0x80
+
+                                pattern_bin.append(pan_out)
+
+                            # Panning
+                            elif (line['effects'][eff] == 0x08):
+
+                                pattern_bin.append(OPM_PAN)
+
+                                pan_left = (0x40 if (line['effects'][eff + 1] & 0xf0) else 0)
+                                pan_right = (0x80 if (line['effects'][eff + 1] & 0x0f) else 0)
+
+                                pattern_bin.append(pan_left | pan_right)
+
                     # volume
                     # if the volume has been specified on the line, or we haven't provided a volume command yet
                     if (line['volume'] != -1):
@@ -1465,76 +1542,20 @@ def main(argv=None):
                         if volume != current_vol:
 
                             volume_value = 0
+                            max_volume = chan_volume_lookup[channel_type['type']]
 
-                            # sn channel, this byte can be sent straight to the output to set the volume
-                            if (channel_type['type'] == CHAN_SN76489):
-
-                                # cap volume
-                                if volume > 15:
-                                    volume = 15
-
-                                volume_value = (volume)
-
-                            elif (channel_type['type'] == CHAN_OPLL):
-
-                                # cap volume
-                                if volume > 15:
-                                    volume = 15
-                                    
-                                volume_value = (volume)
-
-                            elif (channel_type['type'] == CHAN_OPLL_DRUMS):
-
-                                # cap volume
-                                if volume > 15:
-                                    volume = 15
-
-                                volume_value = (volume)
-
-                            elif (channel_type['type'] == CHAN_AY_3_8910):
-                                
-                                # cap volume
-                                if volume > 15:
-                                    volume = 15
-
-                                volume_value = (volume)
-
-                            elif (channel_type['type'] == CHAN_OPL_2OP):
-                                
-                                # cap volume
-                                if volume > 0x3f:
-                                    volume = 0x3f
-
-                                volume_value = (volume)
-
-                            elif (channel_type['type'] == CHAN_OPN) or (channel_type['type'] == CHAN_OPM):
-                                
-                                # cap volume
-                                if volume > 0x7f:
-                                    volume = 0x7f
-
-                                volume_value = (volume)
-
-                            elif (channel_type['type'] == CHAN_OPNA_RHYTHM):
-                                
-                                # cap volume
-                                if volume > 0x1f:
-                                    volume = 0x1f
-
-                                volume_value = (volume)
+                            if volume > max_volume:
+                                volume_value = max_volume
+                            else:
+                                volume_value = volume
 
                             # volume change command and value combined
                             pattern_bin.append(VOLUME_CHANGE | (volume_value & 0x1f))
                             
-                            # opl requires almost a full byte for the volume
-                            if (channel_type['type'] == CHAN_OPL_2OP):
+                            # some chips require almost a full byte for the volume
+                            if (max_volume > 0x1f):
 
-                                pattern_bin.append(volume_value & 0x3f)
-
-                            # opl requires almost a full byte for the volume
-                            elif (channel_type['type'] == CHAN_OPN) or (channel_type['type'] == CHAN_OPM):
-
-                                pattern_bin.append(volume_value & 0x7f)
+                                pattern_bin.append(volume_value & max_volume)
 
                         current_vol = volume
 

@@ -20,16 +20,16 @@ mpnl_note_on_opm:
 	
 			; send note off
             ld h, 0x8
-			ld l, (ix + channel.subchannel)
+			ld a, (ix + channel.subchannel)
+			and a, 0x7
+			ld l, a
             call banjo_opm_write
 
 	mnon_opm_legato_done:
 
     ; send note on
-    ld a, (ix + channel.subchannel)
-    or a, (ix + channel.gp1)
     ld h, 0x8
-    ld l, a
+    ld l, (ix + channel.subchannel)
     call banjo_opm_write
 
 	; standard note-on stuff
@@ -54,7 +54,9 @@ mpnl_note_off_opm:
 
         ; send note off
         ld h, 0x8
-        ld l, (ix + channel.subchannel)
+		ld a, (ix + channel.subchannel)
+		and a, 0x7
+		ld l, a
         call banjo_opm_write
 
 	mnoff_opm_dont_write_chip:

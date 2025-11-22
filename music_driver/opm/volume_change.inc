@@ -16,8 +16,9 @@ music_volume_change_opm:
 	inc hl
 
 	; first slot reg
-	ld a, (hl)
-    add a, (ix + channel.subchannel)
+	ld a, (ix + channel.subchannel)
+	and a, 0x7
+    add a, (hl)
     ld d, a
 	inc hl
 

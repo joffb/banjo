@@ -15,19 +15,21 @@ music_calculate_volume:
 		bit CHAN_FLAG_BIT_VOLUME_MACRO, (ix + channel.flags)
 		jr z, mcv_no_volume_macro
 
-			; preserve volume
-			ld l, a
+			; volume macro should be like an attenuation
+			sub a, (ix + channel.volume_macro_vol)
 
-			; if macro volume is 0 we can finish now
-			ld a, (ix + channel.volume_macro_vol)
-			or a, a
+			; zero means we're done
 			ret z
 
-				; vol = vol - (max - volume_macro_vol)
-				; vol = vol + volume_macro_vol - max
-				add a, l
-				sub a, c
+			; continue if volume is still positive
+			jp p, mcv_vm_not_neg
 
+				; macro has made the volume go negative
+				; zero it out
+				xor a, a
+				ret
+		
+		mcv_vm_not_neg:
 		mcv_no_volume_macro:
 		
 		; master volume active? (bit 7 set)

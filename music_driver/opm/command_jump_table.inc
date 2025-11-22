@@ -21,13 +21,13 @@ music_command_jump_table_opm:
 	jp mpnl_vibrato_off
 	jp mpnl_legato_on
 	jp mpnl_legato_off
-	jp mpnl_skip_3_byte_command     ; mpnl_game_gear_pan
+	jp mpnl_opm_pan
     jp mpnl_skip_1_byte_command     ; mpnl_ay_env_on
 	jp mpnl_skip_1_byte_command     ; mpnl_ay_env_off
     jp mpnl_skip_2_byte_command     ; mpnl_ay_env_shape
     jp mpnl_skip_2_byte_command     ; mpnl_ay_env_period_hi
 	jp mpnl_skip_2_byte_command     ; mpnl_ay_env_period_lo
-	jp mpnl_skip_2_byte_command     ; mpnl_ay_channel_mix
+	jp mpnl_opm_noise
 	jp mpnl_opm_lfo_rate
 	jp mpnl_opm_lfo_wave
 	jp mpnl_order_jump

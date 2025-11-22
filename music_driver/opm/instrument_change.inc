@@ -38,8 +38,8 @@ mpnl_opm_instrument_change:
         ; 0x20 - fb/connect
         ; select register for this channel
         ld a, (ix + channel.subchannel)
+        and a, 0x7
         add a, 0x20
-        push af
 
         ld h, a
         ld a, (de)
@@ -51,11 +51,10 @@ mpnl_opm_instrument_change:
 
         ; 0x38 - pms/ams
         ; move register to correct number
-        pop af
+        ld a, h
         add a, 0x18
-        push af
-
         ld h, a
+
         ld a, (de)
         ld l, a
         call banjo_opm_write
@@ -69,11 +68,10 @@ mpnl_opm_instrument_change:
         mpnm_opm_ic_ops_loop:
 
             ; move register to next operator slot
-            pop af
+            ld a, h
             add a, 0x8
-            push af
-
             ld h, a
+
             ld a, (de)
             ld l, a
             call banjo_opm_write
@@ -83,18 +81,28 @@ mpnl_opm_instrument_change:
 
             djnz mpnm_opm_ic_ops_loop
 
-        ; clear register number from stack
-        pop af
+        ; patch pointer in hl
+        ex de, hl
 
         ; operator enable value for key-on
-        ld a, (de)
+        ; combine with subchannel
+        ld a, (ix + channel.subchannel)
+        and a, 0x7
+        or a, (hl)
+        ld (ix + channel.subchannel), a
+
+        inc hl
+
+        ; store panning/alg/fb register
+        ld a, (hl)
         ld (ix + channel.gp1), a
-        inc de
+
+        inc hl
 
         ; store pointer to rest of patch data
 		; used for volume changes
-		ld (ix + channel.gp2), e
-		ld (ix + channel.gp3), d
+		ld (ix + channel.gp2), l
+		ld (ix + channel.gp3), h
 
         ; restore bc and de
         pop de

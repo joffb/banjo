@@ -13,6 +13,7 @@ music_update_pitch_registers_opm:
 
     ; key fraction register in c
     ld a, (ix + channel.subchannel)
+    and a, 0x7
     add a, 0x30
     ld c, a
 
@@ -44,8 +45,6 @@ music_update_pitch_registers_opm:
 
     ; write to register
     call banjo_opm_write
-
-
 
     pop bc
 

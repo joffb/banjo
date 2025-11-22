@@ -33,4 +33,9 @@ banjo_init_opm:
     ld l, 0xff
     call banjo_opm_write
 
+    ; clear noise register
+    ld h, 0x0f
+    ld l, 0x00
+    call banjo_opm_write
+
     ret
