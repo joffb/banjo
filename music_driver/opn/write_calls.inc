@@ -12,7 +12,7 @@ banjo_opn_write_auto:
 
     ; offset register number
     ld a, c
-    and a, 3
+    and a, 0x3
     add a, h
     ld h, a
     

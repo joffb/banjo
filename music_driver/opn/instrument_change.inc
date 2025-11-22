@@ -112,6 +112,21 @@ mpnl_opn_instrument_change:
 			
 			call banjo_opn_write_delay_short
 
+			; operator enable value for key-on
+			; combine with subchannel
+			ld a, (ix + channel.subchannel)
+			and a, 0xf
+			or a, (hl)
+			ld (ix + channel.subchannel), a
+
+			inc hl
+
+			; store panning/ams/pms register
+			ld a, (hl)
+			ld (ix + channel.gp1), a
+
+			inc hl
+			
 			; store pointer to rest of patch data
 			; used for volume changes
 			ld (ix + channel.gp2), l

@@ -22,6 +22,11 @@ banjo_init_opna:
     ld l, 0x3f
     call banjo_opn_write
 
+    ; default lfo val
+    ld h, 0x22
+    ld l, 0x08
+    call banjo_opn_write
+
     ; fm channels
     ld b, 6
     call banjo_init_opn_chs

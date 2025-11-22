@@ -8,7 +8,9 @@ banjo_mute_channel_opn:
 
     ; silence channel via key-offs
     ld h, 0x28
-    ld l, (ix + channel.subchannel)
+    ld a, (ix + channel.subchannel)
+    and a, 0xf
+    ld l, a
     call banjo_opn_write
 
 	ret

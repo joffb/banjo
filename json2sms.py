@@ -40,6 +40,8 @@ OPM_PAN             = 0x10
 OPM_NOISE_FREQ      = 0x16
 OPM_LFO_RATE        = 0x17
 OPM_LFO_WAVE        = 0x18
+OPN_PAN             = 0x10
+OPN_LFO             = 0x17
 ORDER_JUMP          = 0x19
 SET_SPEED_1         = 0x1a
 SET_SPEED_2         = 0x1b
@@ -1030,8 +1032,18 @@ def main(argv=None):
                 
                 # registers staring 0xb4
                 # one byte for the channel
-                fm_patch.append((instrument['fm']['fms'] & 0x7) | (instrument['fm']['ams'] << 4) | 0x40 | 0x80)
-                            
+                fms_ams_val = (instrument['fm']['fms'] & 0x7) | (instrument['fm']['ams'] << 4) | 0x40 | 0x80
+                fm_patch.append(fms_ams_val)
+
+                # which operators are enabled? used for key-ons
+                # they need to be massaged a bit as the chip expects 0,1,2,3 but furnace gives 0,2,1,3
+                op_enabled = instrument['fm']['op_enabled']
+                op_enabled = (op_enabled & (1 | 8)) | ((op_enabled & 0x2) << 1) | ((op_enabled & 0x4) >> 1)
+                fm_patch.append(op_enabled << 4)
+
+                # panning shares fms/ams register
+                fm_patch.append(fms_ams_val)
+
                 # additional copies of data for volume changes
                 
                 # different params for different algorithms
@@ -1474,9 +1486,46 @@ def main(argv=None):
                                     pattern_bin.append((period >> 8) & 0xff)
 
                         # OPM effects
+                        elif channel_type['type'] == CHAN_OPN:
+
+                            # set lfo
+                            if line['effects'][eff] == 0x10:
+
+                                lfo_val = (line['effects'][eff + 1] & 0x1f) >> 1
+
+                                pattern_bin.append(OPN_LFO)
+                                pattern_bin.append(lfo_val)
+
+                            # Panning
+                            elif (line['effects'][eff] == 0x80):
+
+                                pattern_bin.append(OPN_PAN)
+
+                                pan_val = line['effects'][eff + 1]
+
+                                if pan_val == 0x80:
+                                    pan_out = 0x80 | 0x40
+                                elif pan_val < 0x80:
+                                    pan_out = 0x40
+                                else:
+                                    pan_out = 0x80
+
+                                pattern_bin.append(pan_out)
+
+                            # Panning
+                            elif (line['effects'][eff] == 0x08):
+
+                                pattern_bin.append(OPN_PAN)
+
+                                pan_left = (0x40 if (line['effects'][eff + 1] & 0xf0) else 0)
+                                pan_right = (0x80 if (line['effects'][eff + 1] & 0x0f) else 0)
+
+                                pattern_bin.append(pan_left | pan_right)
+
+                        # OPM effects
                         elif channel_type['type'] == CHAN_OPM:
 
-                            # set lfo speed
+                            # set noise mode
                             if line['effects'][eff] == 0x10:
 
                                 noise_val = line['effects'][eff + 1] & 0xff
