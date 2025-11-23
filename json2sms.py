@@ -142,6 +142,9 @@ macro_type_lookup = {
 opl_default_patch = [0x3, 0x1, 0x56, 0x0, 0xf2, 0xf3, 0xf7, 0xbc, 0xe, 0x0, 0x0, 0xe, 0x56, 0x0]
 opn_default_patch = [0x5, 0x1, 0x1, 0x1, 0x2a, 0x30, 0x12, 0x2, 0x1f, 0x1f, 0x1f, 0x1f, 0x8, 0x4, 0xa, 0x9, 0x0, 0x0, 0x0, 0x0, 0xf3, 0xb1, 0xf4, 0xf9, 0x0, 0x0, 0x0, 0x0, 0x20, 0xc0, 0x1, 0x4c, 0x2]
 
+# translate detune from export values to chip values
+opm_opn_dt_translate = [7, 6, 5, 0, 1, 2, 3, 4]
+
 # whether the drum channel needs its volume to be pre-shifted
 pre_shift_fm_drum_value = [0,0,4,0,4]
 
@@ -988,7 +991,7 @@ def main(argv=None):
                 for j in range(0, 4):
                     operator = instrument['fm']['operator_data'][j]
                     fm_patch.append(operator['mult'] | \
-                                    (operator['dt2'] << 4))
+                                    (opm_opn_dt_translate[operator['dt'] & 0x7] << 4))
                                             
                 # registers staring 0x40
                 # one byte per op/slot
@@ -1097,14 +1100,11 @@ def main(argv=None):
                 # registers staring 0x30
                 fm_patch.append((instrument['fm']['ams'] & 0x3) | (instrument['fm']['fms'] << 4))
 
-                # translate from export values to chip values
-                opn_dt_translate = [7, 6, 5, 0, 1, 2, 3, 4]
-
                 # registers staring 0x40
                 # one byte per op/slot
                 for j in range(0, 4):
                     operator = instrument['fm']['operator_data'][j]
-                    fm_patch.append((operator['mult'] & 0xf) | (opn_dt_translate[operator['dt'] & 0x7] << 4))
+                    fm_patch.append((operator['mult'] & 0xf) | (opm_opn_dt_translate[operator['dt'] & 0x7] << 4))
 
                 # registers staring 0x60
                 # one byte per op/slot
