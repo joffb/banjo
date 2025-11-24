@@ -22,50 +22,49 @@ music_volume_change_opm:
     ld d, a
 	inc hl
 
+	; calculate volume w/ volume macros and master volume
+	ld a, (iy + music_state.master_volume)
+	ld c, 0x7f
+	call music_calculate_volume_0x7f
+
+	; keep calculated volume in e
+	ld e, a
+
 	; tl pointer into de
 	; first slot reg into h
+	; calculated volume now in l
+	; c should still be 0x7f
 	ex de, hl
 
 	opm_slot_volume_update_loop:
 
-        push bc
         push hl
 
 		; get tl
 		ld a, (de)
-		and a, 0x7f
+		and a, c
 
-		; apply channel volume
-		; out = vol - tl
-		neg
-		add a, (ix + channel.volume)
+		; apply calculated volume to the tl value
+		; new_tl = tl + (0x7f - vol)
+		add a, c
+		sub a, l
 
-		; is this negative?
+		; check if vol > 0x7f (bit 7 set)
 		jp p, muv_opm_not_neg
 
-			; zero it if it is
-			xor a,a 
+			; cap at 0x7f
+			ld a, c
 
 		muv_opm_not_neg:
-		
-		; calculate volume w/ volume macro and master volume
-		; preserve hl in de
-		ld c, 0x7f
-		call music_calculate_volume
-
-		; invert back to a tl value
-		neg
-		add a, c
-		
+	
 		; register number in h
 		; value to write in l
 		ld l, a
 		call banjo_opm_write
 
         pop hl
-        pop bc
 
-		; add 4 to register numbe to move to next operator
+		; add to register number to move to next operator
 		ld a, h
 		add a, 0x8
 		ld h, a

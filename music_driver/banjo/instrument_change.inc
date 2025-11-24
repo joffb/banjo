@@ -51,16 +51,24 @@ music_instrument_change:
 	or a, (hl)
 	ld (de), a
 
-	; move along to volume_macro_ptr
-	ld a, channel.volume_macro_ptr
+	; move along to volume_macro_vol
+	ld a, channel.volume_macro_vol
 	add a, e
 	ld e, a
 	adc a, d
 	sub a, e
 	ld d, a
 
-	; move to volume macro info
+	; move to volume macro info in instrument
 	inc hl
+
+	; set volume_macro_vol to 0
+	xor a, a
+	ld (de), a
+
+	; move to volume macro ptr
+	inc de
+	inc de
 
 	; volume macro
 	; copy over macro info

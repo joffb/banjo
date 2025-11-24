@@ -12,6 +12,22 @@ banjo_set_song_master_volume:
     ld hl, song_state + music_state.flags
     set STATE_FLAG_BIT_MASTER_VOLUME_CHANGE, (hl)
 
+    ; turn the volume into an attenuation
+    cp a, 0x80
+    jr c, bssmv_not_full
+
+        ; no attenuation
+        xor a, a
+        jr bssmv_set_value
+
+    bssmv_not_full:
+
+        ; att = 0x7f - vol
+        neg
+        add a, 0x7f
+
+    bssmv_set_value:
+
     ; store the new volume
     ld hl, song_state + music_state.master_volume
     ld (hl), a

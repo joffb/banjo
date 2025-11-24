@@ -49,9 +49,6 @@ init:
 
 	call banjo_check_hardware
 
-	ld a, (banjo_has_chips)
-	and a, BANJO_HAS_OPLL
-	jr z, +
 
 		ld a, CHAN_COUNT
 		ld l, BANJO_HAS_OPLL
@@ -61,19 +58,7 @@ init:
 		ld hl, cmajor
 		call banjo_play_song
 
-		jr ++
 
-	+:
-
-		ld a, CHAN_COUNT_AY
-		ld l, BANJO_HAS_AY
-		call banjo_init
-
-		; get pointer in hl and loop mode on stack
-		ld hl, cmajor_ay
-		call banjo_play_song
-
-	++:
 
 	; set up vblank interrupt call
 	ld hl, timi_hook

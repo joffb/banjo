@@ -941,7 +941,7 @@ def main(argv=None):
                 # one byte per op/slot
                 for j in range(0, 2):
                     operator = instrument['fm']['operator_data'][j]
-                    fm_patch.append(operator['dr'] | (operator['ar'] << 4))
+                    fm_patch.append((operator['dr'] & 0xf) | ((operator['ar'] & 0xf) << 4))
 
                 # registers staring 0x80
                 # one byte per op/slot
@@ -961,13 +961,29 @@ def main(argv=None):
 
                 # additional copies of data for volume changes
                 
-                # algorithm
-                fm_patch.append((instrument['fm']['algorithm'] & 0x1) | (instrument['fm']['feedback'] << 1))
+                # algorithm determines number of op/slots to update
+                # and the starting port
+                algorithm = instrument['fm']['algorithm'] & 0x1
+                
+                # 2op fm
+                if algorithm == 0:
+                    
+                    fm_patch.append(1)
+                    fm_patch.append(0x43)
 
-                # tls
-                for j in range(0, 2):
-                    operator = instrument['fm']['operator_data'][j]
+                    operator = instrument['fm']['operator_data'][1]
                     fm_patch.append(operator['tl'] | (operator['ksl'] << 6))
+
+                # additive
+                else:
+
+                    fm_patch.append(2)
+                    fm_patch.append(0x40)
+
+                    # tls
+                    for j in range(0, 2):
+                        operator = instrument['fm']['operator_data'][j]
+                        fm_patch.append(operator['tl'] | (operator['ksl'] << 6))
 
             # write out patch data
             fm_patch_name = "fm_patch_" + str(i)
@@ -1742,7 +1758,7 @@ def main(argv=None):
     writelabel("flags")
     outfile.write(".db " + str(0 if sfx else 2) + "\n")
     writelabel("master_volume")
-    outfile.write(".db 0x80\n")
+    outfile.write(".db 0x00\n")
     writelabel("master_volume_fade")
     outfile.write(".db 0x00\n")
     writelabel("has_chips")

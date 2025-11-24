@@ -4,14 +4,14 @@
 
 music_volume_change_opll_drums:
 
-    ; get channel volume
-    ld a, (ix + channel.volume)
-    ld c, 15
-    call music_calculate_volume
+    ; calculate volume w/ volume macros and master volume
+    ld a, (iy + music_state.master_volume)
+    ld c, 0xf
+    call music_calculate_volume_0x0f
 
     ; convert to opll volume
     neg
-    add a, 15
+    add a, c
 
     ; preserve (possibly attenuated) volume
     ld d, a

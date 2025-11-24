@@ -7,10 +7,8 @@
 music_volume_change_ay:
 
     ; calculate volume w/ volume macros and master volume
-    ; for AY the quietest volume is 0 and the loudest is 15
-    ld a, (ix + channel.volume)
-    ld c, 15
-    call music_calculate_volume
+    ld a, (iy + music_state.master_volume)
+    call music_calculate_volume_0x0f
 
     ; combine new volume with envelope flag
     ld c, a
