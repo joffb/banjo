@@ -15,10 +15,14 @@
     .define OPNA_REG_PORT 0x16
     .define OPNA_DATA_PORT 0x17
 .elif BANJO_SYS == 3
-    .define OPN_REG_PORT 0xa8
-    .define OPN_DATA_PORT 0xa9
-    .define OPNA_REG_PORT 0xac
-    .define OPNA_DATA_PORT 0xad
+    .define OPN_REG_PORT_1 0x44
+    .define OPN_DATA_PORT_1 0x45
+    .define OPNA_REG_PORT_1 0x46
+    .define OPNA_DATA_PORT_1 0x47
+    .define OPN_REG_PORT_2 0xa8
+    .define OPN_DATA_PORT_2 0xa9
+    .define OPNA_REG_PORT_2 0xac
+    .define OPNA_DATA_PORT_2 0xad
 .endif
 
 .RAMSECTION "BANJO_OPN_RAM" APPENDTO "BANJO_RAM" FREE

@@ -54,7 +54,7 @@ init:
 	call banjo_init
 
 	; get pointer in hl and loop mode on stack
-	ld hl, cmajor
+	ld hl, cmajor_opn
 	call banjo_play_song
 
 

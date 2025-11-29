@@ -6,11 +6,6 @@
 ; iy: music state
 banjo_init_opn:
 
-    ld a, OPN_REG_PORT
-    ld (banjo_opn_port), a
-    ld a, OPNA_REG_PORT
-    ld (banjo_opna_port), a
-
     ; fm channels
     ld b, 3
     call banjo_init_opn_chs

@@ -1,4 +1,5 @@
 
+
 banjo_init_system_call:
 
     ; default mix to all just squares
@@ -7,4 +8,4 @@ banjo_init_system_call:
 	ld a, 0xf8
     out (AY_DATA_WRITE), a
 
-	ret
+    ret

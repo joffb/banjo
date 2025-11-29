@@ -6,11 +6,6 @@
 ; iy: music state
 banjo_init_opna:
 
-    ld a, OPN_REG_PORT
-    ld (banjo_opn_port), a
-    ld a, OPNA_REG_PORT
-    ld (banjo_opna_port), a
-
     ; enable six voices of opna fm
     ; also enables interrupts
     ld h, 0x29

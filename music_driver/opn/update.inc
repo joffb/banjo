@@ -6,9 +6,6 @@
 ; ix: channel
 ; iy: music state
 banjo_update_channels_opn:
-
-    ld a, OPN_REG_PORT
-    ld (banjo_opn_port), a
     
     call music_update_channel_opn
     call music_update_channel_opn
