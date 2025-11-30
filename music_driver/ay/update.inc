@@ -60,13 +60,16 @@ music_update_channel_ay:
         bit CHAN_EVENT_BIT_DUTY_CHANGED, b
         jr z, muc_ay_no_duty
 
+            ld c, (ix + channel.port)
+
             ; select noise reg
             ld a, 6
-            out (AY_REG_WRITE), a
+            out (c), a
 
             ; get noise amount and write it
             ld a, (ix + channel.ex_macro_val)
-            out (AY_DATA_WRITE), a
+            inc c
+            out (c), a
 
         muc_ay_no_duty:
 

@@ -7,7 +7,13 @@
 banjo_init_ay:
 
     ld b, 3
-    ld c, AY_REG_WRITE
+
+    .ifdef BANJO_PC88
+        ld a, (banjo_opn_port)
+        ld c, a
+    .else
+        ld c, AY_REG_WRITE
+    .endif
 
     music_init_ay_loop:
 

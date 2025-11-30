@@ -35,6 +35,10 @@ mpnl_ay_channel_mix:
     bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
     jp nz, mpnl_skip_2_byte_command
 
+        push bc
+
+        ld c, (ix + channel.port)
+
         ld a, (ix + channel.subchannel)
         ld hl, music_ay_channel_mix_masks
 
@@ -47,8 +51,14 @@ mpnl_ay_channel_mix:
 
         ; get current mix
         ld a, 7
-        out (AY_REG_WRITE), a
-        in a, (AY_DATA_READ)
+        out (c), a
+        inc c
+
+        .ifdef BANJO_MSX
+        inc c
+        .endif
+
+        in a, (c)
 
         ; mask out values
         and a, (hl)
@@ -59,7 +69,14 @@ mpnl_ay_channel_mix:
         ex de, hl
 
         ; output
-        out (AY_DATA_WRITE), a
+        
+        .ifdef BANJO_MSX
+        dec c
+        .endif
+
+        out (c), a
+
+        pop bc
 
         jp mpnl_command_done
 
@@ -70,12 +87,19 @@ mpnl_ay_noise_pitch:
     bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
     jp nz, mpnl_skip_2_byte_command
 
+        push bc
+
+        ld c, (ix + channel.port)
+
         ; select noise reg
         ld a, 6
-        out (AY_REG_WRITE), a
+        out (c), a
 
         ; get noise amount and write it
         ld a, (de)
-        out (AY_DATA_WRITE), a
+        inc c
+        out (c), a
+
+        pop bc
 
         jp mpnl_command_done

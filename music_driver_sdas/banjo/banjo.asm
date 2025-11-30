@@ -19,7 +19,13 @@
 	song_playing: .ds 1
     _song_state: .ds _sizeof_music_state
 
-    _banjo_memory_control_value: .ds 1
+	.ifeq BANJO_SYS - 1
+		_banjo_memory_control_value: .ds 1
+	.endif
+
+	.ifeq BANJO_SYS - 2
+		_banjo_opm_slot: .ds 1
+	.endif
 
 .ifdef BANJO_GBDK
 	.area _CODE_1 (REL,CON)
@@ -68,13 +74,23 @@
     .globl music_process_new_line
 
 	.ifeq BANJO_SYS - 1
+    	BANJO_SMS .equ 1
+        BANJO_3_57MHZ .equ 1
 		.include "check_hardware_sms.inc"
         .include "init_sms.inc"
     .endif
 
 	.ifeq BANJO_SYS - 2
+
+		BANJO_MSX .equ 1
+		BANJO_3_57MHZ .equ 1
+
         bch_msx_opll_magic_string: 
             .ascii /APRLOPLL/
+
+        bch_msx_sfg_magic_string: 
+            .ascii /MCHFM0/
+
 		.include "check_hardware_msx.inc"
         .include "init_msx.inc"
 	.endif

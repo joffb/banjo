@@ -90,7 +90,7 @@ _banjo_init_opll_drums:
     out (#OPLL_DATA_PORT), a
 
     ; store new value
-    ld (opll_drum_note_ons), a
+    ld (opll_drum_note_status), a
 
     ; initialise drums to variable pitch mode
     ld a, #0

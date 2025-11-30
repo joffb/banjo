@@ -48,7 +48,8 @@
 		.include "init_msx.inc"
 
 	.elif BANJO_SYS == 3
-	
+
+		.define BANJO_PC88 1
 		.define BANJO_4MHZ 1
 		.include "check_hardware_pc88.inc"
 		.include "init_pc88.inc"

@@ -7,10 +7,8 @@
 music_volume_change_ay: 
 
     ; calculate volume w/ volume macros and master volume
-    ; for AY the quietest volume is 0 and the loudest is 15
-    ld a, channel.volume(ix)
-    ld c, #15
-    call music_calculate_volume
+    ld a, music_state.master_volume(iy)
+    call music_calculate_volume_0x0f
 
     ; combine new volume with envelope flag
     ld c, a
@@ -29,11 +27,8 @@ music_volume_change_ay:
     add a, #8
     out (c), a
 
-    ; move c to AY_DATA_WRITE
+    ; write volume to chip
     inc c
-
-    ; get volume back into a and write to chip
-    ld a, d
-    out (c), a
+    out (c), d
 
 	jp music_volume_change_ay_done

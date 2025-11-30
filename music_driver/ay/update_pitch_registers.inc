@@ -18,25 +18,28 @@ music_update_pitch_registers_ay:
     ; shift fnum to the correct octave
     call music_fnum_shift_octave
 
+    ; get port number in c
+    ld c, (ix + channel.port)
+
     ; get fine pitch fnum register
-    ; keep it in c
+    ; keep it in e
     ld a, (ix + channel.subchannel)
     add a, a
-    ld c, a
-    out (AY_REG_WRITE), a
+    ld e, a
+    out (c), e
 
     ; write fine pitch
-    ld a, l
-    out (AY_DATA_WRITE), a
+    inc c
+    out (c), l
+    dec c
     
     ; get coarse pitch register
-    ld a, c
-    inc a
-    out (AY_REG_WRITE), a
+    inc e
+    out (c), e
 
     ; write coarse pitch
-    ld a, h
-    out (AY_DATA_WRITE), a
+    inc c
+    out (c), h
 
     pop bc
 

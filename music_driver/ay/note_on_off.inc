@@ -31,16 +31,23 @@ mpnl_note_off_ay:
 	bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
 	jr nz, mnoff_sn_dont_write_chip
 
+		push bc
+
+		ld c, (ix + channel.port)
+
 		; update volume level on chip
 		; select volume register
 		ld a, (ix + channel.subchannel)
 		add a, 8
-		out (AY_REG_WRITE), a
+		out (c), a
 
 		; write 0 to register
 		; setting note volume to 0 and switching off envelope
 		xor a, a
-		out (AY_DATA_WRITE), a
+		inc c
+		out (c), a
+
+		pop bc
 
 	mnoff_sn_dont_write_chip:
 	

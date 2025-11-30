@@ -8,8 +8,12 @@
 ; iy : pointer to music state
 mpnl_note_on_ay: 
 
+    .ifdef BANJO_3_57MHZ
+		; add 3 to the note number as the 3.57mhz pitch table starts at the note A
+		add a, #3
+    .endif 
+
 	; standard note-on stuff
-	ld hl, #ay_tone_lookup
 	call music_note_on
 
 	jp mpnl_command_done
@@ -27,16 +31,23 @@ mpnl_note_off_ay:
 	bit CHAN_FLAG_BIT_MUTED, channel.flags(ix)
 	jr nz, mnoff_sn_dont_write_chip
 
+		push bc
+
+		ld c, channel.port(ix)
+
 		; update volume level on chip
 		; select volume register
 		ld a, channel.subchannel(ix)
 		add a, #8
-		out (#AY_REG_WRITE), a
+		out (c), a
 
 		; write 0 to register
 		; setting note volume to 0 and switching off envelope
 		xor a, a
-		out (#AY_DATA_WRITE), a
+		inc c
+		out (c), a
+
+		pop bc
 
 	mnoff_sn_dont_write_chip: 
 	

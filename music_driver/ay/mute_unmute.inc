@@ -39,15 +39,19 @@ banjo_mute_all_ay:
     ld d, 8
     ld b, 3
 
+    ; get AY_REG_WRITE in c
+    ld c, (ix + channel.port)
+
     music_mute_all_ay_loop:
         
         ; select volume register
-        ld a, d
-        out (AY_REG_WRITE), a
+        out (c), d
 
         ; silence channel
-        ld a, 0
-        out (AY_DATA_WRITE), a
+        xor a, a
+        inc c
+        out (c), a
+        dec c
 
         ; move to next volume register
         inc d

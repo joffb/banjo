@@ -27,11 +27,8 @@ music_volume_change_ay:
     add a, 8
     out (c), a
 
-    ; move c to AY_DATA_WRITE
+    ; write volume to chip
     inc c
-
-    ; get volume back into a and write to chip
-    ld a, d
-    out (c), a
+    out (c), d
 
 	jp music_volume_change_ay_done

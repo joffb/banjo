@@ -8,37 +8,25 @@
 ; iy : pointer to music state
 mpnl_note_on_opll_drums: 
 
-	; preserve bc
-	push bc
-
 	; update note on status 
 	set CHAN_FLAG_BIT_NOTE_ON, channel.flags(ix)
 
     ; mark volume as requiring update
     set CHAN_EVENT_BIT_VOLUME_CHANGE, channel.events(ix)
 
-	; select rhythm trigger register
-	ld a, #0xe
-	out (#OPLL_REG_PORT), a
-
-	; sending note-off
+	; pointer to note-on byte
 	ld hl, #opll_drum_note_ons
 
-	; get drum trigger bit
-	; and use it to clear the bit for this drum
+	; set drum trigger bit in opll_drum_note_ons
+	; and use it to set note-on bit to signal we need a note-on
 	ld a, channel.gp2(ix)
-	ld c, a
-	cpl 
-	and a, (hl)
-	out (#OPLL_DATA_PORT), a
+	or a, (hl)
+	ld (hl), a
 
-	call _banjo_opll_write_delay
-
-	; send note-on
-	or a, c
-	out (#OPLL_DATA_PORT), a
-
-	; store new opll_drum_note_ons status
+	; set note-off bit in opll_drum_note_offs
+	inc hl
+	ld a, channel.gp2(ix)
+	or a, (hl)
 	ld (hl), a
 
     ; check if we should be in rhythm or fixed mode
@@ -60,9 +48,6 @@ mpnl_note_on_opll_drums:
 		set CHAN_EVENT_BIT_PITCH_CHANGED, channel.events(ix)
 
     mfmdno_fixed_pitch: 
-	
-	; restore bc
-	pop bc
 
 	jp mpnl_command_done
 
@@ -75,21 +60,10 @@ mpnl_note_off_opll_drums:
 	; clear note on flag
 	res CHAN_FLAG_BIT_NOTE_ON, channel.flags(ix)
 
-	; select rhythm control register
-	ld a, #0x0e
-	out (#OPLL_REG_PORT), a
-
-	; sending note-off
-	ld hl, #opll_drum_note_ons
-
-	; get drum trigger bit
-	; and use it to clear the bit for this drum
+	; set note-off bit in opll_drum_note_offs
+	ld hl, #opll_drum_note_offs
 	ld a, channel.gp2(ix)
-	cpl 
-	and a, (hl)
+	or a, (hl)
 	ld (hl), a
-	
-	; send note-off
-	out (#OPLL_DATA_PORT), a
 
 	jp mpnl_command_done_one_byte_command
