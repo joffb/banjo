@@ -4,30 +4,37 @@
 
 music_volume_change_sn:
 
-    ; restore original hl
-	ex de, hl
+    ; calculate volume w/ volume macros and master volume
+    ld a, (iy + music_state.master_volume)
+    ld c, 0xf
+    call music_calculate_volume_0x0f
 
-	; update local volume variable
-    inc hl
-	ld a, (hl)
-    ld (ix + channel.volume), a
+    ; convert to sn volume 
+    neg
+    add a, c
 
-    ; preserve volume in c
-    ld c, a
+    ; get channel (pre-shifted into correct position)
+    or a, (ix + channel.subchannel)
 
-    ; don't update chip volume if
-    ; channel is muted, volume macro is active or note-on is false
-    ld a, (ix + channel.flags)
-    xor a, CHAN_FLAG_NOTE_ON
-    and a, CHAN_FLAG_MUTED + CHAN_FLAG_NOTE_ON + CHAN_FLAG_VOLUME_MACRO
-    jr nz, mvc_sn_dont_update_chip
+    ; set latch and volume bit
+    or a, 0x90
 
-        ; get volume back into a
-        ; and write it to the chip
-        ld a, c
+    ; update chip
+    .ifdef BANJO_SMS
+
+        out (SN76489_PORT), a
+
+    .else
+
         ld c, (ix + channel.port)
         out (c), a
 
-    mvc_sn_dont_update_chip:
-	inc hl
-	jp music_process_new_line_subloop
+    .endif
+
+    ; ALF TEST
+    ; additional write delay
+    .ifdef BANJO_ALF
+        call banjo_sn_alf_wait
+    .endif
+
+    jp music_volume_change_sn_done

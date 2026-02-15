@@ -1,4 +1,6 @@
 
+.include "../../music_driver/banjo_defines_wladx.inc"
+
 .define VDP_CONTROL_PORT 0xbf
 .define VDP_DATA_PORT 0xbe
 
@@ -6,6 +8,7 @@
 .define VDP_WRITE_CRAM 0xc000
 .define VDP_WRITE_REGISTER 0x8000
 
+.define CHAN_COUNT CHAN_COUNT_OPLL_DRUMS + CHAN_COUNT_SN
 
 .MEMORYMAP
 	SLOTSIZE $4000
@@ -27,9 +30,13 @@ jp init
 
 .RAMSECTION "Main Vars" bank 0 slot 3
 
+	bios: db
+
 	tic: db
 	input_last: db
 	input_pressed: db
+
+	song_channels: INSTANCEOF channel (CHAN_COUNT)
 
 .ENDS
 
@@ -131,7 +138,8 @@ init:
 	; and whether there's an fm unit installed
 	call banjo_check_hardware
 
-	ld a, 2
+	ld a, CHAN_COUNT
+	ld l, BANJO_HAS_SN
 	call banjo_init
 
 	; change bank
@@ -140,10 +148,13 @@ init:
 
 	; get pointer in hl and loop mode on stack
 	ld hl, cmajor_sn
-	ld a, 1
-	push af
-	inc sp
 	call banjo_play_song
+
+	; disable looping
+	;ld a, 0
+	;call banjo_set_song_loop_mode
+
+	call banjo_sfx_init
 
 	; enable vdp screen 1 and enable vblank interrupt
 	ld hl, VDP_WRITE_REGISTER | (1 << 8) | 0b11100000
@@ -190,14 +201,20 @@ init:
 		; button 1 stops or starts play
 		ld a, (input_pressed)
 		and a, 0x10
-		jr nz, +
+		jr nz, no_button_1
 
-			ld a, (song_playing)
-			or a, a
-			call z, banjo_song_resume
-			call nz, banjo_song_stop
+			ld a, (song_channels)
+			bit CHAN_FLAG_BIT_MUTED, a
+			jr nz, +
 
-		+;
+				call banjo_mute_song
+				jr no_button_1
+
+			+:
+			
+				call banjo_unmute_song
+
+		no_button_1:
 
 		; button 2 plays an sfx
 		ld a, (input_pressed)
@@ -210,19 +227,36 @@ init:
 
 			; get pointer in hl and loop mode on stack
 			ld hl, sfx_test_sn
-			ld a, 0
-			push af
-			inc sp
 			call banjo_play_sfx
 
 		dont_play_sfx:
 
-		; change bank
+		; fade out
+		ld a, (input_pressed)
+		and a, 0x01
+		jr nz, dont_fade_out
+
+			ld a, 1
+			;call banjo_song_fade_out
+
+		dont_fade_out:
+
+		; fade in
+		ld a, (input_pressed)
+		and a, 0x02
+		jr nz, dont_fade_in
+
+			ld a, 1
+			;call banjo_song_fade_in
+
+		dont_fade_in:
+
+		; change bank and update song
 		ld a, :cmajor_sn
 		ld (SLOT_2_BANK_CHANGE), a
 		call banjo_update_song
 
-		; change bank
+		; change bank and update sfx
 		ld a, :sfx_test_sn
 		ld (SLOT_2_BANK_CHANGE), a
 		call banjo_update_sfx
@@ -236,25 +270,31 @@ init:
 		
 		jr wait_vblank
 
-.incdir "../../music_driver/"
-.include "music_driver.asm"
+.incdir "../../music_driver/banjo"
+.include "banjo.asm"
 
-; song table
-; SONG_DEF(SONG_LABEL)
-song_table_fm:
-	SONG_DEF(cmajor)
+.incdir "../../music_driver/sn"
+.include "banjo_sn.asm"
 
-song_table_sn:
-	SONG_DEF(cmajor_sn)
+.incdir "../../music_driver/opll"
+.include "banjo_opll.asm"
 
-; sfx table
-; SFX_DEF(SFX_LABEL, SFX_PRIORITY)
-sfx_table_fm:
-	SFX_DEF(sfx_test, 10)
+.incdir "../../music_driver/opll_drums"
+.include "banjo_opll_drums.asm"
 
-sfx_table_sn:
-	SFX_DEF(sfx_test_sn, 10)
+.incdir "../../music_driver/sfx"
+.include "banjo_sfx.asm"
 
+	.SMSHEADER
+		PRODUCTCODE 26, 70, 2 ; 2.5 bytes
+		VERSION 1             ; 0-15
+		REGIONCODE 4          ; 3-7
+		RESERVEDSPACE 0, 0    ; 2 bytes
+		ROMSIZE 0xc             ; 0-15
+		CHECKSUMSIZE 32*1024  ; Uses the first this-many bytes in checksum
+								;   calculations (excluding header area)
+	.ENDSMS
+		
 
 .BANK 2
 .SLOT 2

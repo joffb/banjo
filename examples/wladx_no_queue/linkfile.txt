@@ -1,2 +1,5 @@
 [objects]
 main.o
+
+[ramsections]
+bank 0 slot 3 "BANJO_RAM"

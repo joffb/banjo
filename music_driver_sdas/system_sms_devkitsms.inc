@@ -1,0 +1,4 @@
+BANJO_SYS .equ 1
+BANJO_DEVKITSMS .equ 1
+BANJO_SMS .equ 1
+.globl _SMS_Port3EBIOSvalue

@@ -8,8 +8,8 @@ python ..\..\furnace2json.py -o .\sfx_test.json ..\sfx_test.fur
 python ..\..\json2sms.py -o sfx_test.asm -s 2 -i sfx_test .\sfx_test.json 
 
 python ..\..\furnace2json.py -o .\sfx_test_sn.json ..\sfx_test_sn.fur
-python ..\..\json2sms.py -o sfx_test_sn.asm -s 2 -i sfx_test_sn .\sfx_test_sn.json 
+python ..\..\json2sms.py -o sfx_test_sn.asm -s 1 -i sfx_test_sn .\sfx_test_sn.json 
 
-wla-z80 -D BANJO_MODE=2 -D QUEUES_OFF=1 main.asm
+wla-z80 -D BANJO_SYS=1  main.asm
 wlalink -s -r linkfile.txt main.sms
 wlalink -s -r linkfile.txt main.gg

@@ -1,0 +1,2 @@
+BANJO_SYS .equ 2
+BANJO_MSX .equ 1

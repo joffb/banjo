@@ -2,64 +2,49 @@
 ; banjo sound driver
 ; Joe Kennedy 2024
 
-; include full opll code
-.ifdef INCLUDE_OPLL
+music_volume_change_opll: 
 
-music_volume_change_fm: 
+    ; choose volume register
+    ld a, channel.subchannel(ix)
+    add a, #0x30
+    out (#OPLL_REG_PORT), a
+    
+    ; calculate volume w/ volume macros and master volume
+    ld a, music_state.master_volume(iy)
+    ld c, #0xf
+    call music_calculate_volume_0x0f
+    
+    ; convert to opll volume
+    neg 
+    add a, c
 
-    ; restore original hl
-	ex de, hl
+    ; preserve volume
+    ld l, a
 
-    ; update local volume variable
-    inc hl
-    ld a, (hl)
-    and a, #0xf
-    ld channel.volume(ix), a
+    ; ex macro active?
+    bit CHAN_FLAG_BIT_EX_MACRO, channel.flags(ix)
+    jr z, mvcopll_no_ex_macro
 
-    ; preserve volume in c
-    ld c, a
+        ; is it a patch macro?
+        bit MACRO_TYPE_BIT_WAVE, channel.ex_macro_type(ix)
+        jr nz, mvcopll_no_ex_macro
 
-    ; don't update chip volume if
-    ; channel is muted, volume macro is active or note-on is false
-    ld a, channel.flags(ix)
-    xor a, #CHAN_FLAG_NOTE_ON
-    and a, #CHAN_FLAG_MUTED+CHAN_FLAG_NOTE_ON+CHAN_FLAG_VOLUME_MACRO
-    jr nz, mvc_fm_dont_update_chip
+            ; get current patch which is the upper nibble of the volume reg
+            ; and combine with new volume level
+            ld a, channel.ex_macro_val(ix)
+            or a, l
+            jr mvcopll_write
 
-        ; select volume/patch register
-        ld a, channel.subchannel(ix)
-        add a, #0x30
-        out (#OPLL_REG_PORT), a
+    mvcopll_no_ex_macro: 
 
-        ; get volume back into a
-        ; combine with patch number and write to chip
-        ld a, c
-        or a, channel.fm_patch_shifted(ix)
+        ; get current patch which is the upper nibble of the volume reg
+        ; and combine with new volume level
+        ld a, channel.gp1(ix)
+        or a, l
+
+    mvcopll_write: 
+
+        ; write new value
         out (#OPLL_DATA_PORT), a
 
-    mvc_fm_dont_update_chip: 
-	inc hl
-	jp music_process_new_line_subloop
-
-music_volume_change_fm_drums: 
-
-    ; restore original hl
-	ex de, hl
-
-    ; update local volume variable
-    inc hl
-    ld a, (hl)
-    ld channel.volume(ix), a
-
-	inc hl
-	jp music_process_new_line_subloop
-
-; don't include full opll code
-.else 
-
-music_volume_change_fm: 
-music_volume_change_fm_drums: 
-    inc hl
-	jp music_process_new_line_subloop
-
-.endif 
+        jp music_volume_change_opll_done

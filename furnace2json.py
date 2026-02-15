@@ -473,7 +473,7 @@ def main(argv=None):
                             line['effects'].append(struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0])
                             pattern_data_pointer += 1
 
-                            line['effects'].append(-1)
+                            line['effects'].append(0)
 
                         elif (read_byte & 0x10):
 
@@ -503,7 +503,7 @@ def main(argv=None):
                                 line['effects'].append(struct.unpack("B", data[pattern_data_pointer:pattern_data_pointer+1])[0])
                                 pattern_data_pointer += 1
 
-                                line['effects'].append(-1)
+                                line['effects'].append(0)
 
                             elif (fx_byte & 0x2):
 
@@ -820,6 +820,8 @@ def main(argv=None):
                 'features': [],
             }
 
+            #print(instrument)
+
             # go through features and add them to the instrument
             feature_pointer = instrument_pointer + 12
 
@@ -832,6 +834,8 @@ def main(argv=None):
                     'length': feature_header[1],
                     'data': [],
                 }
+
+                #print(feature)
 
                 # move pointer past header
                 feature_pointer += 4
@@ -902,14 +906,7 @@ def main(argv=None):
                                 )[0]
                             )
 
-                        # add macro to list
-                        if (macro['code'] == 0):
-
-                            instrument['volume_macro'] = macro
-
-                        else:
-
-                            instrument['macros'].append(macro)
+                        instrument['macros'].append(macro)
 
 
                         # advance pointer
@@ -934,11 +931,21 @@ def main(argv=None):
 
                         'opll_patch': fm_data[3] & 0x1f,
                         'am2': (fm_data[3] >> 6) & 0x3,
+                        
+                        'block': 0,
 
                         'operator_data': [],
                     }
 
-                    operator_pointer = feature_pointer + 4
+                    # block parameter
+                    if song["format_version"] >= 224:
+
+                        instrument["fm"]["block"] = data[fm_pointer + 4] & 0xf
+                        operator_pointer = feature_pointer + 5
+
+                    else:
+                        
+                        operator_pointer = feature_pointer + 4
 
                     # get operator data for each operator
                     for j in range (0, instrument['fm']['op_count']):
