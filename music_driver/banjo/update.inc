@@ -124,11 +124,9 @@ music_update:
 
 		.endif
 
-		; get pointer to channel update call
+		; get pointer to channel update call & jump to it
 		ld l, (iy + music_state.channel_update_call)
 		ld h, (iy + music_state.channel_update_call + 1)
-
-		; do call
 		call banjo_jp_hl
 
 		; clear process new line flag

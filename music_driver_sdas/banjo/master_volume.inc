@@ -35,13 +35,13 @@ _banjo_set_song_master_volume:
     ret 
 
 
-; a: fade amount to subtract from master volume per frame
-_banjo_song_fade_out: 
+; a: fade amount to subtract from master volume attenuation per frame
+_banjo_song_fade_in: 
 
     neg 
 
-; a: fade amount to add to master volume per frame
-_banjo_song_fade_in: 
+; a: fade amount to add to master volume attenuation per frame
+_banjo_song_fade_out: 
 
     ld hl, #_song_state+music_state.master_volume_fade
     ld (hl), a
@@ -53,11 +53,13 @@ _banjo_update_fade:
 
     push bc
 
+    ; get the fade amount
+    ; negative values will fade in (reduce the attenuation)
     ld a, music_state.master_volume_fade(iy)
     bit 7, a
-    jr nz, buf_fade_out
+    jr nz, buf_fade_in
 
-        ; fading in
+        ; fading out by increasing the attenuation
         add a, music_state.master_volume(iy)
         
         ; if is this >= 0x80 we're done
@@ -65,31 +67,30 @@ _banjo_update_fade:
         bit 7, a
         jr z, buf_done
 
-            ; set fade value to 0 and master volume to 0x80
+            ; set fade value to 0 and master volume attenuation to 0x7f
             ld music_state.master_volume_fade(iy), #0
-            ld a, #0x80
+            ld a, #0x7f
 
             jr buf_done
 
-    buf_fade_out: 
+    buf_fade_in: 
 
-        ; invert fade amount as we'll be using sub
-        neg 
-        ld c, a
+        ; fading in by decreasing the attenuation
+        add a, music_state.master_volume(iy)
 
-        ; fading out
-        ld a, music_state.master_volume(iy)
-        sub a, c
+        ; if the attenuation has gone negative we're done
+        ; otherwise just update the volume
+        bit 7, a
+        jr z, buf_done
 
-        ; if there was no carry, it's still >0
-        jr nc, buf_done
-
-            ; if there was carry, we're done
-            ld music_state.master_volume_fade(iy), #0
-            ld a, #0x0
+            ; set fade value to 0 and master volume attenuation to 0
+            xor a, a
+            ld music_state.master_volume_fade(iy), a
 
     buf_done: 
 
+        ; update master volume attenuation
+        ; flag that the master volume has been changed
         ld music_state.master_volume(iy), a
         set STATE_FLAG_BIT_MASTER_VOLUME_CHANGE, music_state.flags(iy)
 

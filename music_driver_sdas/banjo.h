@@ -72,17 +72,14 @@ typedef void (*banjo_func_ptr_t)(void);
 
 typedef struct instrument_s {
 
-    unsigned char volume_macro_len;
-    unsigned char volume_macro_loop;
+    unsigned char macro_flags;
     const unsigned char * volume_macro_ptr;
-
-    unsigned char ex_macro_len;
+    const unsigned char * arp_macro_ptr;
     unsigned char ex_macro_type;
-    unsigned char ex_macro_loop;
     const unsigned char * ex_macro_ptr;
-
     unsigned char fm_preset;
     const unsigned char * fm_patch;
+    unsigned char padding;
 
 } instrument_t;
 
@@ -136,40 +133,35 @@ typedef struct channel_s {
     unsigned char events;
 
     unsigned int freq;
-    unsigned int target_freq;
+    unsigned char target_freq;
 
     unsigned char volume;
     unsigned char midi_note;
     unsigned char instrument_num;
             
-    unsigned char slide_amount;
-    unsigned char slide_type;
-    
-    unsigned char vibrato_depth;
-    unsigned char vibrato_counter;
-    unsigned char vibrato_counter_add;
-
-    unsigned char arpeggio_pos;
-    unsigned char arpeggio;
+    unsigned char effect1;
+    unsigned char effect2;
+    unsigned char effect3;
 
     unsigned char * pattern_ptr;
-    unsigned char line_wait;
-    unsigned char tic_wait;
+    unsigned char wait;
 
-    unsigned char volume_macro_len;
     unsigned char volume_macro_vol;
     unsigned char volume_macro_pos;
-    unsigned char volume_macro_loop;
     const unsigned char * volume_macro_ptr;
 
-    unsigned char ex_macro_type;
-    unsigned char ex_macro_len;
+    unsigned char arp_macro_vol;
+    unsigned char arp_macro_pos;
+    const unsigned char * arp_macro_ptr;
+
     unsigned char ex_macro_val;    
     unsigned char ex_macro_pos;
-    unsigned char ex_macro_loop;
+    unsigned char ex_macro_type;
     const unsigned char * ex_macro_ptr;
 
-    unsigned char patch;
+    unsigned char gp1;
+    unsigned char gp2;
+    unsigned char gp3;
     
 } channel_t;
 

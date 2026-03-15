@@ -64,36 +64,13 @@
     .globl mpnl_note_delay, mpnl_note_release
     .globl mpnl_skip_1_byte_command, mpnl_skip_2_byte_command, mpnl_skip_3_byte_command
 
-    .globl music_note_on
-    .globl music_calc_fnum, music_fnum_lookup, music_fnum_shift_octave, music_calculate_volume
-    .globl music_instrument_change
-    .globl music_divmod12
-    
-    .globl music_update
     .globl music_play
     .globl music_process_new_line
-
-	.ifeq BANJO_SYS - 1
-    	BANJO_SMS .equ 1
-        BANJO_3_57MHZ .equ 1
-		.include "check_hardware_sms.inc"
-        .include "init_sms.inc"
-    .endif
-
-	.ifeq BANJO_SYS - 2
-
-		BANJO_MSX .equ 1
-		BANJO_3_57MHZ .equ 1
-
-        bch_msx_opll_magic_string: 
-            .ascii /APRLOPLL/
-
-        bch_msx_sfg_magic_string: 
-            .ascii /MCHFM0/
-
-		.include "check_hardware_msx.inc"
-        .include "init_msx.inc"
-	.endif
+    .globl music_note_on
+    .globl music_calc_fnum, music_fnum_lookup, music_fnum_shift_octave
+    .globl music_calculate_volume_0x0f, music_calculate_volume_0x1f, music_calculate_volume_0x3f, music_calculate_volume_0x7f
+    .globl music_update, music_instrument_change
+    .globl music_divmod12
 
 
     .include "commands.inc"
@@ -107,6 +84,29 @@
     .include "stop.inc"
     .include "update_pitch_registers.inc"
     .include "update.inc"
+
+	.ifdef BANJO_SMS
+	
+		BANJO_3_57MHZ .equ 1
+		
+		.include "check_hardware_sms.inc"
+		.include "init_sms.inc"
+
+    .endif
+	
+	.ifdef BANJO_MSX
+
+		BANJO_3_57MHZ .equ 1
+
+		bch_msx_opll_magic_string: 
+			.ascis /APRLOPLL/
+		bch_msx_sfg_magic_string:
+			.ascis /MCHFM0/
+
+		.include "check_hardware_msx.inc"
+		.include "init_msx.inc"
+
+	.endif
 
     .ifndef BANJO_MINIMAL
     .include "arpeggio.inc"

@@ -18,7 +18,7 @@
 
 .area _DATA (REL,CON)
 
-    opll_drum_note_ons: .ds 1
+    opll_drum_note_status: .ds 1
 
 .ifdef BANJO_GBDK
 	.area _CODE_1 (REL,CON)
@@ -36,8 +36,8 @@
 
     ; used in opll_drum
     .globl music_update_channel_opll
-    .globl opll_drum_note_ons
     .globl fm_tone_lookup
+    .globl opll_drum_note_status
 
     .include "fnums_fm.inc"
     .include "command_jump_table.inc"

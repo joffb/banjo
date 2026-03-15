@@ -19,7 +19,10 @@
 .area _DATA (REL,CON)
 
     opll_drum_fixed_pitch_mode: .ds 1
-    
+  
+	opll_drum_note_ons: .ds 1
+    opll_drum_note_offs: .ds 1
+
 	opll_drum_volumes: .ds 3
 
 .ifdef BANJO_GBDK

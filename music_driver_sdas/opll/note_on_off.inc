@@ -9,25 +9,21 @@
 ; iy : pointer to music state
 mpnl_note_on_opll: 
 
-	; send note off if there's a note currently playing and we're not playing legato
-	; and the channel isn't muted
-	bit CHAN_FLAG_BIT_NOTE_ON, channel.flags(ix)
-	jr z, mnon_opll_legato_done
+	; send note off if we're not playing legato
+	; check for legato
+	bit CHAN_EVENT_BIT_LEGATO, channel.events(ix)
+	jr nz, mnon_opll_legato_done
 
-		; check for legato
-		bit CHAN_EVENT_BIT_LEGATO, channel.events(ix)
-		jr nz, mnon_opll_legato_done
-	
-			; send note off
-			ld a, channel.subchannel(ix)
-			add a, #0x20
-			out (#OPLL_REG_PORT), a
+		; send note off
+		ld a, channel.subchannel(ix)
+		add a, #0x20
+		out (#OPLL_REG_PORT), a
 
-			ld a, channel.gp2(ix)
-			and a, #0xf
-			out (#OPLL_DATA_PORT), a
+		ld a, channel.gp2(ix)
+		and a, #0xf
+		out (#OPLL_DATA_PORT), a
 
-			call _banjo_opll_write_delay
+		call _banjo_opll_write_delay
 		
 	mnon_opll_legato_done: 
 

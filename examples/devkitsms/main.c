@@ -52,12 +52,37 @@ void main(void)
 
 		keys = SMS_getKeysPressed();
 
+		// play sfx
 		if (keys & 0x20)
 		{
 			banjo_queue_sfx(0);
 		}
+		
+		if (keys & 0x01)
+		{
+			banjo_song_fade_out(1);
+		}
 
+		if (keys & 0x02)
+		{
+			banjo_song_fade_in(1);
+		}
+
+		if (keys & 0x04)
+		{
+			SMS_mapROMBank(song_state.bank);
+			banjo_song_stop();
+		}
+
+		if (keys & 0x08)
+		{
+			SMS_mapROMBank(song_state.bank);
+			banjo_song_resume();
+		}
+
+		SMS_setBackdropColor(1);
 		banjo_update();
+		SMS_setBackdropColor(0);
 
 		tic++;
 	}
