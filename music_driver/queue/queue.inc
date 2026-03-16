@@ -119,6 +119,10 @@ music_handle_sfx_queue:
             ld iy, sfx_state
             call music_play
 
+            ; for sfx we just need to mute a channel
+            ld a, (iy + music_state.sfx_channel)
+            call banjo_mute_song_channel_from_sfx
+
             ; update bank on music_state
             pop af
             ld (iy + music_state.bank), a

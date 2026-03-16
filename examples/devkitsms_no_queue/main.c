@@ -51,8 +51,16 @@ void main(void)
 		// play sfx
 		if (keys & 0x20)
 		{
-			SMS_mapROMBank(3);
-			banjo_play_sfx(&sfx_test_sn);
+			if (banjo_has_chips & BANJO_HAS_OPLL)
+			{
+				SMS_mapROMBank(2);
+				banjo_play_sfx(&sfx_test);
+			}
+			else
+			{
+				SMS_mapROMBank(3);
+				banjo_play_sfx(&sfx_test_sn);
+			}
 		}
 		
 		if (keys & 0x01)

@@ -1,5 +1,5 @@
 XL4
-H 2 areas 11 global symbols
+H 2 areas 12 global symbols
 M BANJO_SFX
 S music_update Ref00000000
 S song_playing Ref00000000
@@ -9,6 +9,7 @@ S bmsc_sfx_jump Ref00000000
 S _banjo_unmute_song_channel Ref00000000
 S music_play Ref00000000
 A _CODE size A3 flags 0 addr 0
+S _banjo_mute_song_channel_from_sfx Def00000096
 S _banjo_set_sfx_loop_mode Def00000080
 S _banjo_set_sfx_master_volume Def0000008C
 S _banjo_sfx_init Def00000000

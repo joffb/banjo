@@ -38,11 +38,11 @@ mpnl_note_on_opn:
 		ld l, (ix + channel.subchannel)
 		call banjo_opn_write
 
-	mnon_opn_dont_write_chip:
-
 	; standard note-on stuff
 	ld a, (de)
 	call music_note_on
+
+	mnon_opn_dont_write_chip:
 
 	jp mpnl_command_done
 

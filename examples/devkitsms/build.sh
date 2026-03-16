@@ -12,7 +12,7 @@ python3 ../../json2sms.py -o sfx_test.asm -s 2 -i sfx_test --sdas -a BANK -b 2 .
 sdasz80 -g -o sfx_test.rel ../../music_driver_sdas/banjo_defines_sdas.inc sfx_test.asm
 
 python3 ../../furnace2json.py -o ./sfx_test_sn.json ../sfx_test_sn.fur
-python3 ../../json2sms.py -o sfx_test_sn.asm -s 2 -i sfx_test_sn --sdas -a BANK -b 3 ./sfx_test_sn.json
+python3 ../../json2sms.py -o sfx_test_sn.asm -s 1 -i sfx_test_sn --sdas -a BANK -b 3 ./sfx_test_sn.json
 sdasz80 -g -o sfx_test_sn.rel ../../music_driver_sdas/banjo_defines_sdas.inc sfx_test_sn.asm
 
 sdcc -c -I../../music_driver_sdas -mz80 main.c
