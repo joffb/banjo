@@ -13,6 +13,7 @@ _banjo_init_opll_drums:
 
         ; default volume
         ld channel.volume(ix), #0x0f
+        ld channel.volume_macro_vol(ix), #0
 
         ; temp set fm patch to 15
         ld channel.gp1(ix), #0xf0
@@ -42,6 +43,7 @@ _banjo_init_opll_drums:
 
         ; default volume
         ld channel.volume(ix), #0x0f
+        ld channel.volume_macro_vol(ix), #0
 
         ; temp set fm patch to 15
         ld channel.gp1(ix), #0xf0
