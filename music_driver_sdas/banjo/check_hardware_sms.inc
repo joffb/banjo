@@ -29,8 +29,6 @@ _banjo_check_hardware_slot_select:
     ld a, #BANJO_HAS_SN
     ld (_banjo_has_chips), a
 
-    ; get memory control register value which should have been set from the bios
-
     ; check for fm unit
     ; disable i/o
     ld a, (_banjo_memory_control_value)
@@ -78,6 +76,7 @@ _banjo_check_hardware_slot_select:
     ld a, (_banjo_memory_control_value)
     out (#SMS_MEMORY_CONTROL_PORT), a
     
+    ; check the count of correct read/write matches
     ; count = 2 implies mark 3 with fm (0, 1 will match)
     ; count = 4 implies sms with fm unit (0, 1, 2, 3 will match)
     ; counts of 1 or 3 imply no unit
