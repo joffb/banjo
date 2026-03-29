@@ -6,39 +6,34 @@
 ; variable, corresponding to what was found
 banjo_check_hardware:
 
-    ; clear the "has_chips" variable and system flags
-    xor a, a
-    ld (banjo_has_chips), a
-    ld (banjo_system_flags), a
+    ; assume cart slot
+    ld a, SMS_MEMORY_CONTROL_CART_ENABLE
 
-    ; for SMS, assume the SN is present
-    ld a, (banjo_has_chips)
-    or a, BANJO_HAS_SN
-    ld (banjo_has_chips), a
+; banjo_check_hardware variation
+; to pass in a value to select whether the program's media is
+; cart/card/expansion slot
+banjo_check_hardware_slot_select:
 
-    ; get memory control register value which should have been set from the bios
-
-    .ifdef BANJO_DEVKITSMS
-        ; devkitsms preserves the value in a separate variable
-        ld a, (_SMS_Port3EBIOSvalue)
-    .endif
-
-    .ifdef BANJO_GBDK
-        ; gbdk preserves the value in a separate variable
-        ld a, (__BIOS)
-    .endif
-
-    .ifndef BANJO_DEVKITSMS
-        .ifndef BANJO_GBDK
-            ld a, (0xc000)
-        .endif
-    .endif
+    ; enable i/o and ram
+    or a, SMS_MEMORY_CONTROL_RAM_ENABLE | SMS_MEMORY_CONTROL_IO_ENABLE
+    cpl
 
     ; store the register value in our own variable
     ld (banjo_memory_control_value), a
 
+    ; clear the system flags variable
+    xor a, a
+    ld (banjo_system_flags), a
+
+    ; for SMS, assume the SN is present
+    ld a, BANJO_HAS_SN
+    ld (banjo_has_chips), a
+
+    ; get memory control register value which should have been set from the bios
+
     ; check for fm unit
     ; disable i/o
+    ld a, (banjo_memory_control_value)
     set 2, a
     out (SMS_MEMORY_CONTROL_PORT), a
 
