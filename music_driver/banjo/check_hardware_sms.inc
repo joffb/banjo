@@ -5,29 +5,48 @@
 ; check for presence of hardware and set bits in the banjo_has_chips
 ; variable, corresponding to what was found
 banjo_check_hardware:
-
-    ; assume cart slot
-    ld a, SMS_MEMORY_CONTROL_CART_ENABLE
-
-; banjo_check_hardware variation
-; to pass in a value to select whether the program's media is
-; cart/card/expansion slot
-banjo_check_hardware_slot_select:
-
-    ; enable i/o and ram
-    or a, SMS_MEMORY_CONTROL_RAM_ENABLE | SMS_MEMORY_CONTROL_IO_ENABLE
-    cpl
-
-    ; store the register value in our own variable
-    ld (banjo_memory_control_value), a
-
-    ; clear the system flags variable
-    xor a, a
-    ld (banjo_system_flags), a
-
+    
     ; for SMS, assume the SN is present
     ld a, BANJO_HAS_SN
     ld (banjo_has_chips), a
+    
+    ; clear the system flags
+    xor a, a
+    ld (banjo_system_flags), a
+
+    .ifndef BANJO_NO_BIOS
+
+        ; if we know we have a bios
+        ; get memory control register value which should have been set from the bios
+
+        .ifdef BANJO_DEVKITSMS
+            ; devkitsms preserves the value in a separate variable
+            ld a, (_SMS_Port3EBIOSvalue)
+        .endif
+
+        .ifdef BANJO_GBDK
+            ; gbdk preserves the value in a separate variable
+            ld a, (__BIOS)
+        .endif
+
+        .ifndef BANJO_DEVKITSMS
+            .ifndef BANJO_GBDK
+                ld a, (0xc000)
+            .endif
+        .endif
+
+    .endif
+
+    .ifdef BANJO_NO_BIOS
+
+        ; if we don't have a bios
+        ; get memory control register value by checking all slots
+        call banjo_get_memory_control_value
+
+    .endif 
+
+    ; store the register value in our own variable
+    ld (banjo_memory_control_value), a
 
     ; check for fm unit
     ; disable i/o
@@ -126,3 +145,78 @@ banjo_check_hardware_slot_select:
     bch_not_game_gear:
 
     ret
+
+.ifdef BANJO_NO_BIOS
+
+banjo_check_hardware_signature:
+
+	.db 0xba, 0xba, 0xba, 0xba
+
+banjo_find_current_slot:
+
+	; slot select mask
+	ld d, 0b11101111
+	
+	; port value with no slots enabled
+	ld e, 0xeb
+
+	banjo_find_current_slot_loop:
+
+		; rotate mask
+		rlc d
+		jr nc, banjo_fcs_not_found
+
+		; combine with port value with no slots enabled
+		ld a, d
+		and a, e
+		out (0x3e), a
+
+		ld a, 0xba
+		ld b, 4
+		ld hl, banjo_check_hardware_signature
+		
+		; check the signature matches what we expect
+		banjo_fcs_signature_loop:
+			cp a, (hl)
+			inc hl
+			jr nz, banjo_find_current_slot_loop	
+			djnz banjo_fcs_signature_loop	
+		
+		; at this point we've detected the slot
+		; get slot value into a and return
+		ld a, d
+		and a, e
+		ret
+		
+		; if we can't find the slot, assume cartridge and hope for the best
+		banjo_fcs_not_found:
+		ld a, 0xab
+		out (0x3e), a
+		ret
+		
+banjo_find_current_slot_end:
+
+banjo_get_memory_control_value:
+
+	; ensure interrupts are disabled
+	di 
+	
+	; copy check code to ram, relative to stack 
+	ld hl, banjo_find_current_slot - banjo_find_current_slot_end - 2
+	add hl, sp
+	
+	; preserve start address
+	push hl
+	
+	; do the copy 
+	ex de, hl
+	ld hl, banjo_find_current_slot
+	ld bc, banjo_find_current_slot_end - banjo_find_current_slot
+	ldir
+	
+	; restore start address and jump to it
+	; the code in ram will `ret` when it's done
+	pop hl
+	jp (hl)
+
+.endif
