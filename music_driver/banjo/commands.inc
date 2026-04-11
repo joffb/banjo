@@ -106,6 +106,8 @@ mpnl_slide_off:
 ; de : instruction pointer (preserve this!)
 mpnl_arpeggio:
 
+	.ifndef BANJO_DISABLE_ARPEGGIO
+
 	; keep arp values
 	ld a, (de)
 	ld l, a
@@ -134,11 +136,15 @@ mpnl_arpeggio:
 	; set "pitch always changing" flag
 	set CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
 
+	.endif
+
 	jp mpnl_command_done
 
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
 mpnl_arpeggio_off:
+
+	.ifndef BANJO_DISABLE_ARPEGGIO
 
 	; clear arpeggio flag
 	ld a, (ix + channel.flags)
@@ -150,6 +156,8 @@ mpnl_arpeggio_off:
 	
 	; clear the "pitch always changing" flag
 	res CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
+
+	.endif
 
 	jp mpnl_command_done_one_byte_command
 

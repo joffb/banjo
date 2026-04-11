@@ -2,31 +2,41 @@
 ; banjo sound driver
 ; Joe Kennedy 2024
 
-music_update_arpeggio:
+.ifndef BANJO_DISABLE_ARPEGGIO
 
-    ; decrement arpeggio position and check if it has gone negative
-    dec (ix + channel.effect1)
-    jp m, mpct_arp_reset
+    music_update_arpeggio:
 
-        ; if it wasn't zero after decrementing, use the first value
-        jr z, mpct_arp_val2
+        ; decrement arpeggio position and check if it has gone negative
+        dec (ix + channel.effect1)
+        jp m, mpct_arp_reset
 
-            ld a, (ix + channel.effect2)
+            ; if it wasn't zero after decrementing, use the first value
+            jr z, mpct_arp_val2
+
+                ld a, (ix + channel.effect2)
+                ret
+
+            ; if it was zero after decrementing, use the second value
+            mpct_arp_val2:
+
+                ld a, (ix + channel.effect3)
+                ret
+
+        mpct_arp_reset:
+
+            ; arp position has gone negative, reset it to 2
+            ld (ix + channel.effect1), 2
+
+            ; return 0
+            xor a, a
+
             ret
 
-        ; if it was zero after decrementing, use the second value
-        mpct_arp_val2:
+.endif
 
-            ld a, (ix + channel.effect3)
-            ret
+.ifdef BANJO_DISABLE_ARPEGGIO
 
-    mpct_arp_reset:
-
-        ; arp position has gone negative, reset it to 2
-        ld (ix + channel.effect1), 2
-
-        ; return 0
-        xor a, a
-
+    music_update_arpeggio:
         ret
-        
+
+.endif

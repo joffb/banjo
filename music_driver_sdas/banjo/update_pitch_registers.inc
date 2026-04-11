@@ -26,6 +26,8 @@ music_calc_fnum:
 		ld l, channel.freq(ix)
 		ld h, channel.freq+1(ix)
 
+		.ifndef BANJO_DISABLE_ARPEGGIO
+
 		; arp effect active?
 		bit CHAN_FLAG_BIT_ARPEGGIO, b
 		jr z, mnc_no_arp
@@ -36,6 +38,8 @@ music_calc_fnum:
 			ld h, a
 
 		mnc_no_arp: 
+
+		.endif 
 
 		; arp macro active?
 		bit CHAN_FLAG_BIT_ARP_MACRO, b
