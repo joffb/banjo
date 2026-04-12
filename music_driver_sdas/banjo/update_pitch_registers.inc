@@ -71,6 +71,8 @@ music_calc_fnum:
 		mnc_no_arp_macro: 
 		mnc_arp_macro_done: 
 
+		.ifndef BANJO_DISABLE_VIBRATO
+
 		; vibrato active?
 		bit CHAN_FLAG_BIT_VIBRATO, b
 		jr z, mnc_no_vibrato
@@ -80,6 +82,8 @@ music_calc_fnum:
 			add hl, de
 
 		mnc_no_vibrato: 
+
+		.endif 
 
 	mnc_slide_done: 
 

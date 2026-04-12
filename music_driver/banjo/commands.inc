@@ -166,6 +166,8 @@ mpnl_arpeggio_off:
 ; de : instruction pointer (preserve this!)
 mpnl_vibrato:
 
+	.ifndef BANJO_DISABLE_VIBRATO
+	
 	; initialise vibrato counter
 	ld (ix + channel.effect1), 0
 
@@ -191,11 +193,15 @@ mpnl_vibrato:
 	; set "pitch always changing" flag
 	set CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
 
+	.endif
+
 	jp mpnl_command_done
 
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
 mpnl_vibrato_off:
+
+	.ifndef BANJO_DISABLE_VIBRATO
 
 	; clear vibrato flag
 	ld a, (ix + channel.flags)
@@ -207,6 +213,8 @@ mpnl_vibrato_off:
 
 	; clear the "pitch always changing" flag
 	res CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
+
+	.endif
 
 	jp mpnl_command_done_one_byte_command
 

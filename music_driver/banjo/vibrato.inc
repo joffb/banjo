@@ -4,6 +4,8 @@
 
 ; out = ""; for (i = 0; i < 16; i++) { row = []; for (j = 0; j < 16; j++) { row.push(Math.floor(Math.sin((Math.PI/32) * j) * (i + 1) * 8));} out += ("\t.db " + row.join(",") + "\n"); } console.log(out);
 
+.ifndef BANJO_DISABLE_VIBRATO
+
 ; quarter of sine table
 ; 16 rows, one for each vibrato amplitude
 ; 16 values per row, other quadrants of sine are calculated
@@ -90,3 +92,12 @@ music_update_vibrato:
         ld e, a
 
 		ret
+
+.endif
+
+.ifdef BANJO_DISABLE_VIBRATO
+
+music_update_vibrato:
+    ret
+
+.endif
