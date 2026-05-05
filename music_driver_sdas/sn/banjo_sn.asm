@@ -11,6 +11,11 @@ SN76489_2_PORT .equ 0x7b
 SN76489_3_PORT .equ 0x7f
 SN76489_4_PORT .equ 0x7f
 
+.ifdef BANJO_SMS
+	.ifndef BANJO_3_57MHZ
+		BANJO_3_57MHZ .equ 1
+	.endif
+.endif
 
 .globl _banjo_init_sn
 .globl _banjo_init_sfx_channel_sn, _banjo_mute_all_sn

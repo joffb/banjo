@@ -10,6 +10,12 @@ AY_REG_WRITE .equ 0xa0
 AY_DATA_WRITE .equ 0xa1
 AY_DATA_READ .equ 0xa2
 
+.ifdef BANJO_MSX
+	.ifndef BANJO_3_57MHZ
+		BANJO_3_57MHZ .equ 1
+	.endif
+.endif
+
 .area _CODE (REL,CON)
 
 	.globl _banjo_init_ay, _banjo_init_dual_ay

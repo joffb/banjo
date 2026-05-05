@@ -1634,12 +1634,8 @@ def main(argv=None):
 
                         midi_note = (note['note'] + (note['octave'] * 12)) & 0x7f
 
-                        if (channel_type['type'] == CHAN_SN76489) or (channel_type['type'] == CHAN_AY_3_8910):
-
-                            midi_note = midi_note - 12
-
-                            if midi_note < 0:
-                                midi_note += 12
+                        if midi_note < 0:
+                            midi_note = 0
 
                         # note command and note number combined
                         pattern_bin.append(NOTE_ON | midi_note)

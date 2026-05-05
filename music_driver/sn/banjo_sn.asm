@@ -9,11 +9,21 @@
 	.define SN76489_2_PORT 0x7b
 	.define SN76489_3_PORT 0x7f
 	.define SN76489_4_PORT 0x7b
+
+	.ifndef BANJO_3_57MHZ
+		.define BANJO_3_57MHZ 1
+	.endif
+
 .elif BANJO_SYS == 2
 	.define SN76489_PORT 0x7f
 	.define SN76489_2_PORT 0x7b
 	.define SN76489_3_PORT 0x7f
 	.define SN76489_4_PORT 0x7b
+
+	.ifndef BANJO_3_57MHZ
+		.define BANJO_3_57MHZ 1
+	.endif
+
 ; ALF TEST
 .elif BANJO_SYS == 9
 	.define SN76489_PORT 0x7f

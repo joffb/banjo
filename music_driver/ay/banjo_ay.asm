@@ -8,10 +8,20 @@
 	.define AY_REG_WRITE 0xa0
 	.define AY_DATA_WRITE 0xa1
 	.define AY_DATA_READ 0xa2
+
+	.ifndef BANJO_3_57MHZ
+		.define BANJO_3_57MHZ 1
+	.endif
+
 .elif BANJO_SYS == 2
 	.define AY_REG_WRITE 0xa0
 	.define AY_DATA_WRITE 0xa1
 	.define AY_DATA_READ 0xa2
+
+	.ifndef BANJO_3_57MHZ
+		.define BANJO_3_57MHZ 1
+	.endif
+
 .elif BANJO_SYS == 3
 	.define AY_REG_WRITE 0x44
 	.define AY_DATA_WRITE 0x45

@@ -86,17 +86,13 @@
     .include "update.inc"
 
 	.ifdef BANJO_SMS
-	
-		BANJO_3_57MHZ .equ 1
-		
+
 		.include "check_hardware_sms.inc"
 		.include "init_sms.inc"
 
     .endif
 	
 	.ifdef BANJO_MSX
-
-		BANJO_3_57MHZ .equ 1
 
 		bch_msx_opll_magic_string: 
 			.ascis /APRLOPLL/

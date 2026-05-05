@@ -9,8 +9,15 @@
 mpnl_note_on_ay: 
 
     .ifdef BANJO_3_57MHZ
-		; add 3 to the note number as the 3.57mhz pitch table starts at the note A
-		add a, #3
+
+		; sub 9 from the note number as the 3.57mhz pitch table starts at the note A
+		sub a, #9
+		jr nc, mpl_no_ay_nc
+
+			xor a, a
+
+		mpl_no_ay_nc: 
+
     .endif 
 
 	; standard note-on stuff
