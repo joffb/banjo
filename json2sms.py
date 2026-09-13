@@ -1354,20 +1354,23 @@ def main(argv=None):
                         # set speed 1
                         elif (line['effects'][eff] == 0x09):
                             
-                            pattern_bin.append(SET_SPEED_1)
-                            pattern_bin.append(line['effects'][eff + 1] * (song['time_base'] + 1))
+                            if line['effects'][eff + 1] != 0:
+                                pattern_bin.append(SET_SPEED_1)
+                                pattern_bin.append(line['effects'][eff + 1] * (song['time_base'] + 1))
 
                         # set speed 2
                         elif (line['effects'][eff] == 0x0f):
                             
-                            pattern_bin.append(SET_SPEED_2)
-                            pattern_bin.append(line['effects'][eff + 1] * (song['time_base'] + 1))
+                            if line['effects'][eff + 1] != 0:
+                                pattern_bin.append(SET_SPEED_2)
+                                pattern_bin.append(line['effects'][eff + 1] * (song['time_base'] + 1))
 
                         # note delay
                         elif (line['effects'][eff] == 0xed):
 
-                            pattern_bin.append(NOTE_DELAY)
-                            pattern_bin.append(line['effects'][eff + 1] * (song['time_base'] + 1))
+                            if line['effects'][eff + 1] != 0:
+                                pattern_bin.append(NOTE_DELAY)
+                                pattern_bin.append(line['effects'][eff + 1] * (song['time_base'] + 1))
 
                         # sn modes
                         if channel_type['type'] == CHAN_SN76489:

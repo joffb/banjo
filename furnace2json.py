@@ -843,7 +843,11 @@ def main(argv=None):
                 # Instrument name feature
                 if (feature['code'] == "NA"):
 
-                    instrument['name'] = data[feature_pointer : feature_pointer + feature['length'] - 1].decode()
+                    try:
+                        instrument['name'] = data[feature_pointer : feature_pointer + feature['length'] - 1].decode()
+                    except UnicodeDecodeError:
+                        instrument['name'] = "Instrument " + str(i)
+                        print ("warning: invalid unicode character in name of instrument " + str(i))
 
                 # End features if we reach this code
                 elif (feature['code'] == "EN"):

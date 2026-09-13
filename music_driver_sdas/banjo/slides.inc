@@ -22,7 +22,7 @@ music_update_slide:
 	ld h, channel.freq+1(ix)
 
 	; check slide type 
-	ld a, channel.effect1(ix)
+	ld a, channel.effect3(ix)
 	dec a
 	jr nz, mus_not_up
 

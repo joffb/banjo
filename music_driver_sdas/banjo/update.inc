@@ -46,6 +46,7 @@ music_update:
 		bit STATE_FLAG_BIT_ORDER_JUMP, music_state.flags(iy)
 		jr z, music_update_no_jump
 
+			ld a, music_state.order_jump(iy)
 			call music_jump_channels_order_and_pattern
 		
 			jr music_update_tics_done

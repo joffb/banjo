@@ -45,7 +45,7 @@ mpnl_volume_change:
 mpnl_pitch_slide_up: 
 	
 	; set slide_type = 1
-	ld channel.effect1(ix), #SLIDE_TYPE_UP
+	ld channel.effect3(ix), #SLIDE_TYPE_UP
 
 	jr mpnl_slide_common
 
@@ -54,7 +54,7 @@ mpnl_pitch_slide_up:
 mpnl_pitch_slide_down: 
 	
 	; set slide_type = 2
-	ld channel.effect1(ix), #SLIDE_TYPE_DOWN
+	ld channel.effect3(ix), #SLIDE_TYPE_DOWN
 
 	jr mpnl_slide_common
 
@@ -63,7 +63,7 @@ mpnl_pitch_slide_down:
 mpnl_portamento: 
 
 	; set slide_type = 4
-	ld channel.effect1(ix), #SLIDE_TYPE_PORTA
+	ld channel.effect3(ix), #SLIDE_TYPE_PORTA
 
 mpnl_slide_common: 
 
@@ -86,17 +86,20 @@ mpnl_slide_common:
 mpnl_slide_off: 
 
 	; clear slide
-	ld channel.effect1(ix), #0
+	ld channel.effect3(ix), #0
 
 	; clear slide flag
 	ld a, channel.flags(ix)
-	and a, #~(CHAN_FLAG_ARPEGGIO|CHAN_FLAG_VIBRATO|CHAN_FLAG_SLIDE)
+	and a, #~(CHAN_FLAG_SLIDE)
 	ld channel.flags(ix), a
 
 	; mark pitch as requiring update
 	set CHAN_EVENT_BIT_PITCH_CHANGED, channel.events(ix)
 
-	; clear the "pitch always changing" flag
+	; clear the "pitch always changing" flag if no other effect is running
+	ld a, #CHAN_FLAG_ARPEGGIO|CHAN_FLAG_VIBRATO
+	and a, channel.flags(ix)
+	jp nz, mpnl_command_done_one_byte_command
 	res CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, channel.events(ix)
 
 	jp mpnl_command_done_one_byte_command
@@ -148,13 +151,16 @@ mpnl_arpeggio_off:
 
 	; clear arpeggio flag
 	ld a, channel.flags(ix)
-	and a, #~(CHAN_FLAG_ARPEGGIO|CHAN_FLAG_VIBRATO|CHAN_FLAG_SLIDE)
+	and a, #~(CHAN_FLAG_ARPEGGIO)
 	ld channel.flags(ix), a
 
 	; mark pitch as requiring update
 	set CHAN_EVENT_BIT_PITCH_CHANGED, channel.events(ix)
 	
-	; clear the "pitch always changing" flag
+	; clear the "pitch always changing" flag if no other effect is running
+	ld a, #CHAN_FLAG_VIBRATO|CHAN_FLAG_SLIDE
+	and a, channel.flags(ix)
+	jp nz, mpnl_command_done_one_byte_command
 	res CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, channel.events(ix)
 
 	.endif 
@@ -205,13 +211,16 @@ mpnl_vibrato_off:
 
 	; clear vibrato flag
 	ld a, channel.flags(ix)
-	and a, #~(CHAN_FLAG_ARPEGGIO|CHAN_FLAG_VIBRATO|CHAN_FLAG_SLIDE)
+	and a, #~(CHAN_FLAG_VIBRATO)
 	ld channel.flags(ix), a
 
 	; mark pitch as requiring update
 	set CHAN_EVENT_BIT_PITCH_CHANGED, channel.events(ix)
 
-	; clear the "pitch always changing" flag
+	; clear the "pitch always changing" flag if no other effect is running
+	ld a, #CHAN_FLAG_ARPEGGIO|CHAN_FLAG_SLIDE
+	and a, channel.flags(ix)
+	jp nz, mpnl_command_done_one_byte_command
 	res CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, channel.events(ix)
 
 	.endif 

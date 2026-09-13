@@ -22,7 +22,7 @@ music_note_on:
 	jr z, mnon_no_portamento
 
 		; is portamento on?
-		bit 2, channel.effect1(ix)
+		bit 2, channel.effect3(ix)
 		jr z, mnon_no_portamento
 
 			; portamento on, put fnum in target_freq
@@ -66,7 +66,7 @@ music_note_on:
 
 			xor a, a
 
-			; reset vibrato position			
+			; reset vibrato position
 			ld channel.effect1(ix), a
 
 			; reset macro positions
