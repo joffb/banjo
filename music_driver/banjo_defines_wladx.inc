@@ -62,8 +62,8 @@
 
 .define CHAN_FLAG_MUTED		0x1
 .define CHAN_FLAG_NOTE_ON		0x2
-.define CHAN_FLAG_ARP_MACRO		0x4
-.define CHAN_FLAG_VOLUME_MACRO		0x8
+.define CHAN_FLAG_VOLUME_MACRO		0x4
+.define CHAN_FLAG_ARP_MACRO		0x8
 .define CHAN_FLAG_VIBRATO		0x10
 .define CHAN_FLAG_ARPEGGIO		0x20
 .define CHAN_FLAG_SLIDE		0x40
@@ -71,8 +71,8 @@
 
 .define CHAN_FLAG_BIT_MUTED		0x0
 .define CHAN_FLAG_BIT_NOTE_ON		0x1
-.define CHAN_FLAG_BIT_ARP_MACRO		0x2
-.define CHAN_FLAG_BIT_VOLUME_MACRO		0x3
+.define CHAN_FLAG_BIT_VOLUME_MACRO		0x2
+.define CHAN_FLAG_BIT_ARP_MACRO		0x3
 .define CHAN_FLAG_BIT_VIBRATO		0x4
 .define CHAN_FLAG_BIT_ARPEGGIO		0x5
 .define CHAN_FLAG_BIT_SLIDE		0x6
@@ -172,13 +172,12 @@
 	volume: db
 	midi_note: db
 	instrument_num: db
+	instrument_ptr: dw
 	effect1: db
 	effect2: db
 	effect3: db
 	pattern_ptr: dw		; pointer to the current pattern
 	wait: db		; wait for this many lines
-	volume_macro_vol: db
-	volume_macro_pos: db
 	volume_macro_ptr: dw
 	arp_macro_val: db
 	arp_macro_pos: db

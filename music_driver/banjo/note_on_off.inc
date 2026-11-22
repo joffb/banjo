@@ -66,7 +66,7 @@ music_note_on:
 
 			xor a, a
 
-			; reset vibrato position
+			; reset vibrato/arp effect position
 			ld (ix + channel.effect1), a
 
 			; reset macro positions
@@ -74,8 +74,18 @@ music_note_on:
 			ld (ix + channel.ex_macro_pos), a
 			ld (ix + channel.arp_macro_pos), a
 
-			add a, 2
-			ld (ix + channel.volume_macro_pos), a
+
+			; get instrument pointer into hl
+			ld l, (ix + channel.instrument_ptr)
+			ld h, (ix + channel.instrument_ptr + 1)
+			inc hl
+
+			; reset volume macro pointer
+			ld a, (hl)
+			ld (ix + channel.volume_macro_ptr), a
+			inc hl
+			ld a, (hl)
+			ld (ix + channel.volume_macro_ptr + 1), a
 
 			ret
 

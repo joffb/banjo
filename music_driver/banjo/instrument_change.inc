@@ -39,6 +39,10 @@ music_instrument_change:
 	ld b, (iy + music_state.instrument_ptrs + 1)
 	add hl, bc
 
+	; store instrument pointer
+	ld (ix + channel.instrument_ptr), l
+	ld (ix + channel.instrument_ptr + 1), h
+
 	; get channel struct ptr ix into de
 	push ix
 	pop de
@@ -51,28 +55,18 @@ music_instrument_change:
 	or a, (hl)
 	ld (de), a
 
-	; move along to volume_macro_vol
-	ld a, channel.volume_macro_vol
+	; move to volume macro info in instrument
+	inc hl
+
+	; move along to volume_macro_ptr
+	ld a, channel.volume_macro_ptr
 	add a, e
 	ld e, a
 	adc a, d
 	sub a, e
 	ld d, a
 
-	; move to volume macro info in instrument
-	inc hl
-
-	; set volume_macro_vol to 0
-	xor a, a
-	ld (de), a
-
-	; move to volume macro ptr
-	inc de
-	inc de
-
-	; volume macro
-	; copy over macro info
-	; ptr
+	; copy over volume macro ptr
 	ldi
 	ldi
 

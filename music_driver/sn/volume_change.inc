@@ -6,12 +6,11 @@ music_volume_change_sn:
 
     ; calculate volume w/ volume macros and master volume
     ld a, (iy + music_state.master_volume)
-    ld c, 0xf
     call music_calculate_volume_0x0f
 
     ; convert to sn volume 
     neg
-    add a, c
+    add a, 0xf
 
     ; get channel (pre-shifted into correct position)
     or a, (ix + channel.subchannel)

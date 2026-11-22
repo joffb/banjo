@@ -82,8 +82,8 @@ var defines = [
     [
         { name: "CHAN_FLAG_MUTED", value: 0x01 },
         { name: "CHAN_FLAG_NOTE_ON", value: 0x02 },
-        { name: "CHAN_FLAG_ARP_MACRO", value: 0x04 },
-        { name: "CHAN_FLAG_VOLUME_MACRO", value: 0x8 },
+        { name: "CHAN_FLAG_VOLUME_MACRO", value: 0x4 },
+        { name: "CHAN_FLAG_ARP_MACRO", value: 0x08 },
         { name: "CHAN_FLAG_VIBRATO", value: 0x10 },
         { name: "CHAN_FLAG_ARPEGGIO", value: 0x20 },
         { name: "CHAN_FLAG_SLIDE", value: 0x40 },
@@ -92,8 +92,8 @@ var defines = [
     [
         { name: "CHAN_FLAG_BIT_MUTED", value: 0 },
         { name: "CHAN_FLAG_BIT_NOTE_ON", value: 1 },
-        { name: "CHAN_FLAG_BIT_ARP_MACRO", value: 2 },
-        { name: "CHAN_FLAG_BIT_VOLUME_MACRO", value: 3 },
+        { name: "CHAN_FLAG_BIT_VOLUME_MACRO", value: 2 },
+        { name: "CHAN_FLAG_BIT_ARP_MACRO", value: 3 },
         { name: "CHAN_FLAG_BIT_VIBRATO", value: 4 },
         { name: "CHAN_FLAG_BIT_ARPEGGIO", value: 5 },
         { name: "CHAN_FLAG_BIT_SLIDE", value: 6 },
@@ -219,6 +219,7 @@ var structs = [
             { name: "volume", size: "db" },
             { name: "midi_note", size: "db" },
             { name: "instrument_num", size: "db" },
+            { name: "instrument_ptr", size: "dw" },
             
             { name: "effect1", size: "db" },
             { name: "effect2", size: "db" },
@@ -228,8 +229,6 @@ var structs = [
             { name: "pattern_ptr", size: "dw", comment: "pointer to the current pattern" },
             { name: "wait", size: "db", comment: "wait for this many lines"},
             
-            { name: "volume_macro_vol", size: "db"},
-            { name: "volume_macro_pos", size: "db"},
             { name: "volume_macro_ptr", size: "dw"},
 
             { name: "arp_macro_val", size: "db"},

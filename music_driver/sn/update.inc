@@ -40,10 +40,6 @@ music_update_channel_sn:
     bit CHAN_FLAG_BIT_NOTE_ON, b
     jr z, mucsn_done
 
-        ; process volume macro
-        bit CHAN_FLAG_BIT_VOLUME_MACRO, b
-        call nz, music_update_volume_macro
-
         ; process arp macro
         bit CHAN_FLAG_BIT_ARP_MACRO, b
         call nz, music_update_arp_macro
@@ -90,10 +86,13 @@ music_update_channel_sn:
         call nz, music_update_pitch_registers_sn
 
         .assert CHAN_EVENT_VOLUME_CHANGE == STATE_FLAG_MASTER_VOLUME_CHANGE
+        .assert CHAN_EVENT_VOLUME_CHANGE == CHAN_FLAG_VOLUME_MACRO
 
         ; update volume if there's been a volume change event
+        ; or there's a volume macro
         ; or the master volume changed
         ld a, b
+        or a, (ix + channel.flags)
         or a, (iy + music_state.flags)
         and a, CHAN_EVENT_VOLUME_CHANGE
         jp nz, music_volume_change_sn

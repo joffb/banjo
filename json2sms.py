@@ -58,8 +58,8 @@ TEMP_END_LINE       = 0x100    # used when processing end line to avoid collisio
 INSTRUMENT_SIZE     = 16
 FM_PATCH_SIZE       = 8
 
-CHAN_FLAG_VOLUME_MACRO = 0x08
-CHAN_FLAG_ARP_MACRO = 0x04
+CHAN_FLAG_VOLUME_MACRO = 0x04
+CHAN_FLAG_ARP_MACRO = 0x08
 CHAN_FLAG_EX_MACRO = 0x80
 
 CHIP_SN76489        = 0x03      # 0x03: SMS (SN76489) - 4 channels
@@ -658,8 +658,32 @@ def main(argv=None):
             if macro["type"] == 1:
                 macro = adsr_to_sequence(macro)
 
-
+            # sanity check loop value
             if macro["loop"] != 0xff and macro["loop"] >= macro["length"]:
+                macro["loop"] = 0xff
+
+            # sanity check release value
+            if macro["release"] != 0xff and macro["release"] >= macro["length"]:
+                macro["release"] = 0xff
+
+            # calculate release loop position
+            # no release stage
+            if macro["release"] == 0xff:
+
+                macro["release_loop"] = 0xff
+
+            # release stage with no loop value
+            # or loop value > release point
+            elif macro["loop"] == 0xff or macro["loop"] > macro["release"]: 
+
+                macro["release_loop"] = macro["release"]
+
+            # release stage with loop < release point
+            else:
+
+                macro["release_loop"] = macro["loop"]
+
+                # no longer using this as a loop point
                 macro["loop"] = 0xff
 
             # volume macro
@@ -683,56 +707,12 @@ def main(argv=None):
                 # delay at start of macro
                 for j in range(0, macro["delay"]):
                     macro_delay.append(macro_data[0])
-
-                # volume macro can have a "sustain" stage and a "release" stage
-                # release stage is triggered by Note Release/Macro Release in Furnace
-
-                # calculate loop position and total length
-                macro_sus_loop = (((macro["loop"] * macro["speed"]) + macro["delay"] + 4) if macro["loop"] != 0xff else 0)
-                macro_sus_len = (macro["length"] * macro["speed"]) + macro["delay"] + 4
-
-                # no release stage, just duplicate the sustain values
-                if macro["release"] == 0xff:
-
-                    macro_rel_loop = macro_sus_loop
-                    macro_rel_len = macro_sus_len
-
-                # there is a release stage
-                else:
-
-                    # release length is the entire macro
-                    macro_rel_len = macro_sus_len
-
-                    # sustain length is up to the release point
-                    macro_sus_len = (macro["release"] * macro["speed"]) + macro["delay"] + 4 + 1
-                    
-                    # no loop point set
-                    if macro["loop"] == 0xff:
-
-                        # no release loop
-                        macro_rel_loop = 0
-                        # the sustain loop point is the release point
-                        macro_sus_loop = macro_sus_len - 1
-
-                    # loop is before the release point
-                    elif macro["loop"] < macro["release"]:
-                        
-                        # no release loop, & the sustain loop point stays the same
-                        macro_rel_loop = 0
-
-                    # loop is after the release point
-                    elif macro["loop"] >= macro["release"]:
-
-                        # release loop is the sustain loop point
-                        macro_rel_loop = macro_sus_loop
-                        # the sustain loop point is the release point
-                        macro_sus_loop = macro_sus_len - 1
                 
                 # combine all data
-                macro["data"] = [macro_sus_len, macro_sus_loop, macro_rel_len, macro_rel_loop] + macro_delay + macro_data
+                macro["data"] = macro_delay + macro_data
 
                 macro_data_name = "macro_volume_" + str(i)
-                macros[macro_data_name] = macro['data']
+                macros[macro_data_name] = macro
                 new_instrument["volume_macro_ptr"] = macro_data_name
 
             # currently no ex macro for this instrument
@@ -1704,9 +1684,14 @@ def main(argv=None):
     # output asm/h file
     outfile = open(str(out_filename), "w")
 
+    def getlabel(label):
+
+        return (song_prefix + "_" + label)
+
     def writelabel(label):
 
-        outfile.write(song_prefix + "_" + label + ":" + "\n")
+        outfile.write(getlabel(label) + ":" + "\n")
+
 
     bank_number = str(options.bank) if (options.bank) else "0"
 
@@ -1862,7 +1847,46 @@ def main(argv=None):
     for key in macros:
 
         writelabel(key)
-        outfile.write(".db " + ", ".join(map(hex, macros[key])) + "\n")
+
+        macro = macros[key]
+
+        if "type" in macro and macro["type"] == MACRO_TYPE_VOLUME:
+
+            if macro["loop"] == 0xff:
+                macro["loop"] = len(macro["data"]) - 1
+
+            if macro["release"] != 0xff:
+                macro["loop"] = macro["loop"] + 3
+
+            # no release
+            if macro["release"] == 0xff:
+
+                # write all macro values
+                outfile.write(".db " + ", ".join(map(hex, macro["data"])) + "\n")
+
+                # loop back
+                outfile.write(".db 0x80 ; macro jump\n")
+                outfile.write(".dw " + getlabel(key) + " + " + str(macro["loop"]) + "\n")
+
+            # release
+            else:
+
+                # write macro values up to release point
+                outfile.write(".db " + ", ".join(map(hex, macro["data"][0:macro["release"]+1])) + "\n")
+
+                # repeat loop
+                outfile.write(".db 0x81 ; macro release\n")
+                outfile.write(".dw " + getlabel(key) + " + " + str(macro["release_loop"]) + "\n")
+
+                # write remaining macro values
+                outfile.write(".db " + ", ".join(map(hex, macro["data"][macro["release"]+1:])) + "\n")
+
+                # loop back
+                outfile.write(".db 0x80 ; macro jump\n")
+                outfile.write(".dw " + getlabel(key) + " + " + str(macro["loop"]) + "\n")
+
+        else:
+            outfile.write(".db " + ", ".join(map(hex, macros[key])) + "\n")
 
     outfile.write("\n" + "\n")
 

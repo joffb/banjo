@@ -60,8 +60,8 @@ CHAN_COUNT_AY			.equ		0x3
 
 CHAN_FLAG_MUTED			.equ		0x1
 CHAN_FLAG_NOTE_ON			.equ		0x2
-CHAN_FLAG_ARP_MACRO			.equ		0x4
-CHAN_FLAG_VOLUME_MACRO			.equ		0x8
+CHAN_FLAG_VOLUME_MACRO			.equ		0x4
+CHAN_FLAG_ARP_MACRO			.equ		0x8
 CHAN_FLAG_VIBRATO			.equ		0x10
 CHAN_FLAG_ARPEGGIO			.equ		0x20
 CHAN_FLAG_SLIDE			.equ		0x40
@@ -69,8 +69,8 @@ CHAN_FLAG_EX_MACRO			.equ		0x80
 
 CHAN_FLAG_BIT_MUTED			.equ		0x0
 CHAN_FLAG_BIT_NOTE_ON			.equ		0x1
-CHAN_FLAG_BIT_ARP_MACRO			.equ		0x2
-CHAN_FLAG_BIT_VOLUME_MACRO			.equ		0x3
+CHAN_FLAG_BIT_VOLUME_MACRO			.equ		0x2
+CHAN_FLAG_BIT_ARP_MACRO			.equ		0x3
 CHAN_FLAG_BIT_VIBRATO			.equ		0x4
 CHAN_FLAG_BIT_ARPEGGIO			.equ		0x5
 CHAN_FLAG_BIT_SLIDE			.equ		0x6
@@ -168,13 +168,12 @@ channel.target_freq .equ 6		; target fnum/tone used for portamento
 channel.volume .equ 7
 channel.midi_note .equ 8
 channel.instrument_num .equ 9
-channel.effect1 .equ 10
-channel.effect2 .equ 11
-channel.effect3 .equ 12
-channel.pattern_ptr .equ 13		; pointer to the current pattern
-channel.wait .equ 15		; wait for this many lines
-channel.volume_macro_vol .equ 16
-channel.volume_macro_pos .equ 17
+channel.instrument_ptr .equ 10
+channel.effect1 .equ 12
+channel.effect2 .equ 13
+channel.effect3 .equ 14
+channel.pattern_ptr .equ 15		; pointer to the current pattern
+channel.wait .equ 17		; wait for this many lines
 channel.volume_macro_ptr .equ 18
 channel.arp_macro_val .equ 20
 channel.arp_macro_pos .equ 21
