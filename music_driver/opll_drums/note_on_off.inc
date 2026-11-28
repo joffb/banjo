@@ -8,47 +8,51 @@
 ; iy : pointer to music state
 mpnl_note_on_opll_drums:
 
-	; update note on status 
-	set CHAN_FLAG_BIT_NOTE_ON, c
+	; don't do anything if we're muted
+	bit CHAN_FLAG_BIT_MUTED, c
+	jp nz, mpnl_command_done
 
-    ; mark volume as requiring update
-    set CHAN_EVENT_BIT_VOLUME_CHANGE, b
+		; update note on status 
+		set CHAN_FLAG_BIT_NOTE_ON, c
 
-	; pointer to note-on byte
-	ld hl, opll_drum_note_ons
+		; mark volume as requiring update
+		set CHAN_EVENT_BIT_VOLUME_CHANGE, b
 
-	; set drum trigger bit in opll_drum_note_ons
-	; and use it to set note-on bit to signal we need a note-on
-	ld a, (ix + channel.gp2)
-	or a, (hl)
-	ld (hl), a
+		; pointer to note-on byte
+		ld hl, opll_drum_note_ons
 
-	; set note-off bit in opll_drum_note_offs
-	inc hl
-	ld a, (ix + channel.gp2)
-	or a, (hl)
-	ld (hl), a
+		; set drum trigger bit in opll_drum_note_ons
+		; and use it to set note-on bit to signal we need a note-on
+		ld a, (ix + channel.gp2)
+		or a, (hl)
+		ld (hl), a
 
-    ; check if we should be in rhythm or fixed mode
-    ld a, (opll_drum_fixed_pitch_mode)
-    or a, a
-    jr nz, mfmdno_fixed_pitch
+		; set note-off bit in opll_drum_note_offs
+		inc hl
+		ld a, (ix + channel.gp2)
+		or a, (hl)
+		ld (hl), a
 
-        ; get note
-        ld a, (de)
-		and a, 0x7f
+		; check if we should be in rhythm or fixed mode
+		ld a, (opll_drum_fixed_pitch_mode)
+		or a, a
+		jr nz, mfmdno_fixed_pitch
 
-        ; update freq
-        ld (ix + channel.freq + 1), a
-		xor a, a
-		ld (ix + channel.freq), a
+			; get note
+			ld a, (de)
+			and a, 0x7f
 
-		; mark pitch as requiring update
-		set CHAN_EVENT_BIT_PITCH_CHANGED, b
+			; update freq
+			ld (ix + channel.freq + 1), a
+			ld (ix + channel.freq), 0
 
-    mfmdno_fixed_pitch:
+			; mark pitch as requiring update
+			set CHAN_EVENT_BIT_PITCH_CHANGED, b
 
-	jp mpnl_command_done
+		mfmdno_fixed_pitch:
+
+		jp mpnl_command_done
+
 
 ; bc : jump table address (preserve this!)
 ; de : instruction pointer (preserve this!)
@@ -56,13 +60,17 @@ mpnl_note_on_opll_drums:
 ; iy : pointer to music state
 mpnl_note_off_opll_drums:
 
-	; clear note on flag
-	res CHAN_FLAG_BIT_NOTE_ON, c
+	; don't do anything if we're muted
+	bit CHAN_FLAG_BIT_MUTED, c
+	jp nz, mpnl_command_done_one_byte_command
 
-	; set note-off bit in opll_drum_note_offs
-	ld hl, opll_drum_note_offs
-	ld a, (ix + channel.gp2)
-	or a, (hl)
-	ld (hl), a
+		; clear note on flag
+		res CHAN_FLAG_BIT_NOTE_ON, c
 
-	jp mpnl_command_done_one_byte_command
+		; set note-off bit in opll_drum_note_offs
+		ld hl, opll_drum_note_offs
+		ld a, (ix + channel.gp2)
+		or a, (hl)
+		ld (hl), a
+
+		jp mpnl_command_done_one_byte_command

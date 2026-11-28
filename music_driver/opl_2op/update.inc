@@ -107,9 +107,6 @@ music_update_channel_opl_2op:
         ld a, b
         and a, CHAN_EVENT_VOLUME_CHANGE | CHAN_EVENT_VOLUME_MACRO
         jp nz, music_volume_change_opl_2op
-        
-        bit STATE_FLAG_BIT_MASTER_VOLUME_CHANGE, (iy + music_state.flags)
-        jp nz, music_volume_change_opl_2op      
         music_volume_change_opl_2op_done:
 
         ; clear temporary events

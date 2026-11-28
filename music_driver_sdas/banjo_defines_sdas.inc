@@ -154,9 +154,8 @@ instrument.macro_events .equ 1
 instrument.volume_macro_ptr .equ 2
 instrument.arp_macro_ptr .equ 4
 instrument.ex_macro_ptr .equ 6
-instrument.fm_preset .equ 8
-instrument.fm_patch .equ 9
-instrument.padding .equ 11
+instrument.instrument_call_data .equ 8
+instrument.instrument_call .equ 10
 _sizeof_instrument .equ 12
 
 channel.flags .equ 0

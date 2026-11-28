@@ -193,6 +193,8 @@ banjo_song_resume:
 		ld a, 1
 		ld (song_playing), a
 	
+		call banjo_unmute_song
+
 		ret
 
 ; a: loop mode

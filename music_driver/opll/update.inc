@@ -84,9 +84,6 @@ music_update_channel_opll:
         ld a, b
         and a, CHAN_EVENT_VOLUME_CHANGE | CHAN_EVENT_VOLUME_MACRO
         jp nz, music_volume_change_opll
-        
-        bit STATE_FLAG_BIT_MASTER_VOLUME_CHANGE, (iy + music_state.flags)
-        jp nz, music_volume_change_opll      
         music_volume_change_opll_done:
 
         ; check if we need to update the pitch of this channel

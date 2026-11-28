@@ -42,7 +42,7 @@
 	.include "commands.inc"
 	.include "commands_envelopes.inc"
 	.include "init.inc"
-	.include "mute_unmute.inc"
+	;.include "mute_unmute.inc"
 	.include "note_on_off.inc"
 	.include "update.inc"
 	.include "update_pitch_registers.inc"

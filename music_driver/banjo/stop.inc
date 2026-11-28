@@ -10,21 +10,8 @@ banjo_song_stop:
     or a, a
     ret z
 
-        push ix
-        push iy
-
-        ld ix, song_channels
-        ld iy, song_state
-
-		; get pointer to channel init call
-		ld l, (iy + music_state.song_mute)
-		ld h, (iy + music_state.song_mute + 1)
-
-		; run call
-        call banjo_jp_hl
-
-        pop iy
-        pop ix        
+        call banjo_mute_song
+        call banjo_update_song
 
         xor a, a
         ld (song_playing), a

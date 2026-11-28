@@ -159,8 +159,9 @@ banjo_set_sfx_master_volume:
 ; a: channel to mute
 banjo_mute_song_channel_from_sfx:
 
-    ; preserve channel number
+    ; channel number into hl
     ld l, a
+    ld h, 0
 
     ; check if the song is playing 
     ; do nothing if it isn't
@@ -168,7 +169,4 @@ banjo_mute_song_channel_from_sfx:
     or a, a
     ret z
 
-    push ix
-    push iy
-
-    jp bmsc_sfx_jump
+        jp bmsc_sfx_jump

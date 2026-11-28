@@ -77,8 +77,75 @@ music_instrument_change:
 	ldi
 	ldi
 
+	mic_run_call:
+
+	; get pointer to extended instrument data
+	ld e, (hl)
+	inc hl
+	ld d, (hl)
+	inc hl
+
+	; get pointer to extended instrument call
+	ld a, (hl)
+	inc hl
+	ld h, (hl)
+	ld l, a
+
+	; jump to extended instrument call
+	jp (hl)
+
+	banjo_instrument_change_done:
+
 	; restore bc and de
 	pop bc
 	pop de
 	
 	ret
+
+
+; used to e.g. restore FM patches after unmuting
+; ix: channel
+; iy: state
+music_instrument_change_run_instrument_call:
+
+	; get instrument number
+	ld a, (ix + channel.instrument_num)
+
+	; don't do anything if the instrument is unset (== 0xff)
+	cp a, 0xff
+	ret z
+
+	; preserve de and bc
+	push de
+	push bc
+
+	; get instrument number in hl
+	ld l, a
+	ld h, 0
+
+    .assert _sizeof_instrument == 12   ; ensure that an instrument is the size we think it is!
+
+	; * 4
+	add hl, hl
+	add hl, hl
+
+	; keep * 4 for later
+	ld d, h
+	ld e, l
+	
+	; * 8
+	add hl, hl
+	
+	; * 12
+	add hl, de
+
+	; offset to instrument call data pointer
+	ld de, instrument.instrument_call_data
+	add hl, de
+	
+	; offset into instrument data
+	ld e, (iy + music_state.instrument_ptrs)
+	ld d, (iy + music_state.instrument_ptrs + 1)
+	add hl, de
+
+	jp mic_run_call

@@ -19,7 +19,7 @@
     .include "command_jump_table.inc"
     .include "commands.inc"
     .include "init.inc"
-    .include "mute_unmute.inc"
+    ;.include "mute_unmute.inc"
     .include "update.inc"
 
 .ENDS

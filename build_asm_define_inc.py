@@ -196,10 +196,8 @@ structs = [
             { 'name': "arp_macro_ptr", 'size': "dw"},
             { 'name': "ex_macro_ptr", 'size': "dw"},
             
-            { 'name': "fm_preset", 'size': "db" },
-            { 'name': "fm_patch", 'size': "dw" },
-
-            { 'name': "padding", 'size': "db" }
+            { 'name': "instrument_call_data", 'size': "dw" },
+            { 'name': "instrument_call", 'size': "dw" }
         ]
     },
     {

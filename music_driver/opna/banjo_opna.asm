@@ -7,7 +7,7 @@
 .SECTION "BANJO_OPNA" free
 
     .include "init.inc"
-    .include "mute_unmute.inc"
+    ;.include "mute_unmute.inc"
     .include "update.inc"
 
 .ENDS

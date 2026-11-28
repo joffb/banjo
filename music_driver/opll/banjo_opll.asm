@@ -25,7 +25,7 @@
     .include "command_jump_table.inc"
     .include "init.inc"
     .include "instrument_change.inc"
-    .include "mute_unmute.inc"
+    ;.include "mute_unmute.inc"
     .include "note_on_off.inc"
     .include "update_pitch_registers.inc"
     .include "update.inc"

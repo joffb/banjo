@@ -2,73 +2,50 @@
 ; banjo sound driver
 ; Joe Kennedy 2024
 
-; bc : jump table address (preserve this!)
-; de : instruction pointer (preserve this!)
-mpnl_opll_instrument_change:
+banjo_instrument_change_opll:
 
-	; check if the channel is muted and skip command if it is
-	bit CHAN_FLAG_BIT_MUTED, c
-	jp nz, mpnl_skip_2_byte_command
+	; get patch data pointer into hl
+	ex de, hl
 
-	; don't do anything if the instrument number is the same
-	ld a, (de)
-	cp a, (ix + channel.instrument_num)
-	jr z, mpnl_opll_instrument_change_done
+	; store the patch number shifted left by 4
+	ld a, (hl)
+	ld (ix + channel.gp1), a
+	inc hl
+
+	; don't write fm patch data unless this is the user patch 0
+	or a, a
+	jp nz, banjo_instrument_change_done
+
+		; preserve bc
+		push bc
 		
-		; update the instrument
-		call music_instrument_change
+		; 8 registers, multiplied by 2
+		; as b will be decremented by both outi and djnz
+		ld b, 16
 
-        ; coming out of music_instrument_change, hl should be pointing at the instrument data
-        ; at the start of the fm information
-
-        ; store the patch number shifted left by 4
-		ld a, (hl)
-		ld (ix + channel.gp1), a
+		; destination for outi
+		ld c, OPLL_DATA_PORT
 		
-		; if it's patch 0, update the fm registers with the custom patch data
-		; otherwise we're done
-		or a, a
-		jr nz, mpnl_opll_instrument_change_done
+		; start at register 0
+		xor a, a
 		
-			; get address of patch data into hl
-			inc hl
-			ld a, (hl)
-			inc hl
-			ld h, (hl)
-			ld l, a
-
-			; preserve bc
-			push bc
+		music_instrument_change_opll_patch:
+		
+			; set opll register
+			out (OPLL_REG_PORT), a
+			inc a
 			
-			; 8 registers, multiplied by 2
-			; as b will be decremented by both outi and djnz
-			ld b, 16
-
-			; destination for outi
-			ld c, OPLL_DATA_PORT
+			; write new value from (hl)
+			outi
 			
-			; start at register 0
-			xor a, a
+			call banjo_opll_write_delay
 			
-			music_instrument_change_opll_patch:
+			; reached the last register?
+			djnz music_instrument_change_opll_patch
 			
-				; set opll register
-				out (OPLL_REG_PORT), a
-				inc a
-				
-				; write new value from (hl)
-				outi
-				
-				call banjo_opll_write_delay
-				
-				; reached the last register?
-				djnz music_instrument_change_opll_patch
-				
-			; restore bc
-			pop bc
+		; restore bc
+		pop bc
 
-	mpnl_opll_instrument_change_done:
-
-	jp mpnl_command_done
+		jp banjo_instrument_change_done
 
 

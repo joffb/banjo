@@ -83,6 +83,9 @@ music_update_channel_opll_drums:
 
     ld hl, music_command_jump_table_opll_drums
     call music_process_new_line
+    
+    ; store new value of flags
+    ld (ix + channel.flags), c
 
     ; check that note on is set
     ; this should never be set if the channel is muted

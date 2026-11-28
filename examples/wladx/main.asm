@@ -247,6 +247,10 @@ init:
 		ld a, (input_pressed)
 		and a, 0x04
 		jr nz, +
+			
+			; change to song's bank
+			ld a, (song_state + music_state.bank)
+			ld (0xffff), a
 
 			ld a, (song_playing)
 			or a, a
@@ -270,8 +274,13 @@ init:
 		and a, 0x10
 		jr nz, +
 
-			ld a, 0
-			call banjo_unmute_song_channel
+			; change to song's bank
+			ld a, (song_state + music_state.bank)
+			ld (0xffff), a
+
+			xor a, a
+			ld a, 10
+			call banjo_unmute_song
 
 		+:
 
@@ -280,10 +289,15 @@ init:
 		and a, 0x20
 		ld a, 0
 		jr nz, +
-			ld a, 3
+
+			; change to song's bank
+			ld a, (song_state + music_state.bank)
 			ld (0xffff), a
-			ld a, 0
-			call banjo_mute_song_channel
+
+			xor a, a
+			ld a, 10
+			call banjo_mute_song
+
 		+:
 
 		; volume control

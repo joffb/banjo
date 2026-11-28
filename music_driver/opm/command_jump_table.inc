@@ -7,7 +7,7 @@ music_command_jump_table_opm:
 
 	.dw mpnl_note_on_opm
 	.dw mpnl_note_off
-	.dw mpnl_opm_instrument_change
+	.dw mpnl_instrument_change
 	.dw mpnl_opm_volume_change
 	.dw mpnl_skip_2_byte_command		; mpnl_opll_drum
 	.dw mpnl_skip_2_byte_command     ; mpnl_sn_noise_mode

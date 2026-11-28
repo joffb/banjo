@@ -145,6 +145,10 @@ macro_type_lookup = {
     MACRO_TYPE_EX1: 0
 }
 
+instrument_change_calls = {
+    INS_TYPE_OPLL: "banjo_instrument_change_opll"
+}
+
 # default patch data for fm chips
 opl_default_patch = [0x3, 0x1, 0x56, 0x0, 0xf2, 0xf3, 0xf7, 0xbc, 0xe, 0x0, 0x0, 0xe, 0x56, 0x0]
 opn_default_patch = [0x5, 0x1, 0x1, 0x1, 0x2a, 0x30, 0x12, 0x2, 0x1f, 0x1f, 0x1f, 0x1f, 0x8, 0x4, 0xa, 0x9, 0x0, 0x0, 0x0, 0x0, 0xf3, 0xb1, 0xf4, 0xf9, 0x0, 0x0, 0x0, 0x0, 0x20, 0xc0, 0x1, 0x4c, 0x2]
@@ -361,10 +365,8 @@ def main(argv=None):
             # add init and mute functions to lists
             if sn_count == 0:
                 channel_init_calls.append("banjo_init_sn")
-                song_mute_calls.append("banjo_mute_all_sn")
             else:
                 channel_init_calls.append("banjo_init_sn_" + str(sn_count+1))
-                song_mute_calls.append("banjo_mute_all_sn_" + str(sn_count+1))
                 # also flag that we have a second SN chip 
                 song['has_chips'] |= BANJO_HAS_DUAL_SN
 
@@ -375,8 +377,6 @@ def main(argv=None):
                     'update': "banjo_update_channel_sn",
                     'subchannel': (i | (sn_count << 4))
                     })
-
-                channel_mute_calls.append("banjo_mute_channel_sn")
 
             channel_update_calls.append("banjo_update_channels_sn")
 
@@ -389,7 +389,6 @@ def main(argv=None):
 
             # add init and mute functions to lists
             channel_init_calls.append("banjo_init_opll")
-            song_mute_calls.append("banjo_mute_all_opll")
 
             for i in range(0, 9):
 
@@ -398,8 +397,6 @@ def main(argv=None):
                     'update': "banjo_update_channel_opll",
                     'subchannel': i
                     })
-
-                channel_mute_calls.append("banjo_mute_channel_opll")
 
             channel_update_calls.append("banjo_update_channels_opll")
 
@@ -410,7 +407,6 @@ def main(argv=None):
 
             # add init and mute functions to lists
             channel_init_calls.append("banjo_init_opll_drums")
-            song_mute_calls.append("banjo_mute_all_opll_drums")
 
             for i in range(0, 6):
 
@@ -420,8 +416,6 @@ def main(argv=None):
                     'subchannel': i
                     })
                 
-                channel_mute_calls.append("banjo_mute_channel_opll")
-
             for i in range(0, 5):
 
                 channel_types.append({
@@ -429,8 +423,6 @@ def main(argv=None):
                     'update': "banjo_update_channel_opll_drums",
                     'subchannel': i
                     })
-
-                channel_mute_calls.append("banjo_mute_channel_opll_drums")
 
             channel_update_calls.append("banjo_update_channels_opll_drums")
 
@@ -442,8 +434,6 @@ def main(argv=None):
             # add init and mute functions to lists
             channel_init_calls.append("banjo_init_sn")
             channel_init_calls.append("banjo_init_opll")
-            song_mute_calls.append("banjo_mute_all_sn")
-            song_mute_calls.append("banjo_mute_all_opll")
 
             for i in range(0, 4):
 
@@ -453,8 +443,6 @@ def main(argv=None):
                     'subchannel': (i | (sn_count << 4))
                     })
 
-                channel_mute_calls.append("banjo_mute_channel_sn")
-
             for i in range(0, 9):
 
                 channel_types.append({
@@ -462,8 +450,6 @@ def main(argv=None):
                     'update': "banjo_update_channel_opll",
                     'subchannel': i
                     })
-
-                channel_mute_calls.append("banjo_mute_channel_opll")
 
             channel_update_calls.append("banjo_update_channels_sn")
             channel_update_calls.append("banjo_update_channels_opll")
@@ -477,7 +463,6 @@ def main(argv=None):
 
             # add init and mute functions to lists
             channel_init_calls.append("banjo_init_ay")
-            song_mute_calls.append("banjo_mute_all_ay")
             
             for i in range(0, 3):
 
@@ -486,8 +471,6 @@ def main(argv=None):
                     'update': "banjo_update_channel_ay",
                     'subchannel': i
                     })
-
-                channel_mute_calls.append("banjo_mute_channel_ay")
 
             channel_update_calls.append("banjo_update_channels_ay")
 
@@ -498,8 +481,7 @@ def main(argv=None):
 
             # add init and mute functions to lists
             channel_init_calls.append("banjo_init_opl_2op")
-            song_mute_calls.append("banjo_mute_all_opl_2op")
-            
+
             for i in range(0, 9):
 
                 channel_types.append({
@@ -507,8 +489,6 @@ def main(argv=None):
                     'update': "banjo_update_channel_opl_2op",
                     'subchannel': i
                     })
-
-                channel_mute_calls.append("banjo_mute_channel_opl_2op")
 
             channel_update_calls.append("banjo_update_channels_opl_2op")
 
@@ -519,7 +499,6 @@ def main(argv=None):
 
             # add init and mute functions to lists
             channel_init_calls.append("banjo_init_opn")
-            song_mute_calls.append("banjo_mute_all_opn")
             
             for i in range(0, 3):
 
@@ -529,8 +508,6 @@ def main(argv=None):
                     'subchannel': i
                     })
 
-                channel_mute_calls.append("banjo_mute_channel_opn")
-
             for i in range(0, 3):
 
                 channel_types.append({
@@ -538,8 +515,6 @@ def main(argv=None):
                     'update': "banjo_update_channel_ay",
                     'subchannel': i
                     })
-
-                channel_mute_calls.append("banjo_mute_channel_ay")
 
             channel_update_calls.append("banjo_update_channels_opn")
 
@@ -550,7 +525,6 @@ def main(argv=None):
 
             # add init and mute functions to lists
             channel_init_calls.append("banjo_init_opna")
-            song_mute_calls.append("banjo_mute_all_opna")
             
             for i in range(0, 6):
 
@@ -560,8 +534,6 @@ def main(argv=None):
                     'subchannel': i
                     })
 
-                channel_mute_calls.append("banjo_mute_channel_opn")
-
             for i in range(0, 3):
 
                 channel_types.append({
@@ -569,8 +541,6 @@ def main(argv=None):
                     'update': "banjo_update_channel_ay",
                     'subchannel': i
                     })
-
-                channel_mute_calls.append("banjo_mute_channel_ay")
 
             for i in range(0, 6):
 
@@ -595,7 +565,6 @@ def main(argv=None):
 
             # add init and mute functions to lists
             channel_init_calls.append("banjo_init_opm")
-            song_mute_calls.append("banjo_mute_all_opm")
             
             for i in range(0, 8):
 
@@ -604,8 +573,6 @@ def main(argv=None):
                     'update': "banjo_update_channel_opm",
                     'subchannel': i
                     })
-
-                channel_mute_calls.append("banjo_mute_channel_opm")
 
             channel_update_calls.append("banjo_update_channels_opm")
 
@@ -620,15 +587,12 @@ def main(argv=None):
 
         if sfx_type == CHAN_OPLL:
             channel_init_calls = ["banjo_init_sfx_channel_opll"]
-            song_mute_calls = ["banjo_mute_all_opll"]
 
         elif sfx_type == CHAN_SN76489:
             channel_init_calls = ["banjo_init_sfx_channel_sn"]
-            song_mute_calls = ["banjo_mute_all_sn"]
 
         elif sfx_type == CHAN_AY_3_8910:
             channel_init_calls = ["banjo_init_sfx_channel_ay"]
-            song_mute_calls = ["banjo_mute_all_ay"]
 
     # process instruments
     instruments = []
@@ -656,6 +620,8 @@ def main(argv=None):
 
             "fm_patch": 0xff,
             "fm_patch_ptr": 0xffff,
+
+            "instrument_change_call": "banjo_instrument_change_done" if instrument['type'] not in instrument_change_calls else instrument_change_calls[instrument['type']]
         }
 
         # macros
@@ -812,7 +778,7 @@ def main(argv=None):
         if (instrument['type'] == INS_TYPE_OPLL and "fm" in instrument):
 
             # custom fm patch data
-            if (instrument['fm']['opll_patch'] == 0):
+            if (instrument['fm']['opll_patch'] != 16):
 
                 # pre-shift the patch number into the upper nibble
                 new_instrument["fm_patch"] = (instrument['fm']['opll_patch'] & 0xf) << 4
@@ -850,12 +816,14 @@ def main(argv=None):
 
 
                 fm_patch_name = "fm_patch_" + str(i)
-                fm_patches[fm_patch_name] = fm_patch
+                fm_patches[fm_patch_name] = [new_instrument["fm_patch"]] + fm_patch
                 new_instrument["fm_patch_ptr"] = fm_patch_name
 
 
             # custom drum patch with fixed pitch
             elif (instrument['fm']['opll_patch'] == 16):
+
+                new_instrument["instrument_change_call"] = "banjo_instrument_change_opll_drums"
 
                 # pre-shift the patch number into the upper nibble
                 new_instrument["fm_patch"] = (0xff if instrument['opl_drums']['fixed_freq'] == 1 else 0)
@@ -872,13 +840,8 @@ def main(argv=None):
                 fm_patch.append(instrument['opl_drums']['tom_top_freq'] >> 8)
 
                 fm_patch_name = "fm_patch_" + str(i)
-                fm_patches[fm_patch_name] = fm_patch
+                fm_patches[fm_patch_name] = [new_instrument["fm_patch"]] + fm_patch
                 new_instrument["fm_patch_ptr"] = fm_patch_name
-
-            else:
-
-                # pre-shift the patch number into the upper nibble
-                new_instrument["fm_patch"] = (instrument['fm']['opll_patch'] & 0xf) << 4
 
         # OPL FM instrument
         if instrument['type'] == INS_TYPE_OPL:
@@ -1229,15 +1192,8 @@ def main(argv=None):
                         # other data as an instrument
                         if current_inst < len(instruments):
 
-                            if (channel_type['type'] == CHAN_OPLL_DRUMS):
-
-                                pattern_bin.append(FM_DRUM)
-                                pattern_bin.append(current_inst)
-
-                            else:
-
-                                pattern_bin.append(INSTRUMENT_CHANGE)
-                                pattern_bin.append(current_inst)
+                            pattern_bin.append(INSTRUMENT_CHANGE)
+                            pattern_bin.append(current_inst)
 
                     # check effects
                     for eff in range (0, len(line['effects']), 2):
@@ -1789,15 +1745,18 @@ def main(argv=None):
 
     # array of calls to the mute function for each channel
     writelabel("channel_mute")
-    outfile.write(".dw " + song_prefix + "_channel_mute_calls_data\n")
+    #outfile.write(".dw " + song_prefix + "_channel_mute_calls_data\n")
+    outfile.write(".dw 0xffff\n")
 
     # when there's multiple song mute calls a function will be created
     # if there's only one we just point to that
     writelabel("song_mute")
     if len(song_mute_calls) > 1:
-        outfile.write(".dw " + song_prefix + "_song_mute_call\n")
+        #outfile.write(".dw " + song_prefix + "_song_mute_call\n")
+        outfile.write(".dw 0xffff\n")
     else:
-        outfile.write(".dw " + song_mute_calls[0] + "\n")    
+        #outfile.write(".dw " + song_mute_calls[0] + "\n")    
+        outfile.write(".dw 0xffff\n")
 
     writelabel("song_stop")
     outfile.write(".dw " + ("_" if options.sdas else "") + ("banjo_sfx_stop" if sfx else "banjo_song_stop") + "\n")
@@ -1820,17 +1779,17 @@ def main(argv=None):
         outfile.write("\n")
 
     # channel mute calls
-    writelabel("channel_mute_calls_data")
-    outfile.write("\t.dw " + ", ".join(channel_mute_calls) + "\n")
-    outfile.write("\n")
+    #writelabel("channel_mute_calls_data")
+    #outfile.write("\t.dw " + ", ".join(channel_mute_calls) + "\n")
+    #outfile.write("\n")
 
     # song mute calls
-    if len(song_mute_calls) > 1:
-        writelabel("song_mute_call")
-        for call in song_mute_calls:
-            outfile.write("\tcall " + call + "\n")
-        outfile.write("\tret\n")
-        outfile.write("\n")
+    #if len(song_mute_calls) > 1:
+    #    writelabel("song_mute_call")
+    #    for call in song_mute_calls:
+    #        outfile.write("\tcall " + call + "\n")
+    #    outfile.write("\tret\n")
+    #    outfile.write("\n")
 
     # macros
     writelabel("macros")
@@ -1942,7 +1901,7 @@ def main(argv=None):
             outfile.write("\t.dw " + song_prefix + "_" + str(instrument["ex_macro_ptr"]) + " ; ptr\n")
 
         # fm preset
-        outfile.write("\t.db " + str(instrument["fm_patch"]) + "\n")
+        # outfile.write("\t.db " + str(instrument["fm_patch"]) + "\n")
 
         # fm patch
         if (instrument["fm_patch_ptr"] == 0xffff):
@@ -1950,8 +1909,8 @@ def main(argv=None):
         else:
             outfile.write("\t.dw " + song_prefix + "_" + str(instrument["fm_patch_ptr"]) + " ; ptr\n")
 
-        # pad out to 10 bytes
-        outfile.write("\t .db 0xff ; padding\n")
+        # additional instrument call
+        outfile.write("\t.dw " + instrument["instrument_change_call"] + " ; change call\n")
 
 
     outfile.write("\n" + "\n")

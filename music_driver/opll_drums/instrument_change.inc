@@ -2,53 +2,15 @@
 ; banjo sound driver
 ; Joe Kennedy 2024
 
-; commands will be jumped to from music_process_new_line
 
 ; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 ; iy: music_state
 ; ix: channel we're updating
-mpnl_opll_drum:
+banjo_instrument_change_opll_drums:
 
-	; check if the channel is muted
-	bit CHAN_FLAG_BIT_MUTED, c
-	jp nz, mpnl_skip_2_byte_command
-
-	; preserve bc
-	push bc
-
-    ; get instrument number in a
-	ld a, (de)
-    ld (ix + channel.instrument_num), a
-
-    .assert _sizeof_instrument == 12   ; ensure that an instrument is the size we think it is!
-
-	; get instrument pointer by doing instrument_num * 12
-	ld l, a
-	ld h, 0
-	
-	; * 4
-	add hl, hl
-	add hl, hl
-
-	; keep * 4 for later
-	ld b, h
-	ld c, l
-	
-	; * 8
-	add hl, hl
-	
-	; * 12
-	add hl, bc
-
-	; offset into instrument data
-	ld c, (iy + music_state.instrument_ptrs)
-	ld b, (iy + music_state.instrument_ptrs + 1)
-	add hl, bc
-
-	; moved along to fm patch data
-	ld bc, instrument.fm_preset
-	add hl, bc
+	; get patch data pointer into hl
+	ex de, hl
 
     ; is this a fixed-frequency patch?
     ld a, (hl)
@@ -58,7 +20,8 @@ mpnl_opll_drum:
         ; not fixed freq
         xor a, a
         ld (opll_drum_fixed_pitch_mode), a
-        jr music_fm_drum_change_done
+
+        jp banjo_instrument_change_done
 
     music_fm_drum_change_fixed_freq:
 
@@ -66,12 +29,8 @@ mpnl_opll_drum:
         ld a, 1
         ld (opll_drum_fixed_pitch_mode), a
 
-		; get patch data address into hl
+		; move to drum patch data
 		inc hl
-		ld a, (hl)
-		inc hl
-		ld h, (hl)
-		ld l, a
 
 		; prepare b & c registers for use with outi
 		ld b, 0
@@ -114,9 +73,4 @@ mpnl_opll_drum:
 		out (OPLL_REG_PORT), a
 		outi
 
-	music_fm_drum_change_done:
-
-	; restore bc
-	pop bc
-
-	jp mpnl_command_done
+		jp banjo_instrument_change_done

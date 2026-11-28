@@ -5,8 +5,9 @@
 ; a: channel to mute
 banjo_mute_song_channel:
 
-    ; preserve channel number
+    ; channel number in hl
     ld l, a
+    ld h, 0
 
     ; check if the song is playing 
     ; do nothing if it isn't
@@ -14,69 +15,34 @@ banjo_mute_song_channel:
     or a, a
     ret z
 
-    push ix
-    push iy
+        bmsc_sfx_jump:
 
-    ld iy, song_state
+        .assert _sizeof_channel == 32   ; ensure that the channel is the size we think it is!
 
-    ; jumped to from banjo_mute_song_channel_from_sfx in sfx module
-    bmsc_sfx_jump:
+        ; hl = channel_number * 32
+        add hl, hl
+        add hl, hl
+        add hl, hl
+        add hl, hl
+        add hl, hl
 
-    ; restore channel number
-    ld a, l
+        ; offset into song_channels
+        ld a, l
+        add a, <song_channels
+        ld l, a
+        ld a, h
+        adc a, >song_channels
+        ld h, a
 
-    ; a = channel_number * 2
-	add a, a
-    push af
+        ; set muted flag and note-off flag
+        ; clear note-on flag
+        ld a, (hl)
+        res CHAN_FLAG_BIT_NOTE_ON, a
+        or a, CHAN_FLAG_MUTED | CHAN_FLAG_NOTE_OFF
+        ld (hl), a
 
-    .assert _sizeof_channel == 32   ; ensure that the channel is the size we think it is!
+        ret
 
-    ; hl = channel_number * 32
-    ld l, a
-    ld h, 0
-    add hl, hl
-    add hl, hl
-    add hl, hl
-    add hl, hl
-
-    ; offset into song_channels
-    ld de, song_channels
-    add hl, de
-
-    ; set muted flag and clear note-on flag
-    set CHAN_FLAG_BIT_MUTED, (hl)
-    res CHAN_FLAG_BIT_NOTE_ON, (hl)
-
-    ; get channel into ix
-    push hl
-    pop ix
-
-    ; get address of mute call table
-    ld l, (iy + music_state.channel_mute_calls)
-    ld h, (iy + music_state.channel_mute_calls + 1)
-
-    ; look up mute channel function in table
-    ; a = channel_number * 2
-    pop af
-    add a, l
-    ld l, a
-    adc a, h
-    sub a, l
-    ld h, a
-
-    ; get address of function into hl
-    ld a, (hl)
-    inc hl
-    ld h, (hl)
-    ld l, a
-
-    ; call function
-    call banjo_jp_hl
-
-    pop iy
-    pop ix
-
-    ret
 
 ; a: channel to mute
 banjo_unmute_song_channel:
@@ -93,13 +59,31 @@ banjo_unmute_song_channel:
     add hl, hl
 
     ; offset into song_channels
-    ld de, song_channels
-    add hl, de
+    ld a, l
+    add a, <song_channels
+    ld l, a
+    ld a, h
+    adc a, >song_channels
+    ld h, a
 
     ; clear muted flag
     res CHAN_FLAG_BIT_MUTED, (hl)
+
+    push ix
+    push iy
+
+    ; get channel into ix and song state into iy
+    ; re-run instrument call to e.g. restore FM patch
+    push hl
+    pop ix
+    ld iy, song_state
+    call music_instrument_change_run_instrument_call
+
+    pop iy
+    pop ix
     
 	ret
+
 
 banjo_mute_song:
 
@@ -108,38 +92,28 @@ banjo_mute_song:
     or a, a
     ret z
 
-        push hl
-        push iy
-
-        ld iy, song_state
-
         ; set channel mute flags
-        ld hl, song_channels
+        ld hl, song_channels + channel.flags
         ld de, _sizeof_channel
-        ld b, (iy + music_state.channel_count)
+        ld a, (song_state + music_state.channel_count)
+        ld b, a
 
         banjo_mute_song_loop:
 
-            ; set muted flag and clear note-on flag
-            set CHAN_FLAG_BIT_MUTED, (hl)
-            res CHAN_FLAG_BIT_NOTE_ON, (hl)
-            
+            ; set muted flag and note-off flag
+            ; clear note-on flag
+            ld a, (hl)
+            res CHAN_FLAG_BIT_NOTE_ON, a
+            or a, CHAN_FLAG_MUTED | CHAN_FLAG_NOTE_OFF
+            ld (hl), a
+
             ; move to next channel
             add hl, de
 
             djnz banjo_mute_song_loop
 
-        ; get song mute call in hl
-        ld l, (iy + music_state.song_mute)
-        ld h, (iy + music_state.song_mute + 1)
-
-        ; song mute call
-        call banjo_jp_hl
-
-        pop iy
-        pop hl
-
         ret
+
 
 banjo_unmute_song:
 
@@ -148,27 +122,29 @@ banjo_unmute_song:
     or a, a
     ret z
 
-        push hl
+        push ix
         push iy
 
-        ld iy, song_state
-
         ; clear channel mute flags
-        ld hl, song_channels
+        ld ix, song_channels
+        ld iy, song_state
         ld de, _sizeof_channel
         ld b, (iy + music_state.channel_count)
 
         banjo_unmute_song_loop:
 
             ; unset channel muted flag
-            res CHAN_FLAG_BIT_MUTED, (hl)
-            
+            res CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
+
+            ; re-run instrument call to e.g. restore FM patch
+            call music_instrument_change_run_instrument_call
+
             ; move to next channel
-            add hl, de
+            add ix, de
 
             djnz banjo_unmute_song_loop
 
         pop iy
-        pop hl
+        pop ix
 
         ret

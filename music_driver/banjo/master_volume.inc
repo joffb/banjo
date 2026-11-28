@@ -8,10 +8,6 @@
 ; a: new master volume
 banjo_set_song_master_volume:
 
-    ; flag that the master volume has been changed
-    ld hl, song_state + music_state.flags
-    set STATE_FLAG_BIT_MASTER_VOLUME_CHANGE, (hl)
-
     ; turn the volume into an attenuation
     cp a, 0x80
     jr c, bssmv_not_full
@@ -31,6 +27,19 @@ banjo_set_song_master_volume:
     ; store the new volume
     ld hl, song_state + music_state.master_volume
     ld (hl), a
+
+    ; set volume change event bits in all song channels
+    ld iy, song_state
+    ld hl, song_channels + channel.events
+    ld b, (iy + music_state.channel_count)
+    ld de, _sizeof_channel
+
+    bssmv_loop:
+
+        set CHAN_EVENT_BIT_VOLUME_CHANGE, (hl)
+        add hl, de
+
+        djnz bssmv_loop
 
     ret
 

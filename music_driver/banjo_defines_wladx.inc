@@ -157,9 +157,8 @@
 	volume_macro_ptr: dw
 	arp_macro_ptr: dw
 	ex_macro_ptr: dw
-	fm_preset: db
-	fm_patch: dw
-	padding: db
+	instrument_call_data: dw
+	instrument_call: dw
 .ENDST
 
 .STRUCT channel
