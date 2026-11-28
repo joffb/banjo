@@ -7,8 +7,11 @@
 ; iy: state
 music_process_new_line:
 
+	ld b, (ix + channel.events)
+	ld c, (ix + channel.flags)
+
     ; note delay?
-    bit CHAN_EVENT_BIT_TIC_WAIT, (ix + channel.events)
+    bit CHAN_FLAG_BIT_TIC_WAIT, c
     jr z, mpnl_no_tic_wait
 
         ; decrement tic wait and return if not zero
@@ -17,7 +20,7 @@ music_process_new_line:
 
 			; tic wait is now zero
 			; reset tic wait flag and continue
-			res CHAN_EVENT_BIT_TIC_WAIT, (ix + channel.events)
+			res CHAN_FLAG_BIT_TIC_WAIT, c
 			jr music_process_new_line_continue
 
     mpnl_no_tic_wait:
@@ -53,10 +56,19 @@ music_process_new_line:
 		; is this a note on? (bit 7 set)
 		bit 7, a
 		jp z, mpnl_not_note_on
-			
-			; offset jump table address to note-on command
-			ld l, c
-			ld h, b
+
+			; preserve jump table address
+			push hl
+
+			; get jump address
+			ld a, (hl)
+			inc hl
+			ld h, (hl)
+			ld l, a
+
+			; get note-on value
+			ld a, (de)
+			and a, 0x7f
 
 			; jump to jump table address
 			jp (hl)
@@ -72,7 +84,7 @@ music_process_new_line:
 			and a, 0x3f
 			ld (ix + channel.wait), a
 
-			; store the pointer to the next command and return
+			; store the pointer to the next command
 			inc de
 			ld (ix + channel.pattern_ptr), e
 			ld (ix + channel.pattern_ptr + 1), d
@@ -81,31 +93,33 @@ music_process_new_line:
 			
 		; must be a volume change (bit 5 set)
 		mpnl_not_eol:
-			
-			; offset jump table address to volume change command
-			ld hl, 9
-			add hl, bc
-			
-			; jump to jump table address
-			jp (hl)
+
+			; offset to volume change command
+			ld a, 3
+			dec de
 
 		; if not, process the command
 		mpnl_use_jump_table:
+			
+			; move pattern pointer on
+			inc de
 
-			; address in table is command num * 3
-			; use it to offset into the jump table
-			; hl = (a * 3) + bc
-			ld l, a
+			; preserve jump table address
+			push hl
+
+			; offset into jump table
 			add a, a
 			add a, l
-			add a, c
 			ld l, a
-			adc a, b
+			adc a, h
 			sub a, l
 			ld h, a
 
-			; move pattern pointer on
-			inc de
+			; get jump address
+			ld a, (hl)
+			inc hl
+			ld h, (hl)
+			ld l, a
 
 			; jump to jump table address
 			jp (hl)
@@ -115,5 +129,8 @@ music_process_new_line:
 			inc de
 
 		mpnl_command_done_one_byte_command:
+
+			; restore jump table address
+			pop hl
 			
 			jr mpnl_loop

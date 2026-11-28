@@ -2,17 +2,17 @@
 ; banjo sound driver
 ; Joe Kennedy 2023
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 ; ix : pointer to current channel
 ; iy : pointer to music state
 mpnl_note_on_opll_drums:
 
 	; update note on status 
-	set CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
+	set CHAN_FLAG_BIT_NOTE_ON, c
 
     ; mark volume as requiring update
-    set CHAN_EVENT_BIT_VOLUME_CHANGE, (ix + channel.events)
+    set CHAN_EVENT_BIT_VOLUME_CHANGE, b
 
 	; pointer to note-on byte
 	ld hl, opll_drum_note_ons
@@ -34,10 +34,9 @@ mpnl_note_on_opll_drums:
     or a, a
     jr nz, mfmdno_fixed_pitch
 
-        ; update midi number field
+        ; get note
         ld a, (de)
 		and a, 0x7f
-        ld (ix + channel.midi_note), a
 
         ; update freq
         ld (ix + channel.freq + 1), a
@@ -45,7 +44,7 @@ mpnl_note_on_opll_drums:
 		ld (ix + channel.freq), a
 
 		; mark pitch as requiring update
-		set CHAN_EVENT_BIT_PITCH_CHANGED, (ix + channel.events)
+		set CHAN_EVENT_BIT_PITCH_CHANGED, b
 
     mfmdno_fixed_pitch:
 
@@ -58,7 +57,7 @@ mpnl_note_on_opll_drums:
 mpnl_note_off_opll_drums:
 
 	; clear note on flag
-	res CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
+	res CHAN_FLAG_BIT_NOTE_ON, c
 
 	; set note-off bit in opll_drum_note_offs
 	ld hl, opll_drum_note_offs

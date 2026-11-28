@@ -2,7 +2,7 @@
 ; banjo sound driver
 ; Joe Kennedy 2024
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 ; ix : channel pointer
 ; iy : pointer to music state
@@ -25,37 +25,33 @@ mpnl_note_on_ay:
 
 	jp mpnl_command_done
 
-; bc : jump table address (preserve this!)
-; de : instruction pointer (preserve this!)
+
+; bc : events and flags (preserve these!)
 ; ix : pointer to current channel
 ; iy : pointer to music state
-mpnl_note_off_ay:
+music_note_off_ay:
 
-	; clear note-on bit
-    res CHAN_FLAG_BIT_NOTE_ON, (ix + channel.flags)
+	; clear note-off bit
+	res CHAN_FLAG_BIT_NOTE_OFF, c
 
-    ; check if the channel is muted
-	bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
-	jr nz, mnoff_sn_dont_write_chip
+	; preserve c
+	ld l, c
 
-		push bc
+	ld c, (ix + channel.port)
 
-		ld c, (ix + channel.port)
+	; update volume level on chip
+	; select volume register
+	ld a, (ix + channel.subchannel)
+	add a, 8
+	out (c), a
 
-		; update volume level on chip
-		; select volume register
-		ld a, (ix + channel.subchannel)
-		add a, 8
-		out (c), a
+	; write 0 to register
+	; setting note volume to 0 and switching off envelope
+	xor a, a
+	inc c
+	out (c), a
 
-		; write 0 to register
-		; setting note volume to 0 and switching off envelope
-		xor a, a
-		inc c
-		out (c), a
+	; restore c
+	ld c, l
 
-		pop bc
-
-	mnoff_sn_dont_write_chip:
-	
-	jp mpnl_command_done_one_byte_command
+	jp music_note_off_ay_done

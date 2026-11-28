@@ -62,61 +62,61 @@
 
 .define CHAN_FLAG_MUTED		0x1
 .define CHAN_FLAG_NOTE_ON		0x2
-.define CHAN_FLAG_VOLUME_MACRO		0x4
-.define CHAN_FLAG_ARP_MACRO		0x8
-.define CHAN_FLAG_VIBRATO		0x10
-.define CHAN_FLAG_ARPEGGIO		0x20
-.define CHAN_FLAG_SLIDE		0x40
-.define CHAN_FLAG_EX_MACRO		0x80
+.define CHAN_FLAG_LEGATO		0x4
+.define CHAN_FLAG_TIC_WAIT		0x8
+.define CHAN_FLAG_MACRO_RELEASE		0x10
+.define CHAN_FLAG_NOTE_OFF		0x20
+.define CHAN_FLAG_EX_MACRO		0x40
 
 .define CHAN_FLAG_BIT_MUTED		0x0
 .define CHAN_FLAG_BIT_NOTE_ON		0x1
-.define CHAN_FLAG_BIT_VOLUME_MACRO		0x2
-.define CHAN_FLAG_BIT_ARP_MACRO		0x3
-.define CHAN_FLAG_BIT_VIBRATO		0x4
-.define CHAN_FLAG_BIT_ARPEGGIO		0x5
-.define CHAN_FLAG_BIT_SLIDE		0x6
-.define CHAN_FLAG_BIT_EX_MACRO		0x7
+.define CHAN_FLAG_BIT_LEGATO		0x2
+.define CHAN_FLAG_BIT_TIC_WAIT		0x3
+.define CHAN_FLAG_BIT_MACRO_RELEASE		0x4
+.define CHAN_FLAG_BIT_NOTE_OFF		0x5
+.define CHAN_FLAG_BIT_EX_MACRO		0x6
 
 .define CHAN_EVENT_PITCH_CHANGED		0x1
-.define CHAN_EVENT_PITCH_CHANGE_ALWAYS		0x2
-.define CHAN_EVENT_VOLUME_CHANGE		0x4
-.define CHAN_EVENT_LEGATO		0x8
-.define CHAN_EVENT_WAVE_CHANGED		0x10
-.define CHAN_EVENT_DUTY_CHANGED		0x20
-.define CHAN_EVENT_TIC_WAIT		0x40
-.define CHAN_EVENT_MACRO_RELEASE		0x80
+.define CHAN_EVENT_VOLUME_CHANGE		0x2
+.define CHAN_EVENT_WAVEDUTY_CHANGED		0x4
+.define CHAN_EVENT_VOLUME_MACRO		0x8
+.define CHAN_EVENT_ARP_MACRO		0x10
+.define CHAN_EVENT_VIBRATO		0x20
+.define CHAN_EVENT_ARPEGGIO		0x40
+.define CHAN_EVENT_SLIDE		0x80
 
 .define CHAN_EVENT_BIT_PITCH_CHANGED		0x0
-.define CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS		0x1
-.define CHAN_EVENT_BIT_VOLUME_CHANGE		0x2
-.define CHAN_EVENT_BIT_LEGATO		0x3
-.define CHAN_EVENT_BIT_WAVE_CHANGED		0x4
-.define CHAN_EVENT_BIT_DUTY_CHANGED		0x5
-.define CHAN_EVENT_BIT_TIC_WAIT		0x6
-.define CHAN_EVENT_BIT_MACRO_RELEASE		0x7
+.define CHAN_EVENT_BIT_VOLUME_CHANGE		0x1
+.define CHAN_EVENT_BIT_WAVEDUTY_CHANGED		0x2
+.define CHAN_EVENT_BIT_VOLUME_MACRO		0x3
+.define CHAN_EVENT_BIT_ARP_MACRO		0x4
+.define CHAN_EVENT_BIT_VIBRATO		0x5
+.define CHAN_EVENT_BIT_ARPEGGIO		0x6
+.define CHAN_EVENT_BIT_SLIDE		0x7
 
 .define MACRO_TYPE_PITCH		0x1
 .define MACRO_TYPE_VOLUME		0x2
-.define MACRO_TYPE_WAVE		0x10
-.define MACRO_TYPE_DUTY		0x20
-.define MACRO_TYPE_ARP		0x40
+.define MACRO_TYPE_WAVE		0x4
+.define MACRO_TYPE_DUTY		0x8
+.define MACRO_TYPE_ARP		0x10
 
 .define MACRO_TYPE_BIT_PITCH		0x0
 .define MACRO_TYPE_BIT_VOLUME		0x1
-.define MACRO_TYPE_BIT_WAVE		0x4
-.define MACRO_TYPE_BIT_DUTY		0x5
-.define MACRO_TYPE_BIT_ARP		0x6
+.define MACRO_TYPE_BIT_WAVE		0x2
+.define MACRO_TYPE_BIT_DUTY		0x3
+.define MACRO_TYPE_BIT_ARP		0x4
 
 .define STATE_FLAG_PROCESS_NEW_LINE		0x1
-.define STATE_FLAG_LOOP		0x2
-.define STATE_FLAG_MASTER_VOLUME_CHANGE		0x4
+.define STATE_FLAG_MASTER_VOLUME_CHANGE		0x2
+.define STATE_FLAG_LOOP		0x4
 .define STATE_FLAG_ORDER_JUMP		0x8
+.define STATE_FLAG_SFX		0x10
 
 .define STATE_FLAG_BIT_PROCESS_NEW_LINE		0x0
-.define STATE_FLAG_BIT_LOOP		0x1
-.define STATE_FLAG_BIT_MASTER_VOLUME_CHANGE		0x2
+.define STATE_FLAG_BIT_MASTER_VOLUME_CHANGE		0x1
+.define STATE_FLAG_BIT_LOOP		0x2
 .define STATE_FLAG_BIT_ORDER_JUMP		0x3
+.define STATE_FLAG_BIT_SFX		0x4
 
 .define BANJO_MAGIC_BYTE		0xba
 
@@ -153,9 +153,9 @@
 
 .STRUCT instrument
 	macro_flags: db
+	macro_events: db
 	volume_macro_ptr: dw
 	arp_macro_ptr: dw
-	ex_macro_type: db
 	ex_macro_ptr: dw
 	fm_preset: db
 	fm_patch: dw
@@ -164,31 +164,32 @@
 
 .STRUCT channel
 	flags: db
+	events: db		; 
 	subchannel: db		; channel number within the chip
 	port: db		; output port, used for certain chips
-	events: db		; 
 	freq: dw		; current fnum/tone of the voice
 	target_freq: db		; target fnum/tone used for portamento
 	volume: db
-	midi_note: db
 	instrument_num: db
-	instrument_ptr: dw
 	effect1: db
 	effect2: db
 	effect3: db
-	pattern_ptr: dw		; pointer to the current pattern
-	wait: db		; wait for this many lines
+	pattern_ptr: dw		; current pattern/command pointer
+	wait: db		; wait for this many lines/tics
 	volume_macro_ptr: dw
-	arp_macro_val: db
-	arp_macro_pos: db
 	arp_macro_ptr: dw
-	ex_macro_val: db
-	ex_macro_pos: db
-	ex_macro_type: db
 	ex_macro_ptr: dw
-	gp1: db		; general purpose: opll patch
-	gp2: db		; general purpose:
-	gp3: db		; general purpose:
+	volume_macro_pos: db
+	arp_macro_pos: db
+	ex_macro_pos: db
+	ex_macro_val: db
+	gp1: db		; general purpose: opll patch number, sn7 noise mode, ay3 noise pitch
+	gp2: db		; general purpose: opl/opm/opn patch ptr, ay3 envelope flag
+	gp3: db		; general purpose: opl/opm/opn patch ptr
+	detune: db
+	type: db
+	padding3: db
+	padding4: db
 .ENDST
 
 .STRUCT music_state

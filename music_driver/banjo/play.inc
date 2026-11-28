@@ -104,9 +104,6 @@ music_play:
 		
 		; default waits to 0
 		ld (ix + channel.wait), a
-
-		; default ex_macro_type
-		ld (ix + channel.ex_macro_type), a
 		
 		; the following variables are initialised to 0xff
 		dec a

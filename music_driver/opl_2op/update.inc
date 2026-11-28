@@ -78,52 +78,43 @@ banjo_opl_2op_get_first_slot_index:
 ; iy: music state
 music_update_channel_opl_2op:
 
-    ld bc, music_command_jump_table_opl_2op
+    ; process new line if necessary
+    ; returns events in b and flags in c
+    ld hl, music_command_jump_table_opl_2op
     call music_process_new_line
 
-    ; get flags in b for later
-    ld b, (ix + channel.flags)
+    ; handle note-off
+    bit CHAN_FLAG_BIT_NOTE_OFF, c
+    jp nz, music_note_off_opl_2op
+    music_note_off_opl_2op_done:
+
+    ; store new value of flags
+    ld (ix + channel.flags), c
 
     ; check that note on is set
     ; this should never be set if the channel is muted
-    bit CHAN_FLAG_BIT_NOTE_ON, b
+    bit CHAN_FLAG_BIT_NOTE_ON, c
     jr z, muco2_done
 
-        ; process volume macro
-        bit CHAN_FLAG_BIT_VOLUME_MACRO, b
-        call nz, music_update_volume_macro
-
-        ; process arp macro
-        bit CHAN_FLAG_BIT_ARP_MACRO, b
-        call nz, music_update_arp_macro
-
-        ; process ex macro
-        bit CHAN_FLAG_BIT_EX_MACRO, b
-        call nz, music_update_ex_macro
-
-        ; keep flags in a
-        ld a, b
-
-        ; b now has events
-        ld b, (ix + channel.events)
-
         ; check if we need to update the pitch of this channel
-        ld a, CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_PITCH_CHANGE_ALWAYS | CHAN_EVENT_DUTY_CHANGED
-        and a, b
+        ld a, b
+        and a, CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_VIBRATO | CHAN_EVENT_ARPEGGIO | CHAN_EVENT_SLIDE | CHAN_EVENT_ARP_MACRO
         jp nz, music_update_pitch_registers_opl_2op
         music_update_pitch_registers_opl_2op_done:
 
-        ; update volume if there's been a volume change event
-        ; or the master volume changed
+        ; update volume if there's been a master volume change event
+        ; or there's a volume macro or a volume change
         ld a, b
-        or a, (iy + music_state.flags)
-        and a, CHAN_EVENT_VOLUME_CHANGE
+        and a, CHAN_EVENT_VOLUME_CHANGE | CHAN_EVENT_VOLUME_MACRO
+        jp nz, music_volume_change_opl_2op
+        
+        bit STATE_FLAG_BIT_MASTER_VOLUME_CHANGE, (iy + music_state.flags)
         jp nz, music_volume_change_opl_2op      
         music_volume_change_opl_2op_done:
 
-        ; clear events
-		ld a, b
-		and a, CHAN_EVENT_PITCH_CHANGE_ALWAYS | CHAN_EVENT_MACRO_RELEASE | CHAN_EVENT_LEGATO | CHAN_EVENT_TIC_WAIT
+        ; clear temporary events
+        ld a, b
+        and a, CHAN_EVENT_VOLUME_MACRO | CHAN_EVENT_ARP_MACRO | CHAN_EVENT_VIBRATO | CHAN_EVENT_ARPEGGIO | CHAN_EVENT_SLIDE
         ld (ix + channel.events), a
 
         muco2_done:

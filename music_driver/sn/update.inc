@@ -23,50 +23,51 @@ banjo_update_channel_sn:
     ret
 
 
-.ifndef BANJO_MINIMAL
-
 ; ix: channel
 ; iy: music state
 music_update_channel_sn:
 
-    ld bc, music_command_jump_table_sn
+    ; process new line if necessary
+    ; returns events in b and flags in c
+    ld hl, music_command_jump_table_sn
     call music_process_new_line
 
-    ; get flags in b for later
-    ld b, (ix + channel.flags)
+    ; handle note-off
+    bit CHAN_FLAG_BIT_NOTE_OFF, c
+    jp nz, music_note_off_sn
+    music_note_off_sn_done:
+
+    ; store new value of flags
+    ld (ix + channel.flags), c
 
     ; check that note on is set
     ; this should never be set if the channel is muted
-    bit CHAN_FLAG_BIT_NOTE_ON, b
+    bit CHAN_FLAG_BIT_NOTE_ON, c
     jr z, mucsn_done
 
-        ; process arp macro
-        bit CHAN_FLAG_BIT_ARP_MACRO, b
-        call nz, music_update_arp_macro
-
         ; process ex macro
-        bit CHAN_FLAG_BIT_EX_MACRO, b
+        bit CHAN_FLAG_BIT_EX_MACRO, c
         jr z, muc_sn_no_ex_macro
         
             call music_update_ex_macro
 
-            ; was this a duty macro?
-            bit MACRO_TYPE_BIT_DUTY, (ix + channel.ex_macro_type)
-            jr z, muc_sn_ex_macro_done
+            ; update noise mode
+            ld a, (hl)
+            
+            ; check if the noise mode has changed
+            cp a, (iy + music_state.noise_mode)
+            jr z, muc_sn_no_ex_macro_noise_change
 
-                ; update noise mode
-                ld a, (ix + channel.ex_macro_val)
+                ; update value and flag a change
                 ld (iy + music_state.noise_mode), a
+                set CHAN_EVENT_BIT_WAVEDUTY_CHANGED, b
 
-        muc_sn_ex_macro_done:
+        muc_sn_no_ex_macro_noise_change:
         muc_sn_no_ex_macro:
-
-        ; b now has events
-        ld b, (ix + channel.events)
 
         ; change of noise duty flagged?
         ; could be set by noise command or ex macro
-        bit CHAN_EVENT_BIT_DUTY_CHANGED, b
+        bit CHAN_EVENT_BIT_WAVEDUTY_CHANGED, b
         jr z, muc_sn_no_duty
 
             ; change noise mode here if we've changed to ch3 based pitch
@@ -75,33 +76,28 @@ music_update_channel_sn:
             jr z, muc_sn_no_duty
 
                 ; bit 7 being set flags that the noise mode is different
-                or a, a
-                call m, music_update_noise_mode_sn_ch3_pitch
+                call music_update_noise_mode_sn_ch3_pitch
 
         muc_sn_no_duty:
 
         ; check if we need to update the pitch of this channel
-        ld a, CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_PITCH_CHANGE_ALWAYS | CHAN_EVENT_DUTY_CHANGED
-        and a, b 
+        ld a, b
+        and a, CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_VIBRATO | CHAN_EVENT_ARPEGGIO | CHAN_EVENT_SLIDE | CHAN_EVENT_ARP_MACRO | CHAN_EVENT_WAVEDUTY_CHANGED 
         call nz, music_update_pitch_registers_sn
 
-        .assert CHAN_EVENT_VOLUME_CHANGE == STATE_FLAG_MASTER_VOLUME_CHANGE
-        .assert CHAN_EVENT_VOLUME_CHANGE == CHAN_FLAG_VOLUME_MACRO
-
-        ; update volume if there's been a volume change event
-        ; or there's a volume macro
-        ; or the master volume changed
+        ; update volume if there's a volume macro or a volume change
+        ; or there's been a master volume change event
         ld a, b
-        or a, (ix + channel.flags)
-        or a, (iy + music_state.flags)
-        and a, CHAN_EVENT_VOLUME_CHANGE
+        and a, CHAN_EVENT_VOLUME_CHANGE | CHAN_EVENT_VOLUME_MACRO
         jp nz, music_volume_change_sn
-
+        
+        bit STATE_FLAG_BIT_MASTER_VOLUME_CHANGE, (iy + music_state.flags)
+        jp nz, music_volume_change_sn
         music_volume_change_sn_done:
 
-        ; clear events which only last one frame
-		ld a, b
-		and a, CHAN_EVENT_PITCH_CHANGE_ALWAYS | CHAN_EVENT_MACRO_RELEASE | CHAN_EVENT_LEGATO | CHAN_EVENT_TIC_WAIT
+        ; clear temporary events
+        ld a, b
+        and a, CHAN_EVENT_VOLUME_MACRO | CHAN_EVENT_ARP_MACRO | CHAN_EVENT_VIBRATO | CHAN_EVENT_ARPEGGIO | CHAN_EVENT_SLIDE
         ld (ix + channel.events), a
 
         mucsn_done:
@@ -112,60 +108,8 @@ music_update_channel_sn:
 
             ret
 
-.endif
 
 
-.ifdef BANJO_MINIMAL
-
-; ix: channel
-; iy: music state
-music_update_channel_sn:
-
-    ; process new line if necessary
-	bit STATE_FLAG_BIT_PROCESS_NEW_LINE, (iy + music_state.flags)
-    jr z, muc_sn_no_process_new_line
-
-        ld de, music_command_jump_table_sn
-        call music_process_new_line
-
-    muc_sn_no_process_new_line:
-
-    ; get flags in b for later
-    ld b, (ix + channel.flags)
-
-    ; check that the note is on
-    bit CHAN_FLAG_BIT_NOTE_ON, b
-    jr z, mucsn_done
-
-        ; keep flags in a
-        ld a, b
-
-        ; b now has events
-        ld b, (ix + channel.events)
-
-        ; check if we need to update the pitch of this channel
-        ld a, CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_DUTY_CHANGED
-        and a, b
-        jp nz, music_update_pitch_registers_sn
-        music_update_pitch_registers_sn_done:
-
-        ; update volume if there's been a volume change event
-        bit CHAN_EVENT_BIT_VOLUME_CHANGE, b
-        jp nz, music_volume_change_sn
-        music_volume_change_sn_done:
-
-        ; clear events
-        ld (ix + channel.events), 0
-
-        mucsn_done:
-            
-            ; move on to next channel
-            ld de, _sizeof_channel
-            add ix,de
-
-            ret
-
-.endif
 
 .ifdef BANJO_ALF
 

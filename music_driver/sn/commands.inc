@@ -4,7 +4,7 @@
 
 ; commands will be jumped to from music_process_new_line
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_sn_noise_mode:
 
@@ -15,16 +15,15 @@ mpnl_sn_noise_mode:
 	jp z, mpnl_command_done
 		
 		; store for later w/ flag to say that the mode has changed
-		or a, 0x80
 		ld (iy + music_state.noise_mode), a
 
 		; flag that the noise mode has been changed
-		set CHAN_EVENT_BIT_DUTY_CHANGED, (ix + channel.events)
+		set CHAN_EVENT_BIT_WAVEDUTY_CHANGED, b
 		
 		jp mpnl_command_done
 
 	
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_game_gear_pan:
 
@@ -50,7 +49,7 @@ mpnl_game_gear_pan:
 	jr z, mpnl_game_gear_pan_muted
 
 		; update chip if this channel isn't muted
-		bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
+		bit CHAN_FLAG_BIT_MUTED, c
 		jr nz, mpnl_game_gear_pan_muted
 		
 			ld a, l

@@ -34,7 +34,6 @@ music_update_vibrato:
     ; add to counter, wraps around at 64
     ld a, (ix + channel.effect1)
     add a, (ix + channel.effect2)
-    and a, 0x3f
 
     ; store new value and keep it in c
     ld (ix + channel.effect1), a
@@ -67,29 +66,29 @@ music_update_vibrato:
     ld a, (de)
 
     ; vibrato amount == 0
+    ; don't need to add anything
     or a, a
-    jr z, mvu_no_invert
+    ret z
 
     ; invert value from table when counter is between 32 and 63
     bit 5, c
     jr z, mvu_no_invert
 
-		; upper byte of vibrato
-        ld d, 0xff
-		
-		; lower byte of vibrato
+        ; make value in `a` negative
+        ; at this point we know the value isn't zero
+        ; so dec the upper byte of pitch
 		neg
-        ld e, a
-		
-		ret
+        dec h
 
+    mvu_not_zero:
     mvu_no_invert:
 
-		; upper byte of vibrato
-		ld d, 0
-		
-        ; lower byte of vibrato
-        ld e, a
+        ; add vibrato amount to pitch
+		add a, l
+        ld l, a
+        adc a, h
+        sub a, l
+        ld h, a
 
 		ret
 

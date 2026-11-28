@@ -7,7 +7,7 @@
 mpnl_opll_instrument_change:
 
 	; check if the channel is muted and skip command if it is
-	bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
+	bit CHAN_FLAG_BIT_MUTED, c
 	jp nz, mpnl_skip_2_byte_command
 
 	; don't do anything if the instrument number is the same

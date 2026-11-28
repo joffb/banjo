@@ -25,15 +25,11 @@ music_volume_change_opll:
     bit CHAN_FLAG_BIT_EX_MACRO, (ix + channel.flags)
     jr z, mvcopll_no_ex_macro
 
-        ; is it a patch macro?
-        bit MACRO_TYPE_BIT_WAVE, (ix + channel.ex_macro_type)
-        jr nz, mvcopll_no_ex_macro
-
-            ; get current patch which is the upper nibble of the volume reg
-            ; and combine with new volume level
-            ld a, (ix + channel.ex_macro_val)
-            or a, l
-            jr mvcopll_write
+        ; get current patch which is the upper nibble of the volume reg
+        ; and combine with new volume level
+        ld a, (ix + channel.ex_macro_val)
+        or a, l
+        jr mvcopll_write
 
     mvcopll_no_ex_macro:
 

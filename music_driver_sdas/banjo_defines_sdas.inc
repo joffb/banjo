@@ -60,61 +60,61 @@ CHAN_COUNT_AY			.equ		0x3
 
 CHAN_FLAG_MUTED			.equ		0x1
 CHAN_FLAG_NOTE_ON			.equ		0x2
-CHAN_FLAG_VOLUME_MACRO			.equ		0x4
-CHAN_FLAG_ARP_MACRO			.equ		0x8
-CHAN_FLAG_VIBRATO			.equ		0x10
-CHAN_FLAG_ARPEGGIO			.equ		0x20
-CHAN_FLAG_SLIDE			.equ		0x40
-CHAN_FLAG_EX_MACRO			.equ		0x80
+CHAN_FLAG_LEGATO			.equ		0x4
+CHAN_FLAG_TIC_WAIT			.equ		0x8
+CHAN_FLAG_MACRO_RELEASE			.equ		0x10
+CHAN_FLAG_NOTE_OFF			.equ		0x20
+CHAN_FLAG_EX_MACRO			.equ		0x40
 
 CHAN_FLAG_BIT_MUTED			.equ		0x0
 CHAN_FLAG_BIT_NOTE_ON			.equ		0x1
-CHAN_FLAG_BIT_VOLUME_MACRO			.equ		0x2
-CHAN_FLAG_BIT_ARP_MACRO			.equ		0x3
-CHAN_FLAG_BIT_VIBRATO			.equ		0x4
-CHAN_FLAG_BIT_ARPEGGIO			.equ		0x5
-CHAN_FLAG_BIT_SLIDE			.equ		0x6
-CHAN_FLAG_BIT_EX_MACRO			.equ		0x7
+CHAN_FLAG_BIT_LEGATO			.equ		0x2
+CHAN_FLAG_BIT_TIC_WAIT			.equ		0x3
+CHAN_FLAG_BIT_MACRO_RELEASE			.equ		0x4
+CHAN_FLAG_BIT_NOTE_OFF			.equ		0x5
+CHAN_FLAG_BIT_EX_MACRO			.equ		0x6
 
 CHAN_EVENT_PITCH_CHANGED			.equ		0x1
-CHAN_EVENT_PITCH_CHANGE_ALWAYS			.equ		0x2
-CHAN_EVENT_VOLUME_CHANGE			.equ		0x4
-CHAN_EVENT_LEGATO			.equ		0x8
-CHAN_EVENT_WAVE_CHANGED			.equ		0x10
-CHAN_EVENT_DUTY_CHANGED			.equ		0x20
-CHAN_EVENT_TIC_WAIT			.equ		0x40
-CHAN_EVENT_MACRO_RELEASE			.equ		0x80
+CHAN_EVENT_VOLUME_CHANGE			.equ		0x2
+CHAN_EVENT_WAVEDUTY_CHANGED			.equ		0x4
+CHAN_EVENT_VOLUME_MACRO			.equ		0x8
+CHAN_EVENT_ARP_MACRO			.equ		0x10
+CHAN_EVENT_VIBRATO			.equ		0x20
+CHAN_EVENT_ARPEGGIO			.equ		0x40
+CHAN_EVENT_SLIDE			.equ		0x80
 
 CHAN_EVENT_BIT_PITCH_CHANGED			.equ		0x0
-CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS			.equ		0x1
-CHAN_EVENT_BIT_VOLUME_CHANGE			.equ		0x2
-CHAN_EVENT_BIT_LEGATO			.equ		0x3
-CHAN_EVENT_BIT_WAVE_CHANGED			.equ		0x4
-CHAN_EVENT_BIT_DUTY_CHANGED			.equ		0x5
-CHAN_EVENT_BIT_TIC_WAIT			.equ		0x6
-CHAN_EVENT_BIT_MACRO_RELEASE			.equ		0x7
+CHAN_EVENT_BIT_VOLUME_CHANGE			.equ		0x1
+CHAN_EVENT_BIT_WAVEDUTY_CHANGED			.equ		0x2
+CHAN_EVENT_BIT_VOLUME_MACRO			.equ		0x3
+CHAN_EVENT_BIT_ARP_MACRO			.equ		0x4
+CHAN_EVENT_BIT_VIBRATO			.equ		0x5
+CHAN_EVENT_BIT_ARPEGGIO			.equ		0x6
+CHAN_EVENT_BIT_SLIDE			.equ		0x7
 
 MACRO_TYPE_PITCH			.equ		0x1
 MACRO_TYPE_VOLUME			.equ		0x2
-MACRO_TYPE_WAVE			.equ		0x10
-MACRO_TYPE_DUTY			.equ		0x20
-MACRO_TYPE_ARP			.equ		0x40
+MACRO_TYPE_WAVE			.equ		0x4
+MACRO_TYPE_DUTY			.equ		0x8
+MACRO_TYPE_ARP			.equ		0x10
 
 MACRO_TYPE_BIT_PITCH			.equ		0x0
 MACRO_TYPE_BIT_VOLUME			.equ		0x1
-MACRO_TYPE_BIT_WAVE			.equ		0x4
-MACRO_TYPE_BIT_DUTY			.equ		0x5
-MACRO_TYPE_BIT_ARP			.equ		0x6
+MACRO_TYPE_BIT_WAVE			.equ		0x2
+MACRO_TYPE_BIT_DUTY			.equ		0x3
+MACRO_TYPE_BIT_ARP			.equ		0x4
 
 STATE_FLAG_PROCESS_NEW_LINE			.equ		0x1
-STATE_FLAG_LOOP			.equ		0x2
-STATE_FLAG_MASTER_VOLUME_CHANGE			.equ		0x4
+STATE_FLAG_MASTER_VOLUME_CHANGE			.equ		0x2
+STATE_FLAG_LOOP			.equ		0x4
 STATE_FLAG_ORDER_JUMP			.equ		0x8
+STATE_FLAG_SFX			.equ		0x10
 
 STATE_FLAG_BIT_PROCESS_NEW_LINE			.equ		0x0
-STATE_FLAG_BIT_LOOP			.equ		0x1
-STATE_FLAG_BIT_MASTER_VOLUME_CHANGE			.equ		0x2
+STATE_FLAG_BIT_MASTER_VOLUME_CHANGE			.equ		0x1
+STATE_FLAG_BIT_LOOP			.equ		0x2
 STATE_FLAG_BIT_ORDER_JUMP			.equ		0x3
+STATE_FLAG_BIT_SFX			.equ		0x4
 
 BANJO_MAGIC_BYTE			.equ		0xba
 
@@ -150,9 +150,9 @@ SYS_FLAG_BIT_MARK_III			.equ		0x1
 SYS_FLAG_BIT_SYSTEM_E			.equ		0x2
 
 instrument.macro_flags .equ 0
-instrument.volume_macro_ptr .equ 1
-instrument.arp_macro_ptr .equ 3
-instrument.ex_macro_type .equ 5
+instrument.macro_events .equ 1
+instrument.volume_macro_ptr .equ 2
+instrument.arp_macro_ptr .equ 4
 instrument.ex_macro_ptr .equ 6
 instrument.fm_preset .equ 8
 instrument.fm_patch .equ 9
@@ -160,31 +160,32 @@ instrument.padding .equ 11
 _sizeof_instrument .equ 12
 
 channel.flags .equ 0
-channel.subchannel .equ 1		; channel number within the chip
-channel.port .equ 2		; output port, used for certain chips
-channel.events .equ 3		; 
+channel.events .equ 1		; 
+channel.subchannel .equ 2		; channel number within the chip
+channel.port .equ 3		; output port, used for certain chips
 channel.freq .equ 4		; current fnum/tone of the voice
 channel.target_freq .equ 6		; target fnum/tone used for portamento
 channel.volume .equ 7
-channel.midi_note .equ 8
-channel.instrument_num .equ 9
-channel.instrument_ptr .equ 10
-channel.effect1 .equ 12
-channel.effect2 .equ 13
-channel.effect3 .equ 14
-channel.pattern_ptr .equ 15		; pointer to the current pattern
-channel.wait .equ 17		; wait for this many lines
-channel.volume_macro_ptr .equ 18
-channel.arp_macro_val .equ 20
-channel.arp_macro_pos .equ 21
-channel.arp_macro_ptr .equ 22
+channel.instrument_num .equ 8
+channel.effect1 .equ 9
+channel.effect2 .equ 10
+channel.effect3 .equ 11
+channel.pattern_ptr .equ 12		; current pattern/command pointer
+channel.wait .equ 14		; wait for this many lines/tics
+channel.volume_macro_ptr .equ 15
+channel.arp_macro_ptr .equ 17
+channel.ex_macro_ptr .equ 19
+channel.volume_macro_pos .equ 21
+channel.arp_macro_pos .equ 22
+channel.ex_macro_pos .equ 23
 channel.ex_macro_val .equ 24
-channel.ex_macro_pos .equ 25
-channel.ex_macro_type .equ 26
-channel.ex_macro_ptr .equ 27
-channel.gp1 .equ 29		; general purpose: opll patch
-channel.gp2 .equ 30		; general purpose:
-channel.gp3 .equ 31		; general purpose:
+channel.gp1 .equ 25		; general purpose: opll patch number, sn7 noise mode, ay3 noise pitch
+channel.gp2 .equ 26		; general purpose: opl/opm/opn patch ptr, ay3 envelope flag
+channel.gp3 .equ 27		; general purpose: opl/opm/opn patch ptr
+channel.detune .equ 28
+channel.type .equ 29
+channel.padding3 .equ 30
+channel.padding4 .equ 31
 _sizeof_channel .equ 32
 
 music_state.magic_byte .equ 0		; should be 0xba for a valid song

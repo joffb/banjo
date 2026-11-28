@@ -4,14 +4,14 @@
 
 ; commands will be jumped to from music_process_new_line
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 ; iy: music_state
 ; ix: channel we're updating
 mpnl_opll_drum:
 
 	; check if the channel is muted
-	bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
+	bit CHAN_FLAG_BIT_MUTED, c
 	jp nz, mpnl_skip_2_byte_command
 
 	; preserve bc

@@ -1,5 +1,5 @@
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_opn_volume_change:
 
@@ -16,16 +16,16 @@ mpnl_opn_volume_change:
 		ld (ix + channel.volume), a
 
 		; set bit to indicate a channel volume change event
-		set CHAN_EVENT_BIT_VOLUME_CHANGE, (ix + channel.events)
+		set CHAN_EVENT_BIT_VOLUME_CHANGE, b
 
 		jp mpnl_command_done
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_opn_pan:
 
 	; check if the channel is muted and skip command if it is
-	bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
+	bit CHAN_FLAG_BIT_MUTED, c
 	jp nz, mpnl_skip_2_byte_command
 
 		; get pan value
@@ -43,7 +43,7 @@ mpnl_opn_pan:
 
 		jp mpnl_command_done
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_opn_lfo:
 

@@ -90,10 +90,11 @@ music_update_slide:
 
 		mus_porta_target_passed:
 
+			; portamento done
+			; set to whole note and clear slide bit
 			ld l, 0
 			ld h, c
-
-			res CHAN_FLAG_BIT_SLIDE, (ix + channel.flags)
+			res CHAN_EVENT_BIT_SLIDE, b
 
 	mus_slide_done:
 

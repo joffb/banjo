@@ -9,7 +9,8 @@ music_ay_channel_mix_masks:
     .db 0xed
     .db 0xdb
 
-
+; bc : events and flags (preserve these!)
+; de : instruction pointer (preserve this!)
 mpnl_ay_volume_change:
 
     ld a, (de)
@@ -24,15 +25,17 @@ mpnl_ay_volume_change:
     ld (ix + channel.volume), a
 
     ; set bit to indicate a channel volume change event
-    set CHAN_EVENT_BIT_VOLUME_CHANGE, (ix + channel.events)
+    set CHAN_EVENT_BIT_VOLUME_CHANGE, b
 
     jp mpnl_command_done
 
 
+; bc : events and flags (preserve these!)
+; de : instruction pointer (preserve this!)
 mpnl_ay_channel_mix:
 
     ; check if the channel is muted
-    bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
+    bit CHAN_FLAG_BIT_MUTED, c
     jp nz, mpnl_skip_2_byte_command
 
         push bc
@@ -81,13 +84,16 @@ mpnl_ay_channel_mix:
         jp mpnl_command_done
 
 
+; bc : events and flags (preserve these!)
+; de : instruction pointer (preserve this!)
 mpnl_ay_noise_pitch:
 
     ; check if the channel is muted
-    bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
+    bit CHAN_FLAG_BIT_MUTED, c
     jp nz, mpnl_skip_2_byte_command
 
-        push bc
+		; preserve c
+		ld l, c
 
         ld c, (ix + channel.port)
 
@@ -100,6 +106,7 @@ mpnl_ay_noise_pitch:
         inc c
         out (c), a
 
-        pop bc
+		; restore c
+		ld c, l
 
         jp mpnl_command_done

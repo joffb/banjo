@@ -6,10 +6,10 @@
 ; ix: channel we're updating
 music_update_pitch_registers_opl_2op:
 
-    push bc
-
     ; calculate note number
     call music_calc_fnum
+
+    push bc
 
     ; turn that into an fnum and octave
     ld hl, opl_2op_tone_lookup

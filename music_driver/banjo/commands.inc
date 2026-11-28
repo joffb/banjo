@@ -2,12 +2,29 @@
 ; banjo sound driver
 ; Joe Kennedy 2023
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
+; de : instruction pointer (preserve this!)
+mpnl_note_off:
+
+	; clear note-on flag
+	res CHAN_FLAG_BIT_NOTE_ON, c
+
+	; only trigger a note-off if we aren't muted
+	bit CHAN_FLAG_BIT_MUTED, c
+	jp nz, mpnl_command_done_one_byte_command
+
+		; set note-off flag
+		set CHAN_FLAG_BIT_NOTE_OFF, c
+
+		jp mpnl_command_done_one_byte_command
+
+
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_instrument_change:
 
 	; check if the channel is muted and skip command if it is
-	bit CHAN_FLAG_BIT_MUTED, (ix + channel.flags)
+	bit CHAN_FLAG_BIT_MUTED, c
 	jp nz, mpnl_skip_2_byte_command
 
 		; don't do anything if the instrument number is the same
@@ -17,7 +34,7 @@ mpnl_instrument_change:
 
 		jp mpnl_command_done
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_volume_change:
 
@@ -33,14 +50,14 @@ mpnl_volume_change:
 		ld (ix + channel.volume), a
 
 		; set bit to indicate a channel volume change event
-		set CHAN_EVENT_BIT_VOLUME_CHANGE, (ix + channel.events)
+		set CHAN_EVENT_BIT_VOLUME_CHANGE, b
 
 		jp mpnl_command_done
 	
 
 .ifndef BANJO_MINIMAL
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_pitch_slide_up:
 	
@@ -49,7 +66,7 @@ mpnl_pitch_slide_up:
 
 	jr mpnl_slide_common
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_pitch_slide_down:
 	
@@ -58,7 +75,7 @@ mpnl_pitch_slide_down:
 
 	jr mpnl_slide_common
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_portamento:
 
@@ -72,13 +89,10 @@ mpnl_slide_common:
 	ld (ix + channel.effect2), a
 
 	; set pitch slide flag
-	ld a, (ix + channel.flags)
-	and a, ~(CHAN_FLAG_ARPEGGIO | CHAN_FLAG_VIBRATO | CHAN_FLAG_SLIDE)
-	or a, CHAN_FLAG_SLIDE
-	ld (ix + channel.flags), a
-	
-	; set "pitch always changing" flag
-	set CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
+	ld a, b
+	and a, ~(CHAN_EVENT_ARPEGGIO | CHAN_EVENT_VIBRATO | CHAN_EVENT_SLIDE)
+	or a, CHAN_EVENT_SLIDE
+	ld b, a
 
 	jp mpnl_command_done
 
@@ -88,24 +102,17 @@ mpnl_slide_off:
 	; clear slide
 	ld (ix + channel.effect3), 0
 
-	; clear slide flag
-	ld a, (ix + channel.flags)
-	and a, ~(CHAN_FLAG_SLIDE)
-	ld (ix + channel.flags), a
-
-	; mark pitch as requiring update
-	set CHAN_EVENT_BIT_PITCH_CHANGED, (ix + channel.events)
-
-	; clear the "pitch always changing" flag if no other effect is running
-	ld a, CHAN_FLAG_ARPEGGIO | CHAN_FLAG_VIBRATO
-	and a, (ix + channel.flags)
-	jp nz, mpnl_command_done_one_byte_command
-	res CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
+	; clear pitch effect flags
+	; mark pitch as requiring update	
+	ld a, b
+	and a, ~(CHAN_EVENT_ARPEGGIO | CHAN_EVENT_VIBRATO | CHAN_EVENT_SLIDE)
+	or a, CHAN_EVENT_PITCH_CHANGED
+	ld b, a
 
 	jp mpnl_command_done_one_byte_command
 
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_arpeggio:
 
@@ -131,44 +138,34 @@ mpnl_arpeggio:
 	ld (ix + channel.effect1), 2
 
 	; set arpeggio flag
-	ld a, (ix + channel.flags)
-	and a, ~(CHAN_FLAG_ARPEGGIO | CHAN_FLAG_VIBRATO | CHAN_FLAG_SLIDE)
-	or a, CHAN_FLAG_ARPEGGIO
-	ld (ix + channel.flags), a
+	ld a, b
+	and a, ~(CHAN_EVENT_ARPEGGIO | CHAN_EVENT_VIBRATO | CHAN_EVENT_SLIDE)
+	or a, CHAN_EVENT_ARPEGGIO
+	ld b, a
 	
-	; set "pitch always changing" flag
-	set CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
-
 	.endif
 
 	jp mpnl_command_done
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_arpeggio_off:
 
 	.ifndef BANJO_DISABLE_ARPEGGIO
 
-	; clear arpeggio flag
-	ld a, (ix + channel.flags)
-	and a, ~(CHAN_FLAG_ARPEGGIO)
-	ld (ix + channel.flags), a
-
-	; mark pitch as requiring update
-	set CHAN_EVENT_BIT_PITCH_CHANGED, (ix + channel.events)
-	
-	; clear the "pitch always changing" flag if no other effect is running
-	ld a, CHAN_FLAG_VIBRATO | CHAN_FLAG_SLIDE
-	and a, (ix + channel.flags)
-	jp nz, mpnl_command_done_one_byte_command
-	res CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
+	; clear pitch effect flags
+	; mark pitch as requiring update	
+	ld a, b
+	and a, ~(CHAN_EVENT_ARPEGGIO | CHAN_EVENT_VIBRATO | CHAN_EVENT_SLIDE)
+	or a, CHAN_EVENT_PITCH_CHANGED
+	ld b, a
 
 	.endif
 
 	jp mpnl_command_done_one_byte_command
 
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_vibrato:
 
@@ -190,62 +187,52 @@ mpnl_vibrato:
 	and a, 0xf0
 	ld (ix + channel.effect3), a
 
-	; set vibrato flag
-	ld a, (ix + channel.flags)
-	and a, ~(CHAN_FLAG_ARPEGGIO | CHAN_FLAG_VIBRATO | CHAN_FLAG_SLIDE)
-	or a, CHAN_FLAG_VIBRATO
-	ld (ix + channel.flags), a
+	; set arpeggio flag
+	ld a, b
+	and a, ~(CHAN_EVENT_ARPEGGIO | CHAN_EVENT_VIBRATO | CHAN_EVENT_SLIDE)
+	or a, CHAN_EVENT_VIBRATO
+	ld b, a
 	
-	; set "pitch always changing" flag
-	set CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
-
 	.endif
 
 	jp mpnl_command_done
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_vibrato_off:
 
 	.ifndef BANJO_DISABLE_VIBRATO
 
-	; clear vibrato flag
-	ld a, (ix + channel.flags)
-	and a, ~(CHAN_FLAG_VIBRATO)
-	ld (ix + channel.flags), a
-
-	; mark pitch as requiring update
-	set CHAN_EVENT_BIT_PITCH_CHANGED, (ix + channel.events)
-
-	; clear the "pitch always changing" flag if no other effect is running
-	ld a, CHAN_FLAG_ARPEGGIO | CHAN_FLAG_SLIDE
-	and a, (ix + channel.flags)
-	jp nz, mpnl_command_done_one_byte_command
-	res CHAN_EVENT_BIT_PITCH_CHANGE_ALWAYS, (ix + channel.events)
+	; clear pitch effect flags
+	; mark pitch as requiring update	
+	ld a, b
+	and a, ~(CHAN_EVENT_ARPEGGIO | CHAN_EVENT_VIBRATO | CHAN_EVENT_SLIDE)
+	or a, CHAN_EVENT_PITCH_CHANGED
+	ld b, a
 
 	.endif
 
 	jp mpnl_command_done_one_byte_command
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_legato_on:
 
 	; switch legato flag on
-	set CHAN_EVENT_BIT_LEGATO, (ix + channel.events)
+	set CHAN_FLAG_BIT_LEGATO, c
 
 	jp mpnl_command_done_one_byte_command
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_legato_off:
 
 	; switch legato flag off
-	res CHAN_EVENT_BIT_LEGATO, (ix + channel.events)
+	res CHAN_FLAG_BIT_LEGATO, c
 
 	jp mpnl_command_done_one_byte_command
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_order_jump:
 
@@ -256,7 +243,7 @@ mpnl_order_jump:
 	
 	jp mpnl_command_done
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_order_next:
 
@@ -277,7 +264,7 @@ mpnl_order_next:
 	jp mpnl_command_done_one_byte_command
 
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_set_speed_1:
 
@@ -288,7 +275,7 @@ mpnl_set_speed_1:
 	jp mpnl_command_done
 
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_set_speed_2:
 
@@ -299,7 +286,7 @@ mpnl_set_speed_2:
 	jp mpnl_command_done
 
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_note_delay:
 
@@ -308,7 +295,7 @@ mpnl_note_delay:
 	ld (ix + channel.wait), a
 
 	; set tic wait flag
-	set CHAN_EVENT_BIT_TIC_WAIT, (ix + channel.events)
+	set CHAN_FLAG_BIT_TIC_WAIT, c
 
 	; store the pointer to the next command and return
 	; this will be picked up when tic_wait hits zero
@@ -316,13 +303,16 @@ mpnl_note_delay:
 	ld (ix + channel.pattern_ptr), e
 	ld (ix + channel.pattern_ptr + 1), d
 
+	; clear jump table address from stack
+	pop hl
+
 	ret
 
-; bc : jump table address (preserve this!)
+; bc : events and flags (preserve these!)
 ; de : instruction pointer (preserve this!)
 mpnl_note_release:
 
-	set CHAN_EVENT_BIT_MACRO_RELEASE, (ix + channel.events)
+	set CHAN_FLAG_BIT_MACRO_RELEASE, c
 
 	jp mpnl_command_done_one_byte_command
 

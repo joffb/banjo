@@ -17,7 +17,6 @@ banjo_unmute_channel_opll_drums:
 
     ret
 
-
 ; mute all FM channels by sending key-offs
 banjo_mute_all_opll_drums:
 	

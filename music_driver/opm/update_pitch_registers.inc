@@ -6,10 +6,10 @@
 ; ix: channel we're updating
 music_update_pitch_registers_opm:
 
-    push bc
-
     ; get whole note in d, fraction in e
     call music_calc_fnum
+
+    push bc
 
     ; key fraction register in c
     ld a, (ix + channel.subchannel)

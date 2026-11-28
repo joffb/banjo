@@ -38,53 +38,25 @@ music_update_noise_mode_sn_fixed_pitch:
     ; clear "noise mode changed" flag
     res 7, (iy + music_state.noise_mode)
 
-    ; get flags
-    ld l, (ix + channel.flags)
+    ; get events byte
+    ld l, (ix + channel.events)
 
     ; preserve noise mode
     ld h, a
 
     ; check if an arpeggio effect is running
-    bit CHAN_FLAG_BIT_ARPEGGIO, l
+    bit CHAN_EVENT_BIT_ARPEGGIO, l
     jr z, munmsnfp_no_arpeggio
 
         call music_update_arpeggio
-        add a, (ix + channel.midi_note)
+        add a, (ix + channel.freq + 1)
         jr munmsnfp_arpeggio_done
 
     munmsnfp_no_arpeggio:
 
-        ld a, (ix + channel.midi_note)
+        ld a, (ix + channel.freq + 1)
 
     munmsnfp_arpeggio_done:
-
-    ; arp macro?
-    bit CHAN_FLAG_BIT_ARP_MACRO, l
-    jr z, munmsnfp_no_arp_macro
-
-        ld l, a
-        ld a, (ix + channel.arp_macro_val)
-
-        ; if bit 7 is set, it's absolute
-        bit 7, a
-        jr z, munmsnfp_arp_macro_relative
-
-            ; absolute arp
-            and a, 0x7f
-            
-            jr munmsnfp_no_arp_macro
-
-        munmsnfp_arp_macro_relative:
-
-            ; relative arp macro
-            ; sign extend bit 6 into bit 7
-            rla
-            sra a
-
-            ; add note val
-            add a, l
-
-    munmsnfp_no_arp_macro:
 
     ; get note number mod 12
     sub a, 3
@@ -161,15 +133,16 @@ music_update_pitch_registers_sn:
     ; for a regular square channel we update this channel's pitch
     mup_sn_square_channel:
 
-        ; get channel number (pre-shifted into correct position)
-        ld c, a
+        ; preserve channel number
+        ; (pre-shifted into correct position)
+        push af
 
     mup_sn_pitched_noise_channel:
 
-        push bc
-
         ; calculate note number
         call music_calc_fnum
+
+        push bc
 
         ; turn that into an fnum and octave
         ld hl, sn_tone_lookup
@@ -189,6 +162,8 @@ music_update_pitch_registers_sn:
         or a, 0x80
 
         ; combine with channel number
+        ld c, a
+        pop af
         or a, c
 
         ; output first byte of tone data        

@@ -6,10 +6,10 @@
 ; iy: music_state
 music_update_pitch_registers_ay:
 
-    push bc
-
     ; calculate note number
     call music_calc_fnum
+
+    push bc
 
     ; turn that into an fnum and octave
     ld hl, ay_tone_lookup

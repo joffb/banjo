@@ -81,18 +81,13 @@ banjo_update_channel_opll_drums:
 ; iy: music state
 music_update_channel_opll_drums:
 
-    ld bc, music_command_jump_table_opll_drums
+    ld hl, music_command_jump_table_opll_drums
     call music_process_new_line
-
-    ; get flags in b for later
-    ld b, (ix + channel.flags)
 
     ; check that note on is set
     ; this should never be set if the channel is muted
-    bit CHAN_FLAG_BIT_NOTE_ON, b
+    bit CHAN_FLAG_BIT_NOTE_ON, c
     jr z, mucod_done
-
-        ld b, (ix + channel.events)
 
         ; check if we need to update the pitch of this channel
         bit CHAN_EVENT_BIT_PITCH_CHANGED, b
@@ -102,14 +97,13 @@ music_update_channel_opll_drums:
         ; update volume if there's been a volume change event
         ; or the master volume changed
         ld a, b
-        or a, (iy + music_state.flags)
         and a, CHAN_EVENT_VOLUME_CHANGE
         jp nz, music_volume_change_opll_drums
         music_volume_change_opll_drums_done:
 
         ; clear events
 		ld a, b
-		and a, CHAN_EVENT_PITCH_CHANGE_ALWAYS | CHAN_EVENT_MACRO_RELEASE | CHAN_EVENT_LEGATO | CHAN_EVENT_TIC_WAIT
+		and a, CHAN_EVENT_VOLUME_MACRO | CHAN_EVENT_ARP_MACRO | CHAN_EVENT_VIBRATO | CHAN_EVENT_ARPEGGIO | CHAN_EVENT_SLIDE
         ld (ix + channel.events), a
 
         mucod_done:

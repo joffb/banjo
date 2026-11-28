@@ -27,38 +27,28 @@ banjo_update_channel_ay:
 ; iy: music state
 music_update_channel_ay:
 
-    ld bc, music_command_jump_table_ay
+    ld hl, music_command_jump_table_ay
     call music_process_new_line
 
-    ; get flags in b for later
-    ld b, (ix + channel.flags)
+    ; handle note-off
+    bit CHAN_FLAG_BIT_NOTE_OFF, c
+    jp nz, music_note_off_ay
+    music_note_off_ay_done:
+
+    ; store new value of flags
+    ld (ix + channel.flags), c
 
     ; check that note on is set
     ; this should never be set if the channel is muted
-    bit CHAN_FLAG_BIT_NOTE_ON, b
+    bit CHAN_FLAG_BIT_NOTE_ON, c
     jr z, mucay_done
-
-        ; process volume macro
-        bit CHAN_FLAG_BIT_VOLUME_MACRO, b
-        call nz, music_update_volume_macro
-
-        ; process arp macro
-        bit CHAN_FLAG_BIT_ARP_MACRO, b
-        call nz, music_update_arp_macro
         
-        ; process ex macro
-        bit CHAN_FLAG_BIT_EX_MACRO, b
-        call nz, music_update_ex_macro
-        
-        ; keep flags in a
-        ld a, b
-
-        ; b now has events
-        ld b, (ix + channel.events)
-
         ; change of noise duty?
-        bit CHAN_EVENT_BIT_DUTY_CHANGED, b
+        bit CHAN_FLAG_BIT_EX_MACRO, c
         jr z, muc_ay_no_duty
+
+            ; after this, hl will be pointing at the new ex macro value
+            call music_update_ex_macro
 
             ld c, (ix + channel.port)
 
@@ -67,29 +57,30 @@ music_update_channel_ay:
             out (c), a
 
             ; get noise amount and write it
-            ld a, (ix + channel.ex_macro_val)
+            ld a, (hl)
             inc c
             out (c), a
 
         muc_ay_no_duty:
 
         ; check if we need to update the pitch of this channel
-        ld a, CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_PITCH_CHANGE_ALWAYS
-        and a, b
+        ld a, b
+        and a, CHAN_EVENT_PITCH_CHANGED | CHAN_EVENT_VIBRATO | CHAN_EVENT_ARPEGGIO | CHAN_EVENT_SLIDE | CHAN_EVENT_ARP_MACRO
         jp nz, music_update_pitch_registers_ay
         music_update_pitch_registers_ay_done:
 
-        ; update volume if there's been a volume change event
-        ; or the master volume changed
+        ; update volume if there's been a master volume change event
+        ; or there's a volume macro or a volume change
         ld a, b
-        or a, (iy + music_state.flags)
-        and a, CHAN_EVENT_VOLUME_CHANGE
+        and a, CHAN_EVENT_VOLUME_CHANGE | CHAN_EVENT_VOLUME_MACRO
+        jp nz, music_volume_change_ay
+        bit STATE_FLAG_BIT_MASTER_VOLUME_CHANGE, (iy + music_state.flags)
         jp nz, music_volume_change_ay      
         music_volume_change_ay_done:
 
-        ; clear events
-		ld a, b
-		and a, CHAN_EVENT_PITCH_CHANGE_ALWAYS | CHAN_EVENT_MACRO_RELEASE | CHAN_EVENT_LEGATO | CHAN_EVENT_TIC_WAIT
+        ; clear temporary events
+        ld a, b
+        and a, CHAN_EVENT_VOLUME_MACRO | CHAN_EVENT_ARP_MACRO | CHAN_EVENT_VIBRATO | CHAN_EVENT_ARPEGGIO | CHAN_EVENT_SLIDE
         ld (ix + channel.events), a
         
         mucay_done:

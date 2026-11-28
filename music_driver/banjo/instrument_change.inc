@@ -7,8 +7,7 @@
 ; a: new instrument number
 music_instrument_change:
 
-	; preserve bc and de
-	push bc
+	; preserve de
 	push de
 
 	; store the new instrument number in the channel
@@ -25,76 +24,61 @@ music_instrument_change:
 	add hl, hl
 
 	; keep * 4 for later
-	ld b, h
-	ld c, l
+	ld d, h
+	ld e, l
 	
 	; * 8
 	add hl, hl
 	
 	; * 12
-	add hl, bc
+	add hl, de
 	
 	; offset into instrument data
-	ld c, (iy + music_state.instrument_ptrs)
-	ld b, (iy + music_state.instrument_ptrs + 1)
-	add hl, bc
+	ld e, (iy + music_state.instrument_ptrs)
+	ld d, (iy + music_state.instrument_ptrs + 1)
+	add hl, de
 
-	; store instrument pointer
-	ld (ix + channel.instrument_ptr), l
-	ld (ix + channel.instrument_ptr + 1), h
-
-	; get channel struct ptr ix into de
-	push ix
-	pop de
-
-	; set macro flags
-	; get channel.flags (should be first byte of channel struct)
-	; then unset the macro flags and combine with flags from first byte of instrument 
-	ld a, (de)
-	and a, ~(CHAN_FLAG_VOLUME_MACRO | CHAN_FLAG_ARP_MACRO | CHAN_FLAG_EX_MACRO)
+	; set macro flags in flags byte
+	ld a, c
+	and a, ~(CHAN_FLAG_EX_MACRO)
 	or a, (hl)
-	ld (de), a
+	ld c, a
+	
+	inc hl 
+
+	; set macro flags in events byte
+	ld a, b
+	and a, ~(CHAN_EVENT_VOLUME_MACRO | CHAN_EVENT_ARP_MACRO)
+	or a, (hl)
+	ld b, a
+
+	; preserve bc
+	push bc
 
 	; move to volume macro info in instrument
 	inc hl
 
-	; move along to volume_macro_ptr
+	; get channel struct ptr ix into de
+	; pointing at volume_macro_ptr
 	ld a, channel.volume_macro_ptr
-	add a, e
+	add a, ixl
 	ld e, a
-	adc a, d
+	adc a, ixh
 	sub a, e
 	ld d, a
 
 	; copy over volume macro ptr
 	ldi
 	ldi
-
-	; arp macro
-	; move past arp_macro_val and arp_macro_pos to arp_macro_ptr
-	inc de
-	inc de
-
-	; copy over macro info
-	; ptr
+	; copy over arp macro ptr
+	ldi
+	ldi
+	; copy over ex macro ptr
 	ldi
 	ldi
 
-	; ex macro
-	; move past ex_macro_val and ex_macro_pos to arp_macro_type
-	inc de
-	inc de
-
-	; copy over macro info
-	; ex_macro_type
-	ldi
-
-	; ex_macro_ptr
-	ldi
-	ldi
-
-	; restore de and bc
-	pop de
+	; restore bc and de
 	pop bc
+	pop de
 	
 	ret

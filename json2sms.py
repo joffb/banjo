@@ -58,9 +58,16 @@ TEMP_END_LINE       = 0x100    # used when processing end line to avoid collisio
 INSTRUMENT_SIZE     = 16
 FM_PATCH_SIZE       = 8
 
-CHAN_FLAG_VOLUME_MACRO = 0x04
-CHAN_FLAG_ARP_MACRO = 0x08
-CHAN_FLAG_EX_MACRO = 0x80
+STATE_FLAG_PROCESS_NEW_LINE = 0x1
+STATE_FLAG_MASTER_VOLUME_CHANGE = 0x2
+STATE_FLAG_LOOP = 0x4
+STATE_FLAG_ORDER_JUMP = 0x8
+STATE_FLAG_SFX = 0x10
+
+
+CHAN_FLAG_VOLUME_MACRO = 0x08
+CHAN_FLAG_ARP_MACRO = 0x10
+CHAN_FLAG_EX_MACRO = 0x40
 
 CHIP_SN76489        = 0x03      # 0x03: SMS (SN76489) - 4 channels
 CHIP_SN76489_OPLL   = 0x43      # 0x43: SMS (SN76489) + OPLL (YM2413) - 13 channels (compound!)
@@ -743,14 +750,11 @@ def main(argv=None):
                 for j in range(0, macro["delay"]):
                     macro_delay.append(macro_data[0])
 
-                # calculate loop position
-                macro_loop = (((macro["loop"] * macro["speed"]) + macro["delay"] + 1) if macro["loop"] != 0xff else 0)
-                
                 # combine all data
-                macro["data"] = [(macro["length"] * macro["speed"]) + macro["delay"] + 2, macro_loop] + macro_delay + macro_data
+                macro["data"] = macro_delay + macro_data
 
                 macro_data_name = "macro_arp_" + str(i)
-                macros[macro_data_name] = macro['data']
+                macros[macro_data_name] = macro
                 new_instrument["arp_macro_ptr"] = macro_data_name
 
             # currently no ex macro for this instrument
@@ -777,7 +781,7 @@ def main(argv=None):
                         macro['data'][j] = macro['data'][j] << 4
 
                 # need to invert duty for ay noise freq macro
-                if macro["code"] == MACRO_TYPE_DUTY and instrument["type"] == 6:
+                if macro["code"] == MACRO_TYPE_DUTY and instrument["type"] == INS_TYPE_AY_3_8910:
                     for j in range(0, macro["length"]):
                         macro['data'][j] = 0x1f - macro['data'][j]
 
@@ -797,24 +801,11 @@ def main(argv=None):
                 for j in range(0, macro["delay"]):
                     macro_delay.append(macro_data[0])
 
-                # add a flag for sn noise mode to say when noise register has changed
-                # to avoid resetting lfsr every frame
-                if macro["code"] == MACRO_TYPE_DUTY and instrument["type"] == 0:
-                    for j in range(0, len(macro_data)):
-                        if (j == 0) or ((macro_data[j]) != (macro_data[j - 1] & 0x7f)):
-                            macro_data[j] = macro_data[j] | 0x80
-
-                    if (len(macro_delay) > 0):
-                        macro_delay[0] = macro_delay[0] | 0x80
-
-                # calculate loop position
-                macro_loop = (((macro["loop"] * macro["speed"]) + macro["delay"] + 1) if macro["loop"] != 0xff else 0)
-                
                 # combine all data
-                macro["data"] = [(macro["length"] * macro["speed"]) + macro["delay"] + 2, macro_loop] + macro_delay + macro_data
+                macro["data"] = macro_delay + macro_data
 
                 macro_data_name = "macro_ex_" + str(i)
-                macros[macro_data_name] = macro['data']
+                macros[macro_data_name] = macro
                 new_instrument["ex_macro_ptr"] = macro_data_name
 
         # FM preset change (only for OPLL FM instruments)
@@ -1740,7 +1731,7 @@ def main(argv=None):
     writelabel("channel_count")
     outfile.write(".db " + str(1 if sfx else song['channel_count']) + "\n")
     writelabel("flags")
-    outfile.write(".db " + str(0 if sfx else 2) + "\n")
+    outfile.write(".db " + str(STATE_FLAG_SFX if sfx else STATE_FLAG_LOOP) + "\n")
     writelabel("master_volume")
     outfile.write(".db 0x00\n")
     writelabel("master_volume_fade")
@@ -1850,7 +1841,7 @@ def main(argv=None):
 
         macro = macros[key]
 
-        if "type" in macro and macro["type"] == MACRO_TYPE_VOLUME:
+        if "type" in macro:
 
             if macro["loop"] == 0xff:
                 macro["loop"] = len(macro["data"]) - 1
@@ -1865,8 +1856,8 @@ def main(argv=None):
                 outfile.write(".db " + ", ".join(map(hex, macro["data"])) + "\n")
 
                 # loop back
-                outfile.write(".db 0x80 ; macro jump\n")
-                outfile.write(".dw " + getlabel(key) + " + " + str(macro["loop"]) + "\n")
+                outfile.write(".db 0xff ; macro jump\n")
+                outfile.write(".db " + str(macro["loop"]) + "\n")
 
             # release
             else:
@@ -1875,15 +1866,16 @@ def main(argv=None):
                 outfile.write(".db " + ", ".join(map(hex, macro["data"][0:macro["release"]+1])) + "\n")
 
                 # repeat loop
-                outfile.write(".db 0x81 ; macro release\n")
-                outfile.write(".dw " + getlabel(key) + " + " + str(macro["release_loop"]) + "\n")
+                outfile.write(".db 0xfe ; macro release\n")
+                outfile.write(".db " + str(macro["release_loop"]) + "\n")
+                outfile.write(".db " + str(macro["release"] + 4) + "\n")
 
                 # write remaining macro values
                 outfile.write(".db " + ", ".join(map(hex, macro["data"][macro["release"]+1:])) + "\n")
 
                 # loop back
-                outfile.write(".db 0x80 ; macro jump\n")
-                outfile.write(".dw " + getlabel(key) + " + " + str(macro["loop"]) + "\n")
+                outfile.write(".db 0xff ; macro jump\n")
+                outfile.write(".db " + str(macro["loop"]) + "\n")
 
         else:
             outfile.write(".db " + ", ".join(map(hex, macros[key])) + "\n")
@@ -1917,17 +1909,19 @@ def main(argv=None):
 
         # calculate flag bits dependant on vol/ex macro presence
         flag_bits = 0
+        event_bits = 0
         
         if instrument["volume_macro_ptr"] != 0xffff:
-            flag_bits |= CHAN_FLAG_VOLUME_MACRO
+            event_bits |= CHAN_FLAG_VOLUME_MACRO
 
         if instrument["arp_macro_ptr"] != 0xffff:
-            flag_bits |= CHAN_FLAG_ARP_MACRO
+            event_bits |= CHAN_FLAG_ARP_MACRO
         
         if instrument["ex_macro_ptr"] != 0xffff:
             flag_bits |= CHAN_FLAG_EX_MACRO
         
         outfile.write("\t.db " + str(flag_bits) + " ; flags\n")
+        outfile.write("\t.db " + str(event_bits) + " ; events\n")
         
         # volume macro
         if (instrument["volume_macro_ptr"] == 0xffff):
@@ -1942,8 +1936,6 @@ def main(argv=None):
             outfile.write("\t.dw " + song_prefix + "_" + str(instrument["arp_macro_ptr"]) + " ; ptr\n")
 
         # ex macro
-        outfile.write("\t.db " + str(instrument["ex_macro_type"]) + " ; type\n")
-
         if (instrument["ex_macro_ptr"] == 0xffff):
             outfile.write("\t.dw 0xffff ;ptr\n")
         else:

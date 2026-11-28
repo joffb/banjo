@@ -71,14 +71,13 @@
 	.include "commands.inc"
 	.include "mute_unmute.inc"
 	.include "update_pitch_registers.inc"
+	.include "macro_update.inc"
 
 	.ifndef BANJO_MINIMAL
 	.include "arpeggio.inc"
 	.include "master_volume.inc"
 	.include "vibrato.inc"
 	.include "volume_calculate.inc"
-	.include "volume_macro.inc"
-	.include "arp_macro.inc"
 	.include "ex_macro.inc"
 	.include "slides.inc"
 	.include "divmod12.inc"
